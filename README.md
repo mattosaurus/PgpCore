@@ -18,7 +18,6 @@ using PgpCore;
 ```
 # Dependencies
 BouncyCastle.NetCore (>= 1.8.1.3)
-
 Microsoft.NETCore.App (>= 1.1.2)
 
 # Usage
