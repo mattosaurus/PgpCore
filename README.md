@@ -17,8 +17,7 @@ Add the following namespaces to use the library:
 using PgpCore;
 ```
 # Dependencies
-BouncyCastle.NetCore (>= 1.8.1.3)
-Microsoft.NETCore.App (>= 1.1.2)
+
 
 # Usage
 This is intended for usage in .NET Core projects.
