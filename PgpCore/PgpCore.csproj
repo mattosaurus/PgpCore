@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
-    <Description>Class library for using PGP.</Description>
+    <Description>.NET Core class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
     <Product />
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
