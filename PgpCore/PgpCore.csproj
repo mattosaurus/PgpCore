@@ -5,10 +5,11 @@
     <Description>.NET Core class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
-    <Product />
+    <Product>PgpCore</Product>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
+    <PackageTags>PGP .NET Core</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
