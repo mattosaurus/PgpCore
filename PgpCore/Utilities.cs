@@ -324,13 +324,15 @@ namespace PgpCore
 
         private static void PipeFileContents(FileInfo file, Stream pOut, int bufSize)
         {
-            FileStream inputStream = file.OpenRead();
-            byte[] buf = new byte[bufSize];
-
-            int len;
-            while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
+            using (FileStream inputStream = file.OpenRead())
             {
-                pOut.Write(buf, 0, len);
+                byte[] buf = new byte[bufSize];
+
+                int len;
+                while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
+                {
+                    pOut.Write(buf, 0, len);
+                }
             }
         }
 
