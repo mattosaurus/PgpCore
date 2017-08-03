@@ -215,6 +215,7 @@ namespace PgpCore
                         using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
                         {
                             WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                            inputFileStream.Dispose();
                         }
                     }
                 }
@@ -495,7 +496,9 @@ namespace PgpCore
                 //                ,"BC"
                 );
 
-            secretKey.Encode(secretOut);
+                secretKey.Encode(secretOut);
+
+            secretOut.Dispose();
 
             if (armor)
             {
@@ -505,6 +508,8 @@ namespace PgpCore
             PgpPublicKey key = secretKey.PublicKey;
 
             key.Encode(publicOut);
+
+            publicOut.Dispose();
         }
 
         /*
