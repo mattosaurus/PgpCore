@@ -48,6 +48,20 @@ namespace PgpCore
             PrivateKey = ReadPrivateKey(passPhrase);
         }
 
+        public EncryptionKeys(Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        {
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyStream");
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyStream");
+            if (passPhrase == null)
+                throw new ArgumentNullException("Invalid Pass Phrase.");
+
+            PublicKey = ReadPublicKey(publicKeyStream);
+            SecretKey = ReadSecretKey(privateKeyStream);
+            PrivateKey = ReadPrivateKey(passPhrase);
+        }
+
         #endregion Constructors
 
         #region Secret Key
@@ -63,6 +77,18 @@ namespace PgpCore
                     if (foundKey != null)
                         return foundKey;
                 }
+            }
+            throw new ArgumentException("Can't find signing key in key ring.");
+        }
+
+        private PgpSecretKey ReadSecretKey(Stream privateKeyStream)
+        {
+            using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
+            {
+                PgpSecretKeyRingBundle secretKeyRingBundle = new PgpSecretKeyRingBundle(inputStream);
+                PgpSecretKey foundKey = GetFirstSecretKey(secretKeyRingBundle);
+                if (foundKey != null)
+                    return foundKey;
             }
             throw new ArgumentException("Can't find signing key in key ring.");
         }
@@ -100,6 +126,18 @@ namespace PgpCore
                     if (foundKey != null)
                         return foundKey;
                 }
+            }
+            throw new ArgumentException("No encryption key found in public key ring.");
+        }
+
+        private PgpPublicKey ReadPublicKey(Stream publicKeyStream)
+        {
+            using (Stream inputStream = PgpUtilities.GetDecoderStream(publicKeyStream))
+            {
+                PgpPublicKeyRingBundle publicKeyRingBundle = new PgpPublicKeyRingBundle(inputStream);
+                PgpPublicKey foundKey = GetFirstPublicKey(publicKeyRingBundle);
+                if (foundKey != null)
+                    return foundKey;
             }
             throw new ArgumentException("No encryption key found in public key ring.");
         }
