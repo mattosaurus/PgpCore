@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
-    <Description>.NET Core class library for using PGP</Description>
+    <Description>.NET Standard class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
     <Product>PgpCore</Product>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
-    <PackageTags>PGP .NET Core</PackageTags>
+    <PackageTags>PGP .NET Core Standard</PackageTags>
     <Version>1.1.0</Version>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
