@@ -533,6 +533,11 @@ namespace PgpCore
 
             PgpObject message = plainFact.NextPgpObject();
 
+            if (message is PgpOnePassSignatureList)
+            {
+                message = plainFact.NextPgpObject();
+            }
+
             if (message is PgpCompressedData)
             {
                 PgpCompressedData cData = (PgpCompressedData)message;
@@ -567,6 +572,14 @@ namespace PgpCore
 
                 Stream unc = ld.GetInputStream();
                 Streams.PipeAll(unc, outputStream);
+
+                if (pbe.IsIntegrityProtected())
+                {
+                    if (!pbe.Verify())
+                    {
+                        throw new PgpException("Message failed integrity check.");
+                    }
+                }
             }
             else if (message is PgpOnePassSignatureList)
                 throw new PgpException("Encrypted message contains a signed message - not literal data.");
