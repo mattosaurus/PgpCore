@@ -213,6 +213,11 @@ namespace PgpCore
             await Task.Run(() => EncryptFileAndSign(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase, armor, withIntegrityCheck));
         }
 
+        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        {
+            await Task.Run(() => EncryptStreamAndSign(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase, armor, withIntegrityCheck));
+        }
+
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
         /// </summary>
