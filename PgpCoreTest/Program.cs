@@ -32,6 +32,40 @@ namespace PgpCoreTest
                 using (Stream outputFileStream = File.Create(@"C:\TEMP\keys\content__decrypted2.txt"))
                 using (Stream privateKeyStream = new FileStream(@"C:\TEMP\keys\private.asc", FileMode.Open))
                     pgp.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, "password");
+
+                // Encrypt and decrypt streams
+                using (Stream inputFileStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("Streaming test message")))
+                {
+                    using (Stream publicKeyStream = new FileStream(@"C:\TEMP\keys\public.asc", FileMode.Open))
+                    {
+                        using (Stream encryptedMemoryStream = new MemoryStream())
+                        {
+                            pgp.EncryptStream(inputFileStream, encryptedMemoryStream, publicKeyStream);
+                            encryptedMemoryStream.Seek(0, SeekOrigin.Begin);
+                            StreamReader encryptedReader = new StreamReader(encryptedMemoryStream);
+                            // Reset stream to beginning
+                            encryptedMemoryStream.Seek(0, SeekOrigin.Begin);
+                            string encryptedText = encryptedReader.ReadToEnd();
+                            Console.WriteLine(encryptedText);
+
+                            // Reset stream to beginning again
+                            // Only necessary as stream read to end above for demo output
+                            encryptedMemoryStream.Seek(0, SeekOrigin.Begin);
+
+                            using (Stream decryptedMemoryStream = new MemoryStream())
+                            {
+                                using (Stream privateKeyStream = new FileStream(@"C:\TEMP\keys\private.asc", FileMode.Open))
+                                {
+                                    pgp.DecryptStream(encryptedMemoryStream, decryptedMemoryStream, privateKeyStream, "password");
+                                    decryptedMemoryStream.Seek(0, SeekOrigin.Begin);
+                                    StreamReader decryptedReader = new StreamReader(decryptedMemoryStream);
+                                    string decryptedText = decryptedReader.ReadToEnd();
+                                    Console.WriteLine(decryptedText);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
