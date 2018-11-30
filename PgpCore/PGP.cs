@@ -94,21 +94,45 @@ namespace PgpCore
         /// <param name="withIntegrityCheck"></param>
         public void EncryptFile(string inputFilePath,
             string outputFilePath,
+            string publicKeyFilePath,
+            bool armor = true,
+            bool withIntegrityCheck = true)
+        {
+            EncryptFile(inputFilePath, outputFilePath, new [] {publicKeyFilePath}, armor, withIntegrityCheck);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the file.
+        /// </summary>
+        /// <param name="inputFilePath"></param>
+        /// <param name="outputFilePath"></param>
+        /// <param name="publicKeyFilePaths"></param>
+        /// <param name="armor"></param>
+        /// <param name="withIntegrityCheck"></param>
+        public void EncryptFile(
+            string inputFilePath,
+            string outputFilePath,
             IEnumerable<string> publicKeyFilePaths,
             bool armor = true,
             bool withIntegrityCheck = true)
         {
+            //Avoid multiple enumerations of 'publicKeyFilePaths'
+            string[] publicKeys = publicKeyFilePaths.ToArray();
+
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
-            if (publicKeyFilePaths == null)
-                throw new ArgumentException("PublicKeyFilePaths");
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
-            if(publicKeyFilePaths.Any(key => !File.Exists(key)))
-                throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePaths.First(key => !File.Exists(key))));
-            
+            foreach (string publicKeyFilePath in publicKeys)
+            {
+                if(String.IsNullOrEmpty(publicKeyFilePath))
+                    throw new ArgumentException(nameof(publicKeyFilePath));
+                if (!File.Exists(publicKeyFilePath))
+                    throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
+            }
+
             using (MemoryStream @out = new MemoryStream())
             {
                 if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
@@ -122,9 +146,9 @@ namespace PgpCore
 
                 PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-                foreach (string keyFilePath in publicKeyFilePaths)
+                foreach (string publicKeyFilePath in publicKeys)
                 {
-                    using (Stream pkStream = File.OpenRead(keyFilePath))
+                    using (Stream pkStream = File.OpenRead(publicKeyFilePath))
                     {
                         pk.AddMethod(ReadPublicKey(pkStream));
                     }
@@ -153,7 +177,6 @@ namespace PgpCore
                     }
                 }
             }
-
         }
 
         /// <summary>
