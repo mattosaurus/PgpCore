@@ -12,12 +12,19 @@ namespace PgpCoreTest
             {
                 // Generate keys
                 pgp.GenerateKey(@"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\private.asc", "email@email.com", "password");
+                pgp.GenerateKey(@"C:\TEMP\keys\public2.asc", @"C:\TEMP\keys\private2.asc", "email@email.com", "password2");
                 // Encrypt file
                 pgp.EncryptFile(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted.pgp", @"C:\TEMP\keys\public.asc", true, true);
+                // Encrypt file with multiple keys
+                string[] publicKeys = { @"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\public2.asc" };
+                pgp.EncryptFile(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_multiple.pgp", publicKeys, true, true);
                 // Encrypt and sign file
                 pgp.EncryptFileAndSign(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\private.asc", "password", true, true);
                 // Decrypt file
                 pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted.pgp", @"C:\TEMP\keys\content__decrypted.txt", @"C:\TEMP\keys\private.asc", "password");
+                // Decrypt multiple file
+                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_multiple.pgp", @"C:\TEMP\keys\content__decrypted_multiple.txt", @"C:\TEMP\keys\private.asc", "password");
+                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_multiple.pgp", @"C:\TEMP\keys\content__decrypted_multiple2.txt", @"C:\TEMP\keys\private2.asc", "password2");
                 // Decrypt signed file
                 pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\content__decrypted_signed.txt", @"C:\TEMP\keys\private.asc", "password");
 
