@@ -92,7 +92,8 @@ namespace PgpCore
         /// <param name="publicKeyFilePath"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptFile(string inputFilePath,
+        public void EncryptFile(
+            string inputFilePath,
             string outputFilePath,
             string publicKeyFilePath,
             bool armor = true,
