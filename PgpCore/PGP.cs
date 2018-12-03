@@ -92,57 +92,88 @@ namespace PgpCore
         /// <param name="publicKeyFilePath"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptFile(string inputFilePath, string outputFilePath, string publicKeyFilePath,
-            bool armor = true, bool withIntegrityCheck = true)
+        public void EncryptFile(
+            string inputFilePath,
+            string outputFilePath,
+            string publicKeyFilePath,
+            bool armor = true,
+            bool withIntegrityCheck = true)
         {
+            EncryptFile(inputFilePath, outputFilePath, new [] {publicKeyFilePath}, armor, withIntegrityCheck);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the file.
+        /// </summary>
+        /// <param name="inputFilePath"></param>
+        /// <param name="outputFilePath"></param>
+        /// <param name="publicKeyFilePaths"></param>
+        /// <param name="armor"></param>
+        /// <param name="withIntegrityCheck"></param>
+        public void EncryptFile(
+            string inputFilePath,
+            string outputFilePath,
+            IEnumerable<string> publicKeyFilePaths,
+            bool armor = true,
+            bool withIntegrityCheck = true)
+        {
+            //Avoid multiple enumerations of 'publicKeyFilePaths'
+            string[] publicKeys = publicKeyFilePaths.ToArray();
+
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
-            if (String.IsNullOrEmpty(publicKeyFilePath))
-                throw new ArgumentException("PublicKeyFilePath");
-
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
-            if (!File.Exists(publicKeyFilePath))
-                throw new FileNotFoundException(String.Format("Public Key file [{0}] does not exist.", publicKeyFilePath));
-
-            using (Stream pkStream = File.OpenRead(publicKeyFilePath))
+            foreach (string publicKeyFilePath in publicKeys)
             {
-                using (MemoryStream @out = new MemoryStream())
+                if(String.IsNullOrEmpty(publicKeyFilePath))
+                    throw new ArgumentException(nameof(publicKeyFilePath));
+                if (!File.Exists(publicKeyFilePath))
+                    throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
+            }
+
+            using (MemoryStream @out = new MemoryStream())
+            {
+                if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
                 {
-                    if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
+                    PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
+                    Utilities.WriteFileToLiteralData(comData.Open(@out), FileTypeToChar(), new FileInfo(inputFilePath));
+                    comData.Close();
+                }
+                else
+                    Utilities.WriteFileToLiteralData(@out, FileTypeToChar(), new FileInfo(inputFilePath));
+
+                PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
+
+                foreach (string publicKeyFilePath in publicKeys)
+                {
+                    using (Stream pkStream = File.OpenRead(publicKeyFilePath))
                     {
-                        PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                        Utilities.WriteFileToLiteralData(comData.Open(@out), FileTypeToChar(), new FileInfo(inputFilePath));
-                        comData.Close();
+                        pk.AddMethod(ReadPublicKey(pkStream));
                     }
-                    else
-                        Utilities.WriteFileToLiteralData(@out, FileTypeToChar(), new FileInfo(inputFilePath));
+                }
 
-                    PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-                    pk.AddMethod(ReadPublicKey(pkStream));
+                byte[] bytes = @out.ToArray();
 
-                    byte[] bytes = @out.ToArray();
-
-                    using (Stream outStream = File.Create(outputFilePath))
+                using (Stream outStream = File.Create(outputFilePath))
+                {
+                    if (armor)
                     {
-                        if (armor)
+                        using (ArmoredOutputStream armoredStream = new ArmoredOutputStream(outStream))
                         {
-                            using (ArmoredOutputStream armoredStream = new ArmoredOutputStream(outStream))
+                            using (Stream armoredOutStream = pk.Open(armoredStream, bytes.Length))
                             {
-                                using (Stream armoredOutStream = pk.Open(armoredStream, bytes.Length))
-                                {
-                                    armoredOutStream.Write(bytes, 0, bytes.Length);
-                                }
+                                armoredOutStream.Write(bytes, 0, bytes.Length);
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        using (Stream plainStream = pk.Open(outStream, bytes.Length))
                         {
-                            using (Stream plainStream = pk.Open(outStream, bytes.Length))
-                            {
-                                plainStream.Write(bytes, 0, bytes.Length);
-                            }
+                            plainStream.Write(bytes, 0, bytes.Length);
                         }
                     }
                 }
