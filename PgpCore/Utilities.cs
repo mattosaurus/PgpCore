@@ -345,6 +345,40 @@ namespace PgpCore
             PipeStreamContents(input, pOut, buffer.Length);
         }
 
+
+        /// <summary>
+        /// A simple routine that opens a key ring file and loads the first available key suitable for encryption.
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <returns></returns>
+        public static PgpPublicKey ReadPublicKey(Stream inputStream)
+        {
+            inputStream = PgpUtilities.GetDecoderStream(inputStream);
+
+            PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(inputStream);
+
+            // we just loop through the collection till we find a key suitable for encryption, in the real
+            // world you would probably want to be a bit smarter about this.
+            // iterate through the key rings.
+            foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
+            {
+                foreach (PgpPublicKey k in kRing.GetPublicKeys())
+                {
+                    if (k.IsEncryptionKey)
+                        return k;
+                }
+            }
+            throw new ArgumentException("Can't find encryption key in key ring.");
+        }
+
+        public static PgpPublicKey ReadPublicKey(string publicKeyFilePath)
+        {
+            if(!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("File {0} was not found", publicKeyFilePath));
+            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open))
+                return ReadPublicKey(fs);
+        }
+
         private static void PipeFileContents(FileInfo file, Stream pOut, int bufSize)
         {
             using (FileStream inputStream = file.OpenRead())

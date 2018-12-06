@@ -151,7 +151,7 @@ namespace PgpCore
                 {
                     using (Stream pkStream = File.OpenRead(publicKeyFilePath))
                     {
-                        pk.AddMethod(ReadPublicKey(pkStream));
+                        pk.AddMethod(Utilities.ReadPublicKey(pkStream));
                     }
                 }
 
@@ -210,7 +210,7 @@ namespace PgpCore
                     Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, "name");
 
                 PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-                pk.AddMethod(ReadPublicKey(publicKeyStream));
+                pk.AddMethod(Utilities.ReadPublicKey(publicKeyStream));
 
                 byte[] bytes = @out.ToArray();
 
@@ -720,31 +720,7 @@ namespace PgpCore
 
             publicOut.Dispose();
         }
-
-        /*
-        * A simple routine that opens a key ring file and loads the first available key suitable for encryption.
-        */
-        private PgpPublicKey ReadPublicKey(Stream inputStream)
-        {
-            inputStream = PgpUtilities.GetDecoderStream(inputStream);
-
-            PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(inputStream);
-
-            // we just loop through the collection till we find a key suitable for encryption, in the real
-            // world you would probably want to be a bit smarter about this.
-            // iterate through the key rings.
-            foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
-            {
-                foreach (PgpPublicKey k in kRing.GetPublicKeys())
-                {
-                    if (k.IsEncryptionKey)
-                        return k;
-                }
-            }
-
-            throw new ArgumentException("Can't find encryption key in key ring.");
-        }
-
+        
         /*
         * Search a secret key ring collection for a secret key corresponding to keyId if it exists.
         */
