@@ -78,10 +78,22 @@ namespace PgpCore
             await Task.Run(() => EncryptFile(inputFilePath, outputFilePath, publicKeyFilePath, armor, withIntegrityCheck));
         }
 
+        public async Task EncryptFileAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
+            bool armor = true, bool withIntegrityCheck = true)
+        {
+            await Task.Run(() => EncryptFile(inputFilePath, outputFilePath, publicKeyFilePaths, armor, withIntegrityCheck));
+        }
+
         public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream,
             bool armor = true, bool withIntegrityCheck = true)
         {
             await Task.Run(() => EncryptStream(inputStream, outputStream, publicKeyStream, armor, withIntegrityCheck));
+        }
+
+        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
+            bool armor = true, bool withIntegrityCheck = true)
+        {
+            await Task.Run(() => EncryptStream(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck));
         }
 
         /// <summary>

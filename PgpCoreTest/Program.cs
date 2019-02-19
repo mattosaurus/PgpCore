@@ -1,6 +1,7 @@
 ﻿using PgpCore;
 using System;
 using System.IO;
+using System.Text;
 
 namespace PgpCoreTest
 {
@@ -69,6 +70,26 @@ namespace PgpCoreTest
                                     string decryptedText = decryptedReader.ReadToEnd();
                                     Console.WriteLine(decryptedText);
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // Encrypt key and sign stream
+                using (Stream inputFileStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("Streaming signed test message")))
+                {
+                    using (Stream publicKeyStream = new FileStream(@"C:\TEMP\keys\public.asc", FileMode.Open))
+                    {
+                        using (Stream privateKeyStream = new FileStream(@"C:\TEMP\keys\private.asc", FileMode.Open))
+                        {
+                            using (Stream encryptedMemoryStream = new MemoryStream())
+                            {
+                                pgp.EncryptStreamAndSign(inputFileStream, encryptedMemoryStream, publicKeyStream, privateKeyStream, "password");
+                                // Reset stream to beginning
+                                encryptedMemoryStream.Seek(0, SeekOrigin.Begin);
+                                StreamReader encryptedReader = new StreamReader(encryptedMemoryStream);
+                                string encryptedText = encryptedReader.ReadToEnd();
+                                Console.WriteLine(encryptedText);
                             }
                         }
                     }
