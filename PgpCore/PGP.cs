@@ -183,20 +183,43 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
+        /// <param name="inputFilePath"></param>
+        /// <param name="outputFilePath"></param>
         /// <param name="publicKeyFilePath"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptStream(Stream inputStream, Stream outputStream, Stream publicKeyStream, bool armor = true, bool withIntegrityCheck = true)
+        public void EncryptStream(
+            Stream inputStream,
+            Stream outputStream,
+            Stream publicKeyStream,
+            bool armor = true,
+            bool withIntegrityCheck = true)
         {
+            EncryptStream(inputStream, outputStream, new[] { publicKeyStream }, armor, withIntegrityCheck);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the stream.
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="publicKeyFilePaths"></param>
+        /// <param name="armor"></param>
+        /// <param name="withIntegrityCheck"></param>
+        public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true)
+        {
+            //Avoid multiple enumerations of 'publicKeyFilePaths'
+            Stream[] publicKeys = publicKeyStreams.ToArray();
+
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
-            if (publicKeyStream == null)
-                throw new ArgumentException("PublicKeyStream");
-
+            foreach (Stream publicKey in publicKeys)
+            {
+                if (publicKey == null)
+                    throw new ArgumentException("PublicKeyStream");
+            }
 
             using (MemoryStream @out = new MemoryStream())
             {
@@ -210,7 +233,11 @@ namespace PgpCore
                     Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, "name");
 
                 PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-                pk.AddMethod(Utilities.ReadPublicKey(publicKeyStream));
+
+                foreach (Stream publicKey in publicKeys)
+                {
+                    pk.AddMethod(Utilities.ReadPublicKey(publicKey));
+                }
 
                 byte[] bytes = @out.ToArray();
 
