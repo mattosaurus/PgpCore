@@ -21,6 +21,8 @@ namespace PgpCoreTest
                 pgp.EncryptFile(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_multiple.pgp", publicKeys, true, true);
                 // Encrypt and sign file
                 pgp.EncryptFileAndSign(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\private.asc", "password", true, true);
+                // Encrypt and sign multiple file
+                pgp.EncryptFileAndSign(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_signed_multiple.pgp", publicKeys, @"C:\TEMP\keys\private.asc", "password", true, true);
                 // Decrypt file
                 pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted.pgp", @"C:\TEMP\keys\content__decrypted.txt", @"C:\TEMP\keys\private.asc", "password");
                 // Decrypt multiple file
@@ -28,6 +30,9 @@ namespace PgpCoreTest
                 pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_multiple.pgp", @"C:\TEMP\keys\content__decrypted_multiple2.txt", @"C:\TEMP\keys\private2.asc", "password2");
                 // Decrypt signed file
                 pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\content__decrypted_signed.txt", @"C:\TEMP\keys\private.asc", "password");
+                // Decrypt signed multiple file
+                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_signed_multiple.pgp", @"C:\TEMP\keys\content__decrypted_signed_multiple.txt", @"C:\TEMP\keys\private.asc", "password");
+                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_signed_multiple.pgp", @"C:\TEMP\keys\content__decrypted_signed_multiple2.txt", @"C:\TEMP\keys\private2.asc", "password2");
 
                 // Encrypt stream
                 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\keys\content.txt", FileMode.Open))
