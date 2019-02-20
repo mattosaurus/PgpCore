@@ -14,6 +14,7 @@
     <AssemblyVersion>1.4.0.0</AssemblyVersion>
     <FileVersion>1.4.0.0</FileVersion>
     <PackageReleaseNotes>Allow encrypt and sign with multiple keys</PackageReleaseNotes>
+    <PackageLicenseUrl>https://github.com/mattosaurus/PgpCore/blob/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
