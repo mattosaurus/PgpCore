@@ -347,11 +347,12 @@ namespace PgpCore
 
 
         /// <summary>
-        /// A simple routine that opens a key ring file and loads the first available key suitable for encryption.
+        /// Opens a key ring file and returns first available sub-key suitable for encryption.
+        /// If such sub-key is not found, return master key that can encrypt.
         /// </summary>
         /// <param name="inputStream"></param>
         /// <returns></returns>
-        public static PgpPublicKey ReadPublicKey(Stream inputStream)
+        internal static PgpPublicKey ReadPublicKey(Stream inputStream)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 
@@ -362,15 +363,28 @@ namespace PgpCore
             // iterate through the key rings.
             foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
             {
-                foreach (PgpPublicKey k in kRing.GetPublicKeys())
+                List<PgpPublicKey> keys = kRing.GetPublicKeys()
+                    .Cast<PgpPublicKey>()
+                    .Where(k => k.IsEncryptionKey).ToList();
+
+                const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
+
+                foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && !k.IsMasterKey))
                 {
-                    if (k.IsEncryptionKey)
-                        return k;
+                    foreach (PgpSignature s in key.GetSignatures())
+                    {
+                        if (s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
+                            return key;
+                    }
                 }
+
+                if (keys.Any())
+                    return keys.First();
             }
+
             throw new ArgumentException("Can't find encryption key in key ring.");
         }
-
+        
         public static PgpPublicKey ReadPublicKey(string publicKeyFilePath)
         {
             if(!File.Exists(publicKeyFilePath))
