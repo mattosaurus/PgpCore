@@ -195,9 +195,9 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="publicKeyStream"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
         public void EncryptStream(
@@ -319,7 +319,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFilePath"></param>
         /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="publicKeyFilePaths"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
@@ -390,7 +390,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
+        /// <param name="publicKeyStreams"></param>
         /// <param name="privateKeyStream"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
@@ -947,7 +947,7 @@ namespace PgpCore
             return Verify(inputStream, publicKeyStream);
         }
 
-        public bool Verify(Stream inputStream, Stream publicKeyStream)
+        private bool Verify(Stream inputStream, Stream publicKeyStream)
         {
             PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(inputStream);
             PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
