@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Description>.NET Standard class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.NetCore" Version="1.8.2" />
+    <PackageReference Include="BouncyCastle.NetCore" Version="1.8.5" />
   </ItemGroup>
 
 </Project>

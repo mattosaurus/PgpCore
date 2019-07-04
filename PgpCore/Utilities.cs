@@ -506,10 +506,15 @@ namespace PgpCore
             }
         }
 
-        public static PgpPublicKeyEncryptedData ExtractPublicKeyEncryptedData(System.IO.Stream inputStream)
+        public static PgpPublicKeyEncryptedData ExtractPublicKeyEncryptedData(System.IO.Stream encodedFile)
         {
-            System.IO.Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
             PgpEncryptedDataList encryptedDataList = GetEncryptedDataList(encodedFile);
+            PgpPublicKeyEncryptedData publicKeyED = ExtractPublicKey(encryptedDataList);
+            return publicKeyED;
+        }
+
+        public static PgpPublicKeyEncryptedData ExtractPublicKeyEncryptedData(PgpEncryptedDataList encryptedDataList)
+        {
             PgpPublicKeyEncryptedData publicKeyED = ExtractPublicKey(encryptedDataList);
             return publicKeyED;
         }
@@ -519,11 +524,11 @@ namespace PgpCore
             PgpCompressedData compressedData = (PgpCompressedData)message;
             Stream compressedDataStream = compressedData.GetDataStream();
             PgpObjectFactory compressedFactory = new PgpObjectFactory(compressedDataStream);
-            message = CheckforOnePassSignatureList(message, compressedFactory);
+            message = CheckForOnePassSignatureList(message, compressedFactory);
             return message;
         }
 
-        public static PgpObject CheckforOnePassSignatureList(PgpObject message, PgpObjectFactory compressedFactory)
+        public static PgpObject CheckForOnePassSignatureList(PgpObject message, PgpObjectFactory compressedFactory)
         {
             message = compressedFactory.NextPgpObject();
             if (message is PgpOnePassSignatureList)
@@ -569,7 +574,7 @@ namespace PgpCore
             PgpObject pgpObject = factory.NextPgpObject();
 
             PgpEncryptedDataList encryptedDataList;
-
+            
             if (pgpObject is PgpEncryptedDataList)
             {
                 encryptedDataList = (PgpEncryptedDataList)pgpObject;
@@ -579,6 +584,25 @@ namespace PgpCore
                 encryptedDataList = (PgpEncryptedDataList)factory.NextPgpObject();
             }
             return encryptedDataList;
+        }
+
+        public static PgpOnePassSignatureList GetPgpOnePassSignatureList(Stream encodedFile)
+        {
+            PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
+            PgpObject pgpObject = factory.NextPgpObject();
+
+            PgpOnePassSignatureList pgpOnePassSignatureList;
+
+            if (pgpObject is PgpOnePassSignatureList)
+            {
+                pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpObject;
+            }
+            else
+            {
+                pgpOnePassSignatureList = (PgpOnePassSignatureList)factory.NextPgpObject();
+            }
+
+            return pgpOnePassSignatureList;
         }
     }
 }
