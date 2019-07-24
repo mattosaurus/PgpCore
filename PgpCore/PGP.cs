@@ -1075,7 +1075,8 @@ namespace PgpCore
             {
                 PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
 
-                if (publicKeyED.KeyId == publicKey.KeyId)
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
                 {
                     verified = true;
                 }
@@ -1089,7 +1090,8 @@ namespace PgpCore
                 PgpEncryptedDataList encryptedDataList = (PgpEncryptedDataList)pgpObject;
                 PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKey(encryptedDataList);
 
-                if (publicKeyED.KeyId == publicKey.KeyId)
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
                 {
                     verified = true;
                 }
@@ -1103,7 +1105,8 @@ namespace PgpCore
                 PgpOnePassSignatureList pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpObject;
                 PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
 
-                if (pgpOnePassSignature.KeyId == publicKey.KeyId)
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
                 {
                     verified = true;
                 }
