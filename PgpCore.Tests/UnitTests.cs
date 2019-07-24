@@ -273,6 +273,28 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFileAndSign(contentFilePath, encryptedContentFilePath, publicKeyFilePath1, privateKeyFilePath1, password1);
+            bool verified = pgp.VerifyFile(encryptedContentFilePath, publicKeyFilePath2);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.False(verified);
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void Verify_VerifySignedFile(KeyType keyType)
         {
             // Arrange
@@ -286,6 +308,28 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(File.Exists(signedContentFilePath));
             Assert.True(verified);
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifySignedFile(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.SignFile(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+            bool verified = pgp.VerifyFile(signedContentFilePath, publicKeyFilePath2);
+
+            // Assert
+            Assert.True(File.Exists(signedContentFilePath));
+            Assert.False(verified);
 
             // Teardown
             Teardown();
@@ -596,6 +640,33 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifyEncryptedAndSignedStream(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (Stream outputFileStream = File.Create(encryptedContentFilePath))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+                pgp.EncryptStreamAndSign(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, password1);
+
+            bool verified = pgp.VerifyFile(encryptedContentFilePath, publicKeyFilePath2);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.False(verified);
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void Verify_VerifySignedStream(KeyType keyType)
         {
             // Arrange
@@ -616,6 +687,35 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(File.Exists(signedContentFilePath));
             Assert.True(verified);
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifySignedStream(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+            bool verified = false;
+
+            // Act
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (Stream outputFileStream = File.Create(signedContentFilePath))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+                pgp.SignStream(inputFileStream, outputFileStream, privateKeyStream, password1);
+
+            using (FileStream inputFileStream = new FileStream(signedContentFilePath, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath2, FileMode.Open))
+                verified = pgp.VerifyStream(inputFileStream, publicKeyStream);
+
+            // Assert
+            Assert.True(File.Exists(signedContentFilePath));
+            Assert.False(verified);
 
             // Teardown
             Teardown();
