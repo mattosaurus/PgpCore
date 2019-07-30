@@ -195,9 +195,9 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="publicKeyStream"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
         public void EncryptStream(
@@ -319,7 +319,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFilePath"></param>
         /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="publicKeyFilePaths"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
@@ -390,7 +390,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
+        /// <param name="publicKeyStreams"></param>
         /// <param name="privateKeyStream"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
@@ -727,6 +727,242 @@ namespace PgpCore
         }
 
         #endregion Decrypt
+
+        #region DecryptAndVerify
+
+        public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
+        {
+            await Task.Run(() => DecryptFileAndVerify(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase));
+        }
+
+        public async Task DecryptStreamAndAndVerifyAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        {
+            await Task.Run(() => DecryptStreamAndVerify(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase));
+        }
+
+        public async Task VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
+        {
+            await Task.Run(() => VerifyFile(inputFilePath, publicKeyFilePath));
+        }
+
+        public async Task VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
+        {
+            await Task.Run(() => VerifyStream(inputStream, publicKeyStream));
+        }
+
+        /// <summary>
+        /// PGP decrypt and verify a given file.
+        /// </summary>
+        /// <param name="inputFilePath"></param>
+        /// <param name="outputFilePath"></param>
+        /// <param name="publicKeyFilePath"></param>
+        /// <param name="privateKeyFilePath"></param>
+        /// <param name="passPhrase"></param>
+        public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(outputFilePath))
+                throw new ArgumentException("OutputFilePath");
+            if (String.IsNullOrEmpty(publicKeyFilePath))
+                throw new ArgumentException("PublicKeyFilePath");
+            if (String.IsNullOrEmpty(privateKeyFilePath))
+                throw new ArgumentException("PrivateKeyFilePath");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Encrypted File [{0}] not found.", inputFilePath));
+            if (!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("Public Key File [{0}] not found.", publicKeyFilePath));
+            if (!File.Exists(privateKeyFilePath))
+                throw new FileNotFoundException(String.Format("Private Key File [{0}] not found.", privateKeyFilePath));
+
+            using (Stream inputStream = File.OpenRead(inputFilePath))
+            {
+                using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
+                using (Stream privateKeyStream = File.OpenRead(privateKeyFilePath))
+                using (Stream outStream = File.Create(outputFilePath))
+                    DecryptAndVerify(inputStream, outStream, publicKeyStream, privateKeyStream, passPhrase);
+            }
+        }
+
+        /// <summary>
+        /// PGP decrypt and verify a given stream.
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="privateKeyFilePath"></param>
+        /// <param name="passPhrase"></param>
+        public Stream DecryptStreamAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (outputStream == null)
+                throw new ArgumentException("OutputStream");
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyFileStream");
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyFileStream");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            DecryptAndVerify(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase);
+            return outputStream;
+        }
+
+        /*
+        * PGP decrypt and verify a given stream.
+        */
+        private void DecryptAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        {
+            EncryptionKeys encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, passPhrase);
+            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(inputStream);
+
+            if (publicKeyED.KeyId != encryptionKeys.PublicKey.KeyId)
+                throw new PgpException(String.Format("Failed to verify file."));
+
+            PgpObject message = Utilities.GetClearCompressedMessage(publicKeyED, encryptionKeys);
+
+            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+            // find secret key
+            PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
+
+            PgpObject obj = null;
+            if (objFactory != null)
+                obj = objFactory.NextPgpObject();
+
+            // the first object might be a PGP marker packet.
+            PgpEncryptedDataList enc = null;
+            if (obj is PgpEncryptedDataList)
+                enc = (PgpEncryptedDataList)obj;
+            else
+                enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // decrypt
+            PgpPrivateKey privateKey = null;
+            PgpPublicKeyEncryptedData pbe = null;
+            foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
+            {
+                privateKey = FindSecretKey(pgpSec, pked.KeyId, passPhrase.ToCharArray());
+
+                if (privateKey != null)
+                {
+                    pbe = pked;
+                    break;
+                }
+            }
+
+            if (privateKey == null)
+                throw new ArgumentException("Secret key for message not found.");
+
+            PgpObjectFactory plainFact = null;
+
+            using (Stream clear = pbe.GetDataStream(privateKey))
+            {
+                plainFact = new PgpObjectFactory(clear);
+            }
+
+            if (message is PgpCompressedData)
+            {
+                PgpCompressedData cData = (PgpCompressedData)message;
+                PgpObjectFactory of = null;
+
+                using (Stream compDataIn = cData.GetDataStream())
+                {
+                    of = new PgpObjectFactory(compDataIn);
+                }
+
+                message = of.NextPgpObject();
+                if (message is PgpOnePassSignatureList)
+                {
+                    message = of.NextPgpObject();
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    Streams.PipeAll(unc, outputStream);
+                }
+                else
+                {
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    Streams.PipeAll(unc, outputStream);
+                }
+            }
+            else if (message is PgpLiteralData)
+            {
+                PgpLiteralData ld = (PgpLiteralData)message;
+                string outFileName = ld.FileName;
+
+                Stream unc = ld.GetInputStream();
+                Streams.PipeAll(unc, outputStream);
+
+                if (pbe.IsIntegrityProtected())
+                {
+                    if (!pbe.Verify())
+                    {
+                        throw new PgpException("Message failed integrity check.");
+                    }
+                }
+            }
+            else
+                throw new PgpException("Message is not a simple encrypted file.");
+        }
+
+        /// <summary>
+        /// PGP verify a given file.
+        /// </summary>
+        /// <param name="inputFilePath"></param>
+        /// <param name="publicKeyFilePath"></param>
+        public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(publicKeyFilePath))
+                throw new ArgumentException("PublicKeyFilePath");
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Encrypted File [{0}] not found.", inputFilePath));
+            if (!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("Public Key File [{0}] not found.", publicKeyFilePath));
+
+            using (Stream inputStream = File.OpenRead(inputFilePath))
+            using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
+                return Verify(inputStream, publicKeyStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="publicKeyStream"></param>
+        public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyStream");
+
+            return Verify(inputStream, publicKeyStream);
+        }
+
+        private bool Verify(Stream inputStream, Stream publicKeyStream)
+        {
+            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(inputStream);
+            PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
+
+            if (publicKeyED.KeyId == publicKey.KeyId)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        #endregion DecryptAndVerify
 
         #region GenerateKey
 
