@@ -84,6 +84,21 @@ namespace PgpCore
             PrivateKey = ReadPrivateKey(passPhrase);
         }
 
+        public EncryptionKeys(string privateKeyFilePath, string passPhrase)
+        {
+            if (String.IsNullOrEmpty(privateKeyFilePath))
+                throw new ArgumentException("PrivateKeyFilePath");
+            if (passPhrase == null)
+                throw new ArgumentNullException("Invalid Pass Phrase.");
+
+            if (!File.Exists(privateKeyFilePath))
+                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
+
+            PublicKeys = null;
+            SecretKey = ReadSecretKey(privateKeyFilePath);
+            PrivateKey = ReadPrivateKey(passPhrase);
+        }
+
         public EncryptionKeys(Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             if (publicKeyStream == null)
@@ -94,6 +109,18 @@ namespace PgpCore
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
             PublicKey = Utilities.ReadPublicKey(publicKeyStream);
+            SecretKey = ReadSecretKey(privateKeyStream);
+            PrivateKey = ReadPrivateKey(passPhrase);
+        }
+
+        public EncryptionKeys(Stream privateKeyStream, string passPhrase)
+        {
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyStream");
+            if (passPhrase == null)
+                throw new ArgumentNullException("Invalid Pass Phrase.");
+
+            PublicKey = null;
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
         }

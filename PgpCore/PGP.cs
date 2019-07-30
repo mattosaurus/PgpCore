@@ -448,6 +448,23 @@ namespace PgpCore
             }
         }
 
+        private void OutputSigned(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
+                using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                {
+                    using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                    {
+                        WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                        inputFileStream.Dispose();
+                    }
+                }
+            }
+        }
+
         private void OutputEncrypted(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
         {
             using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
@@ -460,6 +477,19 @@ namespace PgpCore
                         WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
                         inputStream.Dispose();
                     }
+                }
+            }
+        }
+
+        private void OutputSigned(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
+        {
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
+                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                {
+                    WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
+                    inputStream.Dispose();
                 }
             }
         }
@@ -549,6 +579,91 @@ namespace PgpCore
         }
 
         #endregion Encrypt and Sign
+
+        #region Sign
+
+        /// <summary>
+        /// Sign the file pointed to by unencryptedFileInfo and
+        /// </summary>
+        /// <param name="inputFilePath"></param>
+        /// <param name="outputFilePath"></param>
+        /// <param name="privateKeyFilePath"></param>
+        /// <param name="passPhrase"></param>
+        /// <param name="armor"></param>
+        public void SignFile(string inputFilePath, string outputFilePath,
+            string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(outputFilePath))
+                throw new ArgumentException("OutputFilePath");
+            if (String.IsNullOrEmpty(privateKeyFilePath))
+                throw new ArgumentException("PrivateKeyFilePath");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
+            if (!File.Exists(privateKeyFilePath))
+                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            using (Stream outputStream = File.Create(outputFilePath))
+            {
+                if (armor)
+                {
+                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+                    {
+                        OutputSigned(inputFilePath, armoredOutputStream, encryptionKeys, withIntegrityCheck);
+                    }
+                }
+                else
+                    OutputSigned(inputFilePath, outputStream, encryptionKeys, withIntegrityCheck);
+            }
+        }
+
+        /// <summary>
+        /// Sign the stream pointed to by unencryptedFileInfo and
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="publicKeyStreams"></param>
+        /// <param name="privateKeyStream"></param>
+        /// <param name="passPhrase"></param>
+        /// <param name="armor"></param>
+        public void SignStream(Stream inputStream, Stream outputStream,
+            Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (outputStream == null)
+                throw new ArgumentException("OutputStream");
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyStream");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyStream, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            if (armor)
+            {
+                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+                {
+                    OutputSigned(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
+                }
+            }
+            else
+                OutputSigned(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
+        }
+
+        #endregion Sign
 
         #region Decrypt
 
@@ -949,17 +1064,61 @@ namespace PgpCore
 
         private bool Verify(Stream inputStream, Stream publicKeyStream)
         {
-            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(inputStream);
             PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
+            bool verified = false;
 
-            if (publicKeyED.KeyId == publicKey.KeyId)
+            System.IO.Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
+            PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
+            PgpObject pgpObject = factory.NextPgpObject();
+
+            if (pgpObject is PgpCompressedData)
             {
-                return true;
+                PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
+            }
+            else if (pgpObject is PgpEncryptedDataList)
+            {
+                PgpEncryptedDataList encryptedDataList = (PgpEncryptedDataList)pgpObject;
+                PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKey(encryptedDataList);
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
+            }
+            else if (pgpObject is PgpOnePassSignatureList)
+            {
+                PgpOnePassSignatureList pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpObject;
+                PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
             }
             else
-            {
-                return false;
-            }
+                throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
+
+            return verified;
         }
 
         #endregion DecryptAndVerify
