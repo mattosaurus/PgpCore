@@ -151,11 +151,11 @@ namespace PgpCore
                 if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
                 {
                     PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                    Utilities.WriteFileToLiteralData(comData.Open(@out), FileTypeToChar(), new FileInfo(inputFilePath));
+                    PgpUtilities.WriteFileToLiteralData(comData.Open(@out), FileTypeToChar(), new FileInfo(inputFilePath));
                     comData.Close();
                 }
                 else
-                    Utilities.WriteFileToLiteralData(@out, FileTypeToChar(), new FileInfo(inputFilePath));
+                    PgpUtilities.WriteFileToLiteralData(@out, FileTypeToChar(), new FileInfo(inputFilePath));
 
                 PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
