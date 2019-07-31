@@ -932,51 +932,14 @@ namespace PgpCore
         private void DecryptAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             EncryptionKeys encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, passPhrase);
-            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(inputStream);
+
+            var encodedFile = PgpUtilities.GetDecoderStream(inputStream);
+            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
 
             if (publicKeyED.KeyId != encryptionKeys.PublicKey.KeyId)
-                throw new PgpException(String.Format("Failed to verify file."));
+                throw new PgpException("Failed to verify file.");
 
             PgpObject message = Utilities.GetClearCompressedMessage(publicKeyED, encryptionKeys);
-
-            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
-            // find secret key
-            PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
-
-            PgpObject obj = null;
-            if (objFactory != null)
-                obj = objFactory.NextPgpObject();
-
-            // the first object might be a PGP marker packet.
-            PgpEncryptedDataList enc = null;
-            if (obj is PgpEncryptedDataList)
-                enc = (PgpEncryptedDataList)obj;
-            else
-                enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
-
-            // decrypt
-            PgpPrivateKey privateKey = null;
-            PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
-            {
-                privateKey = FindSecretKey(pgpSec, pked.KeyId, passPhrase.ToCharArray());
-
-                if (privateKey != null)
-                {
-                    pbe = pked;
-                    break;
-                }
-            }
-
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
-
-            PgpObjectFactory plainFact = null;
-
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
 
             if (message is PgpCompressedData)
             {
@@ -1013,9 +976,9 @@ namespace PgpCore
                 Stream unc = ld.GetInputStream();
                 Streams.PipeAll(unc, outputStream);
 
-                if (pbe.IsIntegrityProtected())
+                if (publicKeyED.IsIntegrityProtected())
                 {
-                    if (!pbe.Verify())
+                    if (!publicKeyED.Verify())
                     {
                         throw new PgpException("Message failed integrity check.");
                     }
