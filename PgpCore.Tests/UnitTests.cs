@@ -251,6 +251,30 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFile(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFileAndSign(contentFilePath, encryptedContentFilePath, publicKeyFilePath1, privateKeyFilePath1, password1);
+            pgp.DecryptFileAndVerify(encryptedContentFilePath, decryptedContentFilePath1, publicKeyFilePath1, privateKeyFilePath1, password1);
+            string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(decryptedContentFilePath1));
+            Assert.Equal(content, decryptedContent.Trim());
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void Verify_VerifyEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
