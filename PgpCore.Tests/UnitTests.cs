@@ -252,7 +252,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptEncryptedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptUnsignedFile(KeyType keyType)
         {
             // Arrange
             Arrange(keyType);
@@ -263,7 +263,34 @@ namespace PgpCore.Tests
             var ex = Assert.Throws<PgpException>(() => pgp.DecryptFileAndVerify(encryptedContentFilePath,
                 decryptedContentFilePath1, publicKeyFilePath1, privateKeyFilePath2, password2));
            
-            
+            string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
+
+            // Assert
+            Assert.Equal("File was not signed.", ex.Message);
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(decryptedContentFilePath1));
+            Assert.Equal(string.Empty, decryptedContent.Trim());
+
+            // Teardown
+            Teardown();
+        }
+
+        
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptFileAndVerify_DecryptWithWrongKey(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFileAndSign(contentFilePath, encryptedContentFilePath, publicKeyFilePath1, privateKeyFilePath1, password1);
+            var ex = Assert.Throws<PgpException>(() => pgp.DecryptFileAndVerify(encryptedContentFilePath,
+                decryptedContentFilePath1, publicKeyFilePath2, privateKeyFilePath1, password1));
+           
             string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
 
             // Assert
@@ -275,7 +302,7 @@ namespace PgpCore.Tests
             // Teardown
             Teardown();
         }
-
+        
         [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
