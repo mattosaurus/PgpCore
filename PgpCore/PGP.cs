@@ -931,15 +931,44 @@ namespace PgpCore
         */
         private void DecryptAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
-            EncryptionKeys encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, passPhrase);
+            // find secret key
+            PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
+            PgpEncryptedDataList encryptedDataList = Utilities.GetEncryptedDataList(PgpUtilities.GetDecoderStream(inputStream));
+            
+            // decrypt
+            PgpPrivateKey privateKey = null;
+            PgpPublicKeyEncryptedData pbe = null;
+            foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
+            {
+                privateKey = FindSecretKey(pgpSec, pked.KeyId, passPhrase.ToCharArray());
 
-            var encodedFile = PgpUtilities.GetDecoderStream(inputStream);
-            PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
+                if (privateKey != null)
+                {
+                    pbe = pked;
+                    break;
+                }
+            }
 
-            if (publicKeyED.KeyId != encryptionKeys.PublicKey.KeyId)
+            var publicKey = Utilities.ReadPublicKey(publicKeyStream);
+            if (pbe == null || pbe.KeyId != publicKey.KeyId)
                 throw new PgpException("Failed to verify file.");
+            
+            if (privateKey == null)
+                throw new ArgumentException("Secret key for message not found.");
 
-            PgpObject message = Utilities.GetClearCompressedMessage(publicKeyED, encryptionKeys);
+            PgpObjectFactory plainFact = null;
+
+            using (Stream clear = pbe.GetDataStream(privateKey))
+            {
+                plainFact = new PgpObjectFactory(clear);
+            }
+            
+            PgpObject message = plainFact.NextPgpObject();
+
+            if (message is PgpOnePassSignatureList)
+            {
+                message = plainFact.NextPgpObject();
+            }
 
             if (message is PgpCompressedData)
             {
@@ -976,9 +1005,9 @@ namespace PgpCore
                 Stream unc = ld.GetInputStream();
                 Streams.PipeAll(unc, outputStream);
 
-                if (publicKeyED.IsIntegrityProtected())
+                if (pbe.IsIntegrityProtected())
                 {
-                    if (!publicKeyED.Verify())
+                    if (!pbe.Verify())
                     {
                         throw new PgpException("Message failed integrity check.");
                     }
