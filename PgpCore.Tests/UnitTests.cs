@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Xunit;
 
 namespace PgpCore.Tests
@@ -246,6 +247,34 @@ namespace PgpCore.Tests
             // Teardown
             Teardown();
         }
+        
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptFileAndVerify_DecryptEncryptedFile(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath2);
+            var ex = Assert.Throws<PgpException>(() => pgp.DecryptFileAndVerify(encryptedContentFilePath,
+                decryptedContentFilePath1, publicKeyFilePath1, privateKeyFilePath2, password2));
+           
+            
+            string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
+
+            // Assert
+            Assert.Equal("Failed to verify file.", ex.Message);
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(decryptedContentFilePath1));
+            Assert.Equal(string.Empty, decryptedContent.Trim());
+
+            // Teardown
+            Teardown();
+        }
 
         [Theory]
         [InlineData(KeyType.Generated)]
@@ -260,6 +289,30 @@ namespace PgpCore.Tests
             // Act
             pgp.EncryptFileAndSign(contentFilePath, encryptedContentFilePath, publicKeyFilePath1, privateKeyFilePath1, password1);
             pgp.DecryptFileAndVerify(encryptedContentFilePath, decryptedContentFilePath1, publicKeyFilePath1, privateKeyFilePath1, password1);
+            string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(decryptedContentFilePath1));
+            Assert.Equal(content, decryptedContent.Trim());
+
+            // Teardown
+            Teardown();
+        }
+        
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFileAndSign(contentFilePath, encryptedContentFilePath, publicKeyFilePath2, privateKeyFilePath1, password1);
+            pgp.DecryptFileAndVerify(encryptedContentFilePath, decryptedContentFilePath1, publicKeyFilePath1, privateKeyFilePath2, password2);
             string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
 
             // Assert
