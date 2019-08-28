@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PgpCore
 {
@@ -301,18 +302,18 @@ namespace PgpCore
         }
 
         /// <summary>Write out the passed in file as a literal data packet.</summary>
-        public static void WriteFileToLiteralData(
+        public static async Task WriteFileToLiteralDataAsync(
             Stream output,
             char fileType,
             FileInfo file)
         {
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime);
-            PipeFileContents(file, pOut, 4096);
+            await PipeFileContentsAsync(file, pOut, 4096);
         }
 
         /// <summary>Write out the passed in file as a literal data packet in partial packet format.</summary>
-        public static void WriteFileToLiteralData(
+        public static async Task WriteFileToLiteralDataAsync(
             Stream output,
             char fileType,
             FileInfo file,
@@ -320,10 +321,10 @@ namespace PgpCore
         {
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, file.Name, file.LastWriteTime, buffer);
-            PipeFileContents(file, pOut, buffer.Length);
+            await PipeFileContentsAsync(file, pOut, buffer.Length);
         }
 
-        public static void WriteStreamToLiteralData(
+        public static async Task WriteStreamToLiteralDataAsync(
             Stream output,
             char fileType,
             Stream input,
@@ -331,10 +332,10 @@ namespace PgpCore
         {
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now);
-            PipeStreamContents(input, pOut, 4096);
+            await PipeStreamContentsAsync(input, pOut, 4096);
         }
 
-        public static void WriteStreamToLiteralData(
+        public static async Task WriteStreamToLiteralDataAsync(
             Stream output,
             char fileType,
             Stream input,
@@ -343,9 +344,8 @@ namespace PgpCore
         {
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, name, DateTime.Now, buffer);
-            PipeStreamContents(input, pOut, buffer.Length);
+            await PipeStreamContentsAsync(input, pOut, buffer.Length);
         }
-
 
         /// <summary>
         /// Opens a key ring file and returns first available sub-key suitable for encryption.
@@ -394,28 +394,28 @@ namespace PgpCore
                 return ReadPublicKey(fs);
         }
 
-        private static void PipeFileContents(FileInfo file, Stream pOut, int bufSize)
+        private static async Task PipeFileContentsAsync(FileInfo file, Stream pOut, int bufSize)
         {
             using (FileStream inputStream = file.OpenRead())
             {
                 byte[] buf = new byte[bufSize];
 
                 int len;
-                while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
+                while ((len = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
                 {
-                    pOut.Write(buf, 0, len);
+                    await pOut.WriteAsync(buf, 0, len);
                 }
             }
         }
 
-        private static void PipeStreamContents(Stream input, Stream pOut, int bufSize)
+        private static async Task PipeStreamContentsAsync(Stream input, Stream pOut, int bufSize)
         {
             byte[] buf = new byte[bufSize];
 
             int len;
-            while ((len = input.Read(buf, 0, buf.Length)) > 0)
+            while ((len = await input.ReadAsync(buf, 0, buf.Length)) > 0)
             {
-                pOut.Write(buf, 0, len);
+                await pOut.WriteAsync(buf, 0, len);
             }
         }
 

@@ -8,7 +8,6 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
-using Org.BouncyCastle.Utilities.IO;
 using Org.BouncyCastle.X509;
 using System;
 using System.Collections.Generic;
@@ -72,28 +71,28 @@ namespace PgpCore
 
         #region Encrypt
 
-        public async Task EncryptFileAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath,
+        public void EncryptFile(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptFile(inputFilePath, outputFilePath, publicKeyFilePath, armor, withIntegrityCheck));
+            EncryptFileAsync(inputFilePath, outputFilePath, publicKeyFilePath, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptFileAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
+        public void EncryptFile(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptFile(inputFilePath, outputFilePath, publicKeyFilePaths, armor, withIntegrityCheck));
+            EncryptFileAsync(inputFilePath, outputFilePath, publicKeyFilePaths, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream,
+        public void EncryptStream(Stream inputStream, Stream outputStream, Stream publicKeyStream,
             bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptStream(inputStream, outputStream, publicKeyStream, armor, withIntegrityCheck));
+            EncryptStreamAsync(inputStream, outputStream, publicKeyStream, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
+        public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
             bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptStream(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck));
+            EncryptStreamAsync(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck).Wait();
         }
 
         /// <summary>
@@ -104,14 +103,14 @@ namespace PgpCore
         /// <param name="publicKeyFilePath"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptFile(
+        public async Task EncryptFileAsync(
             string inputFilePath,
             string outputFilePath,
             string publicKeyFilePath,
             bool armor = true,
             bool withIntegrityCheck = true)
         {
-            EncryptFile(inputFilePath, outputFilePath, new [] {publicKeyFilePath}, armor, withIntegrityCheck);
+            await EncryptFileAsync(inputFilePath, outputFilePath, new[] { publicKeyFilePath }, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -122,7 +121,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePaths"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptFile(
+        public async Task EncryptFileAsync(
             string inputFilePath,
             string outputFilePath,
             IEnumerable<string> publicKeyFilePaths,
@@ -140,7 +139,7 @@ namespace PgpCore
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
             foreach (string publicKeyFilePath in publicKeys)
             {
-                if(String.IsNullOrEmpty(publicKeyFilePath))
+                if (String.IsNullOrEmpty(publicKeyFilePath))
                     throw new ArgumentException(nameof(publicKeyFilePath));
                 if (!File.Exists(publicKeyFilePath))
                     throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
@@ -153,7 +152,7 @@ namespace PgpCore
                 MemoryStream memoryStream = new MemoryStream();
                 using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open))
                 {
-                    publicKeyStream.CopyTo(memoryStream);
+                    await publicKeyStream.CopyToAsync(memoryStream);
                     memoryStream.Position = 0;
                     publicKeyStreams.Add(memoryStream);
                 }
@@ -161,7 +160,7 @@ namespace PgpCore
 
             using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open))
             using (Stream outputStream = File.Create(outputFilePath))
-                EncryptStream(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck);
+                await EncryptStreamAsync(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -172,14 +171,14 @@ namespace PgpCore
         /// <param name="publicKeyStream"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptStream(
+        public async Task EncryptStreamAsync(
             Stream inputStream,
             Stream outputStream,
             Stream publicKeyStream,
             bool armor = true,
             bool withIntegrityCheck = true)
         {
-            EncryptStream(inputStream, outputStream, new[] { publicKeyStream }, armor, withIntegrityCheck);
+            await EncryptStreamAsync(inputStream, outputStream, new[] { publicKeyStream }, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -187,10 +186,10 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <param name="outputStream"></param>
-        /// <param name="publicKeyFilePaths"></param>
+        /// <param name="publicKeyStreams"></param>
         /// <param name="armor"></param>
         /// <param name="withIntegrityCheck"></param>
-        public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true)
+        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true)
         {
             //Avoid multiple enumerations of 'publicKeyFilePaths'
             Stream[] publicKeys = publicKeyStreams.ToArray();
@@ -222,11 +221,11 @@ namespace PgpCore
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {
                 PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, "name");
+                await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, "name");
                 comData.Close();
             }
             else
-                Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, "name");
+                await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, "name");
 
             @out.Close();
 
@@ -240,26 +239,26 @@ namespace PgpCore
 
         #region Encrypt and Sign
 
-        public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath,
+        public void EncryptFileAndSign(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath,
             string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptFileAndSign(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase, armor, withIntegrityCheck));
+            EncryptFileAndSignAsync(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths, string privateKeyFilePath,
+        public void EncryptFileAndSign(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths, string privateKeyFilePath,
             string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptFileAndSign(inputFilePath, outputFilePath, publicKeyFilePaths, privateKeyFilePath, passPhrase, armor, withIntegrityCheck));
+            EncryptFileAndSignAsync(inputFilePath, outputFilePath, publicKeyFilePaths, privateKeyFilePath, passPhrase, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptStreamAndSign(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase, armor, withIntegrityCheck));
+            EncryptStreamAndSignAsync(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase, armor, withIntegrityCheck).Wait();
         }
 
-        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            await Task.Run(() => EncryptStreamAndSign(inputStream, outputStream, publicKeyStreams, privateKeyStream, passPhrase, armor, withIntegrityCheck));
+            EncryptStreamAndSignAsync(inputStream, outputStream, publicKeyStreams, privateKeyStream, passPhrase, armor, withIntegrityCheck).Wait();
         }
 
         /// <summary>
@@ -271,10 +270,10 @@ namespace PgpCore
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void EncryptFileAndSign(string inputFilePath, string outputFilePath, string publicKeyFilePath,
+        public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            EncryptFileAndSign(inputFilePath, outputFilePath, new[] { publicKeyFilePath }, privateKeyFilePath, passPhrase, armor, withIntegrityCheck);
+            await EncryptFileAndSignAsync(inputFilePath, outputFilePath, new[] { publicKeyFilePath }, privateKeyFilePath, passPhrase, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -286,7 +285,7 @@ namespace PgpCore
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void EncryptFileAndSign(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
+        public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
             //Avoid multiple enumerations of 'publicKeyFilePaths'
@@ -325,11 +324,11 @@ namespace PgpCore
                 {
                     using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                     {
-                        OutputEncrypted(inputFilePath, armoredOutputStream, encryptionKeys, withIntegrityCheck);
+                        await OutputEncryptedAsync(inputFilePath, armoredOutputStream, encryptionKeys, withIntegrityCheck);
                     }
                 }
                 else
-                    OutputEncrypted(inputFilePath, outputStream, encryptionKeys, withIntegrityCheck);
+                    await OutputEncryptedAsync(inputFilePath, outputStream, encryptionKeys, withIntegrityCheck);
             }
         }
 
@@ -342,10 +341,10 @@ namespace PgpCore
         /// <param name="privateKeyStream"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, Stream publicKeyStream,
+        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
-            EncryptStreamAndSign(inputStream, outputStream, new[] { publicKeyStream }, privateKeyStream, passPhrase, armor, withIntegrityCheck);
+            await EncryptStreamAndSignAsync(inputStream, outputStream, new[] { publicKeyStream }, privateKeyStream, passPhrase, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -357,7 +356,7 @@ namespace PgpCore
         /// <param name="privateKeyStream"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
+        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
             if (inputStream == null)
@@ -384,14 +383,14 @@ namespace PgpCore
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                 {
-                    OutputEncrypted(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
+                    await OutputEncryptedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
                 }
             }
             else
-                OutputEncrypted(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
+                await OutputEncryptedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
         }
 
-        private void OutputEncrypted(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
+        private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
         {
             using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
             {
@@ -403,7 +402,7 @@ namespace PgpCore
                     {
                         using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
                         {
-                            WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                            await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
                             inputFileStream.Dispose();
                         }
                     }
@@ -411,7 +410,7 @@ namespace PgpCore
             }
         }
 
-        private void OutputSigned(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
+        private async Task OutputSignedAsync(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
         {
             FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
             using (Stream compressedOut = ChainCompressedOut(outputStream))
@@ -421,14 +420,14 @@ namespace PgpCore
                 {
                     using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
                     {
-                        WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
                         inputFileStream.Dispose();
                     }
                 }
             }
         }
 
-        private void OutputEncrypted(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
+        private async Task OutputEncryptedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
         {
             using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
             {
@@ -437,45 +436,45 @@ namespace PgpCore
                     PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
                     using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                     {
-                        WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
+                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
                         inputStream.Dispose();
                     }
                 }
             }
         }
 
-        private void OutputSigned(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
+        private async Task OutputSignedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
         {
             using (Stream compressedOut = ChainCompressedOut(outputStream))
             {
                 PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
                 using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                 {
-                    WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
+                    await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
                     inputStream.Dispose();
                 }
             }
         }
 
-        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
+        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
         {
             int length = 0;
             byte[] buf = new byte[BufferSize];
-            while ((length = inputFilePath.Read(buf, 0, buf.Length)) > 0)
+            while ((length = await inputFilePath.ReadAsync(buf, 0, buf.Length)) > 0)
             {
-                literalOut.Write(buf, 0, length);
+                await literalOut.WriteAsync(buf, 0, length);
                 signatureGenerator.Update(buf, 0, length);
             }
             signatureGenerator.Generate().Encode(compressedOut);
         }
 
-        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
+        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
         {
             int length = 0;
             byte[] buf = new byte[BufferSize];
-            while ((length = inputStream.Read(buf, 0, buf.Length)) > 0)
+            while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
             {
-                literalOut.Write(buf, 0, length);
+                await literalOut.WriteAsync(buf, 0, length);
                 signatureGenerator.Update(buf, 0, length);
             }
             signatureGenerator.Generate().Encode(compressedOut);
@@ -545,6 +544,12 @@ namespace PgpCore
 
         #region Sign
 
+        public void SignFile(string inputFilePath, string outputFilePath,
+            string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        {
+            SignFileAsync(inputFilePath, outputFilePath, privateKeyFilePath, passPhrase, armor, withIntegrityCheck).Wait();
+        }
+
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo and
         /// </summary>
@@ -553,7 +558,7 @@ namespace PgpCore
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void SignFile(string inputFilePath, string outputFilePath,
+        public async Task SignFileAsync(string inputFilePath, string outputFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -581,12 +586,18 @@ namespace PgpCore
                 {
                     using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                     {
-                        OutputSigned(inputFilePath, armoredOutputStream, encryptionKeys, withIntegrityCheck);
+                        await OutputSignedAsync(inputFilePath, armoredOutputStream, encryptionKeys, withIntegrityCheck);
                     }
                 }
                 else
-                    OutputSigned(inputFilePath, outputStream, encryptionKeys, withIntegrityCheck);
+                    await OutputSignedAsync(inputFilePath, outputStream, encryptionKeys, withIntegrityCheck);
             }
+        }
+
+        public void SignStream(Stream inputStream, Stream outputStream,
+            Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
+        {
+            SignStreamAsync(inputStream, outputStream, privateKeyStream, passPhrase, armor, withIntegrityCheck).Wait();
         }
 
         /// <summary>
@@ -598,7 +609,7 @@ namespace PgpCore
         /// <param name="privateKeyStream"></param>
         /// <param name="passPhrase"></param>
         /// <param name="armor"></param>
-        public void SignStream(Stream inputStream, Stream outputStream,
+        public async Task SignStreamAsync(Stream inputStream, Stream outputStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
         {
             if (inputStream == null)
@@ -619,25 +630,25 @@ namespace PgpCore
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                 {
-                    OutputSigned(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
+                    await OutputSignedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
                 }
             }
             else
-                OutputSigned(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
+                await OutputSignedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
         }
 
         #endregion Sign
 
         #region Decrypt
 
-        public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
+        public void DecryptFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
-            await Task.Run(() => DecryptFile(inputFilePath, outputFilePath, privateKeyFilePath, passPhrase));
+            DecryptFileAsync(inputFilePath, outputFilePath, privateKeyFilePath, passPhrase).Wait();
         }
 
-        public async Task DecryptStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        public void DecryptStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
-            await Task.Run(() => DecryptStream(inputStream, outputStream, privateKeyStream, passPhrase));
+            DecryptStreamAsync(inputStream, outputStream, privateKeyStream, passPhrase).Wait();
         }
 
         /// <summary>
@@ -647,7 +658,7 @@ namespace PgpCore
         /// <param name="outputFilePath"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
-        public void DecryptFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
+        public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
@@ -668,7 +679,7 @@ namespace PgpCore
                 using (Stream keyStream = File.OpenRead(privateKeyFilePath))
                 {
                     using (Stream outStream = File.Create(outputFilePath))
-                        Decrypt(inputStream, outStream, keyStream, passPhrase);
+                        await DecryptAsync(inputStream, outStream, keyStream, passPhrase);
                 }
             }
         }
@@ -680,7 +691,7 @@ namespace PgpCore
         /// <param name="outputStream"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
-        public Stream DecryptStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        public async Task<Stream> DecryptStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -691,14 +702,14 @@ namespace PgpCore
             if (passPhrase == null)
                 passPhrase = String.Empty;
 
-            Decrypt(inputStream, outputStream, privateKeyStream, passPhrase);
+            await DecryptAsync(inputStream, outputStream, privateKeyStream, passPhrase);
             return outputStream;
         }
 
         /*
         * PGP decrypt a given stream.
         */
-        private void Decrypt(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        private async Task DecryptAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -772,14 +783,14 @@ namespace PgpCore
                     PgpLiteralData Ld = null;
                     Ld = (PgpLiteralData)message;
                     Stream unc = Ld.GetInputStream();
-                    Streams.PipeAll(unc, outputStream);
+                    await Streams.PipeAllAsync(unc, outputStream);
                 }
                 else
                 {
                     PgpLiteralData Ld = null;
                     Ld = (PgpLiteralData)message;
                     Stream unc = Ld.GetInputStream();
-                    Streams.PipeAll(unc, outputStream);
+                    await Streams.PipeAllAsync(unc, outputStream);
                 }
             }
             else if (message is PgpLiteralData)
@@ -788,7 +799,7 @@ namespace PgpCore
                 string outFileName = ld.FileName;
 
                 Stream unc = ld.GetInputStream();
-                Streams.PipeAll(unc, outputStream);
+                await Streams.PipeAllAsync(unc, outputStream);
 
                 if (pbe.IsIntegrityProtected())
                 {
@@ -808,24 +819,38 @@ namespace PgpCore
 
         #region DecryptAndVerify
 
-        public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
+        public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
-            await Task.Run(() => DecryptFileAndVerify(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase));
+            try
+            {
+                DecryptFileAndVerifyAsync(inputFilePath, outputFilePath, publicKeyFilePath, privateKeyFilePath, passPhrase).Wait();
+            }
+            catch (Exception ex)
+            {
+                throw ex.InnerException;
+            }
         }
 
-        public async Task DecryptStreamAndAndVerifyAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        public void DecryptStreamAndAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
-            await Task.Run(() => DecryptStreamAndVerify(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase));
+            try
+            {
+                DecryptStreamAndVerifyAsync(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase).Wait();
+            }
+            catch (Exception ex)
+            {
+                throw ex.InnerException;
+            }
         }
 
-        public async Task VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
+        public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
         {
-            await Task.Run(() => VerifyFile(inputFilePath, publicKeyFilePath));
+            return VerifyFileAsync(inputFilePath, publicKeyFilePath).Result;
         }
 
-        public async Task VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
+        public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
         {
-            await Task.Run(() => VerifyStream(inputStream, publicKeyStream));
+            return VerifyStreamAsync(inputStream, publicKeyStream).Result;
         }
 
         /// <summary>
@@ -836,7 +861,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePath"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
-        public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
+        public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
@@ -861,7 +886,7 @@ namespace PgpCore
                 using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
                 using (Stream privateKeyStream = File.OpenRead(privateKeyFilePath))
                 using (Stream outStream = File.Create(outputFilePath))
-                    DecryptAndVerify(inputStream, outStream, publicKeyStream, privateKeyStream, passPhrase);
+                    await DecryptAndVerifyAsync(inputStream, outStream, publicKeyStream, privateKeyStream, passPhrase);
             }
         }
 
@@ -872,7 +897,7 @@ namespace PgpCore
         /// <param name="outputStream"></param>
         /// <param name="privateKeyFilePath"></param>
         /// <param name="passPhrase"></param>
-        public Stream DecryptStreamAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        public async Task<Stream> DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -885,14 +910,14 @@ namespace PgpCore
             if (passPhrase == null)
                 passPhrase = String.Empty;
 
-            DecryptAndVerify(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase);
+            await DecryptAndVerifyAsync(inputStream, outputStream, publicKeyStream, privateKeyStream, passPhrase);
             return outputStream;
         }
 
         /*
         * PGP decrypt and verify a given stream.
         */
-        private void DecryptAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
+        private async Task DecryptAndVerifyAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             // find secret key
             PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
@@ -922,7 +947,7 @@ namespace PgpCore
             {
                 plainFact = new PgpObjectFactory(clear);
             }
-            
+
             PgpObject message = plainFact.NextPgpObject();
 
             if (message is PgpCompressedData cData)
@@ -951,7 +976,7 @@ namespace PgpCore
             if (message is PgpLiteralData ld)
             {
                 Stream unc = ld.GetInputStream();
-                Streams.PipeAll(unc, outputStream);
+                await Streams.PipeAllAsync(unc, outputStream);
 
                 if (pbe.IsIntegrityProtected())
                 {
@@ -970,7 +995,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFilePath"></param>
         /// <param name="publicKeyFilePath"></param>
-        public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
+        public async Task<bool> VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
         {
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
@@ -984,7 +1009,7 @@ namespace PgpCore
 
             using (Stream inputStream = File.OpenRead(inputFilePath))
             using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
-                return Verify(inputStream, publicKeyStream);
+                return await VerifyAsync(inputStream, publicKeyStream);
         }
 
         /// <summary>
@@ -992,17 +1017,17 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <param name="publicKeyStream"></param>
-        public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
+        public async Task<bool> VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
             if (publicKeyStream == null)
                 throw new ArgumentException("PublicKeyStream");
 
-            return Verify(inputStream, publicKeyStream);
+            return await VerifyAsync(inputStream, publicKeyStream);
         }
 
-        private bool Verify(Stream inputStream, Stream publicKeyStream)
+        private async Task<bool> VerifyAsync(Stream inputStream, Stream publicKeyStream)
         {
             PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
             bool verified = false;
