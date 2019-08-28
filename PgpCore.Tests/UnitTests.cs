@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Xunit;
 
@@ -924,14 +925,16 @@ namespace PgpCore.Tests
             const int blocksPerMb = (1024 * 1024) / blockSize;
 
             byte[] data = new byte[blockSize];
-            Random rng = new Random();
-            using (FileStream stream = File.OpenWrite(filePath))
+
+            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
             {
-                // There 
-                for (int i = 0; i < sizeInMb * blocksPerMb; i++)
+                using (FileStream stream = File.OpenWrite(filePath))
                 {
-                    rng.NextBytes(data);
-                    stream.Write(data, 0, data.Length);
+                    for (int i = 0; i < sizeInMb * blocksPerMb; i++)
+                    {
+                        crypto.GetBytes(data);
+                        stream.Write(data, 0, data.Length);
+                    }
                 }
             }
         }
