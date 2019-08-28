@@ -158,6 +158,26 @@ namespace PgpCore.Tests
             Teardown();
         }
 
+        //[Theory]
+        //[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
+        //public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
+        //{
+        //    // Arrange
+        //    Arrange(keyType, fileType);
+        //    PGP pgp = new PGP();
+
+        //    // Act
+        //    pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
+        //    pgp.DecryptFile(encryptedContentFilePath, decryptedContentFilePath1, privateKeyFilePath1, password1);
+
+        //    // Assert
+        //    Assert.True(File.Exists(encryptedContentFilePath));
+        //    Assert.True(File.Exists(decryptedContentFilePath1));
+
+        //    // Teardown
+        //    Teardown();
+        //}
+
         [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
@@ -826,7 +846,7 @@ namespace PgpCore.Tests
         }
         #endregion Stream
 
-        private void Arrange(KeyType keyType)
+        private void Arrange(KeyType keyType, FileType fileType = FileType.Known)
         {
             Directory.CreateDirectory(keyDirectory);
             Directory.CreateDirectory(contentDirectory);
@@ -884,9 +904,35 @@ namespace PgpCore.Tests
             }
 
             // Create content file
-            using (StreamWriter streamWriter = File.CreateText(contentFilePath))
+            if (fileType == FileType.Known)
             {
-                streamWriter.WriteLine(content);
+                using (StreamWriter streamWriter = File.CreateText(contentFilePath))
+                {
+                    streamWriter.WriteLine(content);
+                }
+            }
+            else if (fileType == FileType.GeneratedLarge)
+            {
+                CreateRandomFile(contentFilePath, 7000);
+            }
+        }
+
+        private void CreateRandomFile(string filePath, int sizeInMb)
+        {
+            // Note: block size must be a factor of 1MB to avoid rounding errors
+            const int blockSize = 1024 * 8;
+            const int blocksPerMb = (1024 * 1024) / blockSize;
+
+            byte[] data = new byte[blockSize];
+            Random rng = new Random();
+            using (FileStream stream = File.OpenWrite(filePath))
+            {
+                // There 
+                for (int i = 0; i < sizeInMb * blocksPerMb; i++)
+                {
+                    rng.NextBytes(data);
+                    stream.Write(data, 0, data.Length);
+                }
             }
         }
 
@@ -955,6 +1001,12 @@ namespace PgpCore.Tests
             Generated,
             Known,
             KnownGpg
+        }
+
+        public enum FileType
+        {
+            GeneratedLarge,
+            Known
         }
 
         // Content

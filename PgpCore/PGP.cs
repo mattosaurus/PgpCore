@@ -146,50 +146,22 @@ namespace PgpCore
                     throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
             }
 
-            using (MemoryStream @out = new MemoryStream())
+            List<Stream> publicKeyStreams = new List<Stream>();
+
+            foreach (string publicKeyFilePath in publicKeyFilePaths)
             {
-                if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
+                MemoryStream memoryStream = new MemoryStream();
+                using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open))
                 {
-                    PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                    PgpUtilities.WriteFileToLiteralData(comData.Open(@out), FileTypeToChar(), new FileInfo(inputFilePath));
-                    comData.Close();
-                }
-                else
-                    PgpUtilities.WriteFileToLiteralData(@out, FileTypeToChar(), new FileInfo(inputFilePath));
-
-                PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-
-                foreach (string publicKeyFilePath in publicKeys)
-                {
-                    using (Stream pkStream = File.OpenRead(publicKeyFilePath))
-                    {
-                        pk.AddMethod(Utilities.ReadPublicKey(pkStream));
-                    }
-                }
-
-                byte[] bytes = @out.ToArray();
-
-                using (Stream outStream = File.Create(outputFilePath))
-                {
-                    if (armor)
-                    {
-                        using (ArmoredOutputStream armoredStream = new ArmoredOutputStream(outStream))
-                        {
-                            using (Stream armoredOutStream = pk.Open(armoredStream, bytes.Length))
-                            {
-                                armoredOutStream.Write(bytes, 0, bytes.Length);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (Stream plainStream = pk.Open(outStream, bytes.Length))
-                        {
-                            plainStream.Write(bytes, 0, bytes.Length);
-                        }
-                    }
+                    publicKeyStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                    publicKeyStreams.Add(memoryStream);
                 }
             }
+
+            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open))
+            using (Stream outputStream = File.Create(outputFilePath))
+                EncryptStream(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck);
         }
 
         /// <summary>
@@ -233,43 +205,34 @@ namespace PgpCore
                     throw new ArgumentException("PublicKeyStream");
             }
 
-            using (MemoryStream @out = new MemoryStream())
+            if (armor)
             {
-                if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
-                {
-                    PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                    Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, "name");
-                    comData.Close();
-                }
-                else
-                    Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, "name");
+                outputStream = new ArmoredOutputStream(outputStream);
+            }
 
-                PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
+            PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-                foreach (Stream publicKey in publicKeys)
-                {
-                    pk.AddMethod(Utilities.ReadPublicKey(publicKey));
-                }
+            foreach (Stream publicKey in publicKeys)
+            {
+                pk.AddMethod(Utilities.ReadPublicKey(publicKey));
+            }
 
-                byte[] bytes = @out.ToArray();
+            Stream @out = pk.Open(outputStream, new byte[1 << 16]);
 
-                if (armor)
-                {
-                    using (ArmoredOutputStream armoredStream = new ArmoredOutputStream(outputStream))
-                    {
-                        using (Stream armoredOutStream = pk.Open(armoredStream, bytes.Length))
-                        {
-                            armoredOutStream.Write(bytes, 0, bytes.Length);
-                        }
-                    }
-                }
-                else
-                {
-                    using (Stream plainStream = pk.Open(outputStream, bytes.Length))
-                    {
-                        plainStream.Write(bytes, 0, bytes.Length);
-                    }
-                }
+            if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
+            {
+                PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
+                Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, "name");
+                comData.Close();
+            }
+            else
+                Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, "name");
+
+            @out.Close();
+
+            if (armor)
+            {
+                outputStream.Close();
             }
         }
 
