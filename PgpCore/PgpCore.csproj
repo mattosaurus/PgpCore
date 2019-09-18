@@ -12,7 +12,7 @@
     <PackageTags>PGP .NET Core</PackageTags>
     <Version>2.1.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <PackageReleaseNotes>v2.1.0 - Add HashAlgorithmTag option to constructor and strongly sign package.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <SignAssembly>true</SignAssembly>
