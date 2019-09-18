@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Xunit;
 
@@ -26,14 +27,31 @@ namespace PgpCore.Tests
 
         #region File
         [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
+        [MemberData(nameof(KeyTypeValues))]
         public void EncryptFile_CreateEncryptedFile(KeyType keyType)
         {
             // Arrange
             Arrange(keyType);
             PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(HashAlgorithmTagValues))]
+        public void EncryptFile_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        {
+            // Arrange
+            Arrange(KeyType.Known);
+            PGP pgp = new PGP();
+            pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
             pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
@@ -144,6 +162,29 @@ namespace PgpCore.Tests
             // Arrange
             Arrange(keyType);
             PGP pgp = new PGP();
+
+            // Act
+            pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
+            pgp.DecryptFile(encryptedContentFilePath, decryptedContentFilePath1, privateKeyFilePath1, password1);
+            string decryptedContent = File.ReadAllText(decryptedContentFilePath1);
+
+            // Assert
+            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(decryptedContentFilePath1));
+            Assert.Equal(content, decryptedContent.Trim());
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(HashAlgorithmTagValues))]
+        public void DecryptFile_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        {
+            // Arrange
+            Arrange(KeyType.Known);
+            PGP pgp = new PGP();
+            pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
             pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
@@ -1004,6 +1045,22 @@ namespace PgpCore.Tests
             Generated,
             Known,
             KnownGpg
+        }
+
+        public static IEnumerable<object[]> KeyTypeValues()
+        {
+            foreach (var keyType in Enum.GetValues(typeof(KeyType)))
+            {
+                yield return new object[] { keyType };
+            }
+        }
+
+        public static IEnumerable<object[]> HashAlgorithmTagValues()
+        {
+            foreach (var hashAlgorithmTag in Enum.GetValues(typeof(HashAlgorithmTag)))
+            {
+                yield return new object[] { hashAlgorithmTag };
+            }
         }
 
         public enum FileType

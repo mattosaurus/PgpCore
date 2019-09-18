@@ -56,6 +56,12 @@ namespace PgpCore
             set;
         }
 
+        public HashAlgorithmTag HashAlgorithmTag
+        {
+            get;
+            set;
+        }
+
         #region Constructor
 
         public PGP()
@@ -65,6 +71,7 @@ namespace PgpCore
             PgpSignatureType = PgpSignature.DefaultCertification;
             PublicKeyAlgorithm = PublicKeyAlgorithmTag.RsaGeneral;
             FileType = PGPFileType.Binary;
+            HashAlgorithmTag = HashAlgorithmTag.Sha1;
         }
 
         #endregion Constructor
@@ -526,7 +533,7 @@ namespace PgpCore
         private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut, EncryptionKeys encryptionKeys)
         {
             PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
-            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag.Sha1);
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
             pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, encryptionKeys.PrivateKey);
             foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
             {
