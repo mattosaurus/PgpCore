@@ -28,12 +28,11 @@ namespace PgpCore.Tests
         #region File
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
-        public void EncryptFile_CreateEncryptedFile(KeyType keyType, HashAlgorithmTag hashAlgorithmTag)
+        public void EncryptFile_CreateEncryptedFile(KeyType keyType)
         {
             // Arrange
             Arrange(keyType);
             PGP pgp = new PGP();
-            pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
             pgp.EncryptFile(contentFilePath, encryptedContentFilePath, publicKeyFilePath1);
