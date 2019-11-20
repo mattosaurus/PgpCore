@@ -1109,8 +1109,8 @@ namespace PgpCore
             if (String.IsNullOrEmpty(privateKeyFilePath))
                 throw new ArgumentException("PrivateKeyFilePath");
 
-            using (Stream pubs = File.Open(publicKeyFilePath, FileMode.OpenOrCreate))
-            using (Stream pris = File.Open(privateKeyFilePath, FileMode.OpenOrCreate))
+            using (Stream pubs = File.Open(publicKeyFilePath, FileMode.Create))
+            using (Stream pris = File.Open(privateKeyFilePath, FileMode.Create))
                 GenerateKey(pubs, pris, username, password, strength, certainty);
         }
 

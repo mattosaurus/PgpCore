@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
-    <PackageReleaseNotes>v2.1.0 - Add HashAlgorithmTag option to constructor and strongly sign package.</PackageReleaseNotes>
+    <FileVersion>2.1.1.0</FileVersion>
+    <PackageReleaseNotes>v2.1.1 - Recreate key file if already exists rather than appending on to.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
