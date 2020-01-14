@@ -25,7 +25,8 @@ namespace PgpCore
     {
         public static readonly PGP Instance = new PGP();
 
-        private const int BufferSize = 0x10000;
+        private const int    BufferSize      = 0x10000;
+        private const string DefaultFileName = "name";
 
         public CompressionAlgorithmTag CompressionAlgorithm
         {
@@ -210,6 +211,14 @@ namespace PgpCore
                 if (publicKey == null)
                     throw new ArgumentException("PublicKeyStream");
             }
+            
+            string fileName = DefaultFileName;
+
+            if (inputStream is FileStream)
+            {
+                string inputFilePath = ((FileStream)inputStream).Name;
+                fileName = Path.GetFileName(inputFilePath);
+            }
 
             if (armor)
             {
@@ -228,11 +237,11 @@ namespace PgpCore
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {
                 PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, "name");
+                await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, fileName);
                 comData.Close();
             }
             else
-                await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, "name");
+                await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, fileName);
 
             @out.Close();
 
@@ -385,16 +394,24 @@ namespace PgpCore
 
             if (encryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
+                
+            string fileName = DefaultFileName;
+
+            if (inputStream is FileStream)
+            {
+                string inputFilePath = ((FileStream)inputStream).Name;
+                fileName = Path.GetFileName(inputFilePath);
+            }
 
             if (armor)
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                 {
-                    await OutputEncryptedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
+                    await OutputEncryptedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, fileName);
                 }
             }
             else
-                await OutputEncryptedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
+                await OutputEncryptedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, fileName);
         }
 
         private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck)
@@ -632,16 +649,24 @@ namespace PgpCore
 
             if (encryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
+                
+            string fileName = DefaultFileName;
+
+            if (inputStream is FileStream)
+            {
+                string inputFilePath = ((FileStream)inputStream).Name;
+                fileName = Path.GetFileName(inputFilePath);
+            }
 
             if (armor)
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
                 {
-                    await OutputSignedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, "name");
+                    await OutputSignedAsync(inputStream, armoredOutputStream, encryptionKeys, withIntegrityCheck, fileName);
                 }
             }
             else
-                await OutputSignedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, "name");
+                await OutputSignedAsync(inputStream, outputStream, encryptionKeys, withIntegrityCheck, fileName);
         }
 
         #endregion Sign
