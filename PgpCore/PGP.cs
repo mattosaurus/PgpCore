@@ -25,7 +25,7 @@ namespace PgpCore
     {
         public static readonly PGP Instance = new PGP();
 
-        private const int    BufferSize      = 0x10000;
+        private const int BufferSize = 0x10000;
         private const string DefaultFileName = "name";
 
         public CompressionAlgorithmTag CompressionAlgorithm
