@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>2.1.1</Version>
+    <Version>2.2.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.1.1.0</FileVersion>
-    <PackageReleaseNotes>v2.1.1 - Recreate key file if already exists rather than appending on to.</PackageReleaseNotes>
+    <FileVersion>2.2.0.0</FileVersion>
+    <PackageReleaseNotes>v2.2.0 - Allow message name to be set, make sync methods properly sync, improve parameter documentation.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
   </ItemGroup>
 
 </Project>
