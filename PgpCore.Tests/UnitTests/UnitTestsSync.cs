@@ -8,7 +8,7 @@ using Xunit;
 
 namespace PgpCore.Tests
 {
-    public class UnitTests
+    public class UnitTestsSync
     {
         [Fact]
         public void GenerateKey_CreatePublicPrivateKeyFiles()
