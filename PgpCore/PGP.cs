@@ -82,11 +82,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptFileAsync(
             string inputFilePath,
             string outputFilePath,
@@ -101,11 +102,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptFile(
             string inputFilePath,
             string outputFilePath,
@@ -120,11 +122,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePaths"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="publicKeyFilePaths">IEnumerable of PGP public key file paths</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptFileAsync(
             string inputFilePath,
             string outputFilePath,
@@ -171,11 +174,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePaths"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="publicKeyFilePaths">IEnumerable of PGP public key file paths</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptFile(
             string inputFilePath,
             string outputFilePath,
@@ -222,11 +226,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAsync(
             Stream inputStream,
             Stream outputStream,
@@ -241,11 +246,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStream(
             Stream inputStream,
             Stream outputStream,
@@ -260,11 +266,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="publicKeyStreams">IEnumerable of PGP public key streams</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             //Avoid multiple enumerations of 'publicKeyFilePaths'
@@ -320,11 +327,12 @@ namespace PgpCore
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="armor"></param>
-        /// <param name="withIntegrityCheck"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="publicKeyStreams">IEnumerable of PGP public key streams</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             //Avoid multiple enumerations of 'publicKeyFilePaths'
@@ -384,12 +392,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted and signed</param>
+        /// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -399,12 +408,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted and signed</param>
+        /// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptFileAndSign(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -414,12 +424,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePaths"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted and signed</param>
+        /// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
+        /// <param name="publicKeyFilePaths">IEnumerable of PGP public key file paths</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -475,12 +486,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePaths"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be encrypted and signed</param>
+        /// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
+        /// <param name="publicKeyFilePaths">IEnumerable of PGP public key file paths</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptFileAndSign(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -536,12 +548,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted and signed</param>
+        /// <param name="outputStream">Output PGP encrypted and signed stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -551,12 +564,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted and signed</param>
+        /// <param name="outputStream">Output PGP encrypted and signed stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, Stream publicKeyStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -566,12 +580,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted and signed</param>
+        /// <param name="outputStream">Output PGP encrypted and signed stream</param>
+        /// <param name="publicKeyStreams">IEnumerable of PGP public key streams</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -615,12 +630,13 @@ namespace PgpCore
         /// <summary>
         /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be encrypted and signed</param>
+        /// <param name="outputStream">Output PGP encrypted and signed stream</param>
+        /// <param name="publicKeyStreams">IEnumerable of PGP public key streams</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -908,11 +924,12 @@ namespace PgpCore
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be signed</param>
+        /// <param name="outputFilePath">Output PGP signed file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public async Task SignFileAsync(string inputFilePath, string outputFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -957,11 +974,12 @@ namespace PgpCore
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputFilePath">Plain data file path to be signed</param>
+        /// <param name="outputFilePath">Output PGP signed file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public void SignFile(string inputFilePath, string outputFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -1006,12 +1024,12 @@ namespace PgpCore
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be signed</param>
+        /// <param name="outputStream">Output PGP signed stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public async Task SignStreamAsync(Stream inputStream, Stream outputStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -1049,12 +1067,12 @@ namespace PgpCore
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStreams"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
-        /// <param name="armor"></param>
+        /// <param name="inputStream">Plain data stream to be signed</param>
+        /// <param name="outputStream">Output PGP signed stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public void SignStream(Stream inputStream, Stream outputStream,
             Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
@@ -1096,10 +1114,10 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputFilePath">PGP encrypted data file path</param>
+        /// <param name="outputFilePath">Output PGP decrypted file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1129,10 +1147,10 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputFilePath">PGP encrypted data file path</param>
+        /// <param name="outputFilePath">Output PGP decrypted file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public void DecryptFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1162,10 +1180,10 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputStream">PGP encrypted data stream</param>
+        /// <param name="outputStream">Output PGP decrypted stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public async Task<Stream> DecryptStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
@@ -1184,10 +1202,10 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputStream">PGP encrypted data stream</param>
+        /// <param name="outputStream">Output PGP decrypted stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public Stream DecryptStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
@@ -1428,11 +1446,11 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt and verify a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
+        /// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1465,11 +1483,11 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt and verify a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="outputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
-        /// <param name="privateKeyFilePath"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
+        /// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1502,11 +1520,11 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt and verify a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
+        /// <param name="outputStream">Output PGP decrypted and verified stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public async Task<Stream> DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
@@ -1527,11 +1545,11 @@ namespace PgpCore
         /// <summary>
         /// PGP decrypt and verify a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="outputStream"></param>
-        /// <param name="publicKeyStream"></param>
-        /// <param name="privateKeyStream"></param>
-        /// <param name="passPhrase"></param>
+        /// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
+        /// <param name="outputStream">Output PGP decrypted and verified stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
         public Stream DecryptStreamAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
@@ -1704,8 +1722,8 @@ namespace PgpCore
         /// <summary>
         /// PGP verify a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="inputFilePath">Plain data file path to be verified</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
         public async Task<bool> VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1726,8 +1744,8 @@ namespace PgpCore
         /// <summary>
         /// PGP verify a given file.
         /// </summary>
-        /// <param name="inputFilePath"></param>
-        /// <param name="publicKeyFilePath"></param>
+        /// <param name="inputFilePath">Plain data file path to be verified</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
         public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -1748,8 +1766,8 @@ namespace PgpCore
         /// <summary>
         /// PGP verify a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="publicKeyStream"></param>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
         public async Task<bool> VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
         {
             if (inputStream == null)
@@ -1763,8 +1781,8 @@ namespace PgpCore
         /// <summary>
         /// PGP verify a given stream.
         /// </summary>
-        /// <param name="inputStream"></param>
-        /// <param name="publicKeyStream"></param>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
         public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
         {
             if (inputStream == null)
