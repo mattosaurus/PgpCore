@@ -22,7 +22,7 @@ BouncyCastle.NetCore (>= 1.8.1.3)
 Microsoft.NETCore.App (>= 1.1.2)
 
 # Usage
-This is intended for usage in .NET Core projects. For further examples see the [tests](https://github.com/mattosaurus/PgpCore/blob/master/PgpCore.Tests/UnitTests.cs).
+This is intended for usage in .NET Core projects. For further examples see the [tests](https://github.com/mattosaurus/PgpCore/tree/master/PgpCore.Tests/UnitTests).
 
 ```C#
 using (PGP pgp = new PGP())
