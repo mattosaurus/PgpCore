@@ -1359,6 +1359,10 @@ namespace PgpCore
             else
                 enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
 
+            // If enc is null at this point, we failed to detect the contents of the encrypted stream.
+            if(enc == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
+
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
