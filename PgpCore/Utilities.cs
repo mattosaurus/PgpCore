@@ -436,7 +436,7 @@ namespace PgpCore
         {
             if(!File.Exists(publicKeyFilePath))
                 throw new FileNotFoundException(String.Format("File {0} was not found", publicKeyFilePath));
-            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open))
+            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open, FileAccess.Read))
                 return ReadPublicKey(fs);
         }
 

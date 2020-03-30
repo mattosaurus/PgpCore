@@ -158,7 +158,7 @@ namespace PgpCore
             foreach (string publicKeyFilePath in publicKeyFilePaths)
             {
                 MemoryStream memoryStream = new MemoryStream();
-                using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open))
+                using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open, FileAccess.Read))
                 {
                     await publicKeyStream.CopyToAsync(memoryStream);
                     memoryStream.Position = 0;
@@ -166,7 +166,7 @@ namespace PgpCore
                 }
             }
 
-            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open))
+            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputStream = File.Create(outputFilePath))
                 await EncryptStreamAsync(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck, name);
         }
@@ -210,7 +210,7 @@ namespace PgpCore
             foreach (string publicKeyFilePath in publicKeyFilePaths)
             {
                 MemoryStream memoryStream = new MemoryStream();
-                using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open))
+                using (Stream publicKeyStream = new FileStream(publicKeyFilePath, FileMode.Open, FileAccess.Read))
                 {
                     publicKeyStream.CopyTo(memoryStream);
                     memoryStream.Position = 0;
@@ -218,7 +218,7 @@ namespace PgpCore
                 }
             }
 
-            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open))
+            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputStream = File.Create(outputFilePath))
                 EncryptStream(inputStream, outputStream, publicKeyStreams, armor, withIntegrityCheck, name);
         }
@@ -1358,6 +1358,10 @@ namespace PgpCore
                 enc = (PgpEncryptedDataList)obj;
             else
                 enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // If enc is null at this point, we failed to detect the contents of the encrypted stream.
+            if(enc == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;

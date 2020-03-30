@@ -24,6 +24,9 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(File.Exists(publicKeyFilePath1));
             Assert.True(File.Exists(privateKeyFilePath1));
+            
+            //Cleanup
+            Directory.Delete(keyDirectory, true);
         }
 
         #region File
@@ -515,9 +518,9 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, publicKeyStream);
 
             // Assert
@@ -538,9 +541,9 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.SignStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
             // Assert
@@ -561,10 +564,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open))
+            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, new List<Stream>() { publicKeyStream1, publicKeyStream2 });
 
             // Assert
@@ -585,10 +588,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, password1);
 
             // Assert
@@ -609,11 +612,11 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open, FileAccess.Read))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, new List<Stream>() { publicKeyStream1, publicKeyStream2 }, privateKeyStream, password1);
 
             // Assert
@@ -634,14 +637,14 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, publicKeyStream);
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath1))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
             string decryptedContent = await File.ReadAllTextAsync(decryptedContentFilePath1);
@@ -666,20 +669,20 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open))
+            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, new List<Stream>() { publicKeyStream1, publicKeyStream2 });
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath1))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath2))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath2, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath2, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password2);
 
             string decryptedContent1 = await File.ReadAllTextAsync(decryptedContentFilePath1);
@@ -707,15 +710,15 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, password1);
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath1))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
             string decryptedContent = await File.ReadAllTextAsync(decryptedContentFilePath1);
@@ -743,20 +746,20 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open))
+            using (Stream publicKeyStream1 = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream2 = new FileStream(publicKeyFilePath2, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, new List<Stream>() { publicKeyStream1, publicKeyStream2 });
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath1))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
-            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(encryptedContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(decryptedContentFilePath2))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath2, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath2, FileMode.Open, FileAccess.Read))
                 await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password2);
 
             string decryptedContent1 = await File.ReadAllTextAsync(decryptedContentFilePath1);
@@ -787,10 +790,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, password1);
 
             bool verified = await pgp.VerifyFileAsync(encryptedContentFilePath, publicKeyFilePath1);
@@ -814,10 +817,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, password1);
 
             bool verified = await pgp.VerifyFileAsync(encryptedContentFilePath, publicKeyFilePath2);
@@ -842,13 +845,13 @@ namespace PgpCore.Tests
             bool verified = false;
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(signedContentFilePath))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.SignStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
-            using (FileStream inputFileStream = new FileStream(signedContentFilePath, FileMode.Open))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(signedContentFilePath, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath1, FileMode.Open, FileAccess.Read))
                 verified = await pgp.VerifyStreamAsync(inputFileStream, publicKeyStream);
 
             // Assert
@@ -871,13 +874,13 @@ namespace PgpCore.Tests
             bool verified = false;
 
             // Act
-            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(contentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(signedContentFilePath))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
+            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open, FileAccess.Read))
                 await pgp.SignStreamAsync(inputFileStream, outputFileStream, privateKeyStream, password1);
 
-            using (FileStream inputFileStream = new FileStream(signedContentFilePath, FileMode.Open))
-            using (Stream publicKeyStream = new FileStream(publicKeyFilePath2, FileMode.Open))
+            using (FileStream inputFileStream = new FileStream(signedContentFilePath, FileMode.Open, FileAccess.Read))
+            using (Stream publicKeyStream = new FileStream(publicKeyFilePath2, FileMode.Open, FileAccess.Read))
                 verified = await pgp.VerifyStreamAsync(inputFileStream, publicKeyStream);
 
             // Assert
@@ -945,6 +948,10 @@ namespace PgpCore.Tests
                     streamWriter.WriteLine(privateGpgKey2);
                 }
             }
+            File.SetAttributes(publicKeyFilePath1, FileAttributes.ReadOnly);
+            File.SetAttributes(publicKeyFilePath2, FileAttributes.ReadOnly);
+            File.SetAttributes(privateKeyFilePath1, FileAttributes.ReadOnly);
+            File.SetAttributes(privateKeyFilePath2, FileAttributes.ReadOnly);
 
             // Create content file
             if (fileType == FileType.Known)
@@ -958,6 +965,7 @@ namespace PgpCore.Tests
             {
                 await CreateRandomFileAsync(contentFilePath, 7000);
             }
+            File.SetAttributes(contentFilePath, FileAttributes.ReadOnly);
         }
 
         private async Task CreateRandomFileAsync(string filePath, int sizeInMb)
@@ -986,21 +994,25 @@ namespace PgpCore.Tests
             // Remove keys
             if (File.Exists(publicKeyFilePath1))
             {
+                File.SetAttributes(publicKeyFilePath1, FileAttributes.Normal);
                 File.Delete(publicKeyFilePath1);
             }
 
             if (File.Exists(privateKeyFilePath1))
             {
+                File.SetAttributes(privateKeyFilePath1, FileAttributes.Normal);
                 File.Delete(privateKeyFilePath1);
             }
 
             if (File.Exists(publicKeyFilePath2))
             {
+                File.SetAttributes(publicKeyFilePath2, FileAttributes.Normal);
                 File.Delete(publicKeyFilePath2);
             }
 
             if (File.Exists(privateKeyFilePath2))
             {
+                File.SetAttributes(privateKeyFilePath2, FileAttributes.Normal);
                 File.Delete(privateKeyFilePath2);
             }
 
@@ -1012,6 +1024,7 @@ namespace PgpCore.Tests
             // Remove content
             if (File.Exists(contentFilePath))
             {
+                File.SetAttributes(contentFilePath, FileAttributes.Normal);
                 File.Delete(contentFilePath);
             }
 
