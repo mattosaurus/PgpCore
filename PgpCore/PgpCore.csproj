@@ -10,12 +10,11 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>2.2.0</Version>
+    <Version>2.2.1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
-    <PackageReleaseNotes>v2.2.0 - Allow message name to be set, make sync methods properly sync, improve parameter documentation.</PackageReleaseNotes>
+    <FileVersion>2.2.1.0</FileVersion>
+    <PackageReleaseNotes>v2.2.1 - Handle read-only keys and input files.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
