@@ -1998,6 +1998,50 @@ namespace PgpCore
         }
 
         /// <summary>
+        /// PGP verify a given clear signed file.
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be verified</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        public async Task<bool> VerifyClearFileAsync(string inputFilePath, string publicKeyFilePath)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(publicKeyFilePath))
+                throw new ArgumentException("PublicKeyFilePath");
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Encrypted File [{0}] not found.", inputFilePath));
+            if (!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("Public Key File [{0}] not found.", publicKeyFilePath));
+
+            using (Stream inputStream = File.OpenRead(inputFilePath))
+            using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
+                return await VerifyClearAsync(inputStream, publicKeyStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed file.
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be verified</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        public bool VerifyClearFile(string inputFilePath, string publicKeyFilePath)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(publicKeyFilePath))
+                throw new ArgumentException("PublicKeyFilePath");
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Encrypted File [{0}] not found.", inputFilePath));
+            if (!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("Public Key File [{0}] not found.", publicKeyFilePath));
+
+            using (Stream inputStream = File.OpenRead(inputFilePath))
+            using (Stream publicKeyStream = File.OpenRead(publicKeyFilePath))
+                return VerifyClear(inputStream, publicKeyStream);
+        }
+
+        /// <summary>
         /// PGP verify a given stream.
         /// </summary>
         /// <param name="inputStream">Plain data stream to be verified</param>
@@ -2025,6 +2069,36 @@ namespace PgpCore
                 throw new ArgumentException("PublicKeyStream");
 
             return Verify(inputStream, publicKeyStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed stream.
+        /// </summary>
+        /// <param name="inputStream">Clear signed data stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        public async Task<bool> VerifyClearStreamAsync(Stream inputStream, Stream publicKeyStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyStream");
+
+            return await VerifyClearAsync(inputStream, publicKeyStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed stream.
+        /// </summary>
+        /// <param name="inputStream">Clear signed stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        public bool VerifyClearStream(Stream inputStream, Stream publicKeyStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyStream");
+
+            return VerifyClear(inputStream, publicKeyStream);
         }
 
         private async Task<bool> VerifyAsync(Stream inputStream, Stream publicKeyStream)
@@ -2091,7 +2165,6 @@ namespace PgpCore
             PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
             bool verified = false;
 
-            //System.IO.Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
             ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream);
             PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
             PgpObject pgpObject = factory.NextPgpObject();
@@ -2142,6 +2215,62 @@ namespace PgpCore
             }
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
+
+            return verified;
+        }
+
+        private async Task<bool> VerifyClearAsync(Stream inputStream, Stream publicKeyStream)
+        {
+            bool verified = false;
+
+            using (ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream))
+            {
+                PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
+
+                int lookAhead = ReadInputLine(encodedFile);
+
+                if (lookAhead != -1 && encodedFile.IsClearText())
+                {
+                    while (lookAhead != -1 && encodedFile.IsClearText())
+                    {
+                        lookAhead = ReadInputLine(encodedFile);
+                    }
+                }
+
+                PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
+                PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+                PgpSignature pgpSignature = pgpSignatureList[0];
+
+                verified = publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId);
+            }
+
+            return verified;
+        }
+
+        private bool VerifyClear(Stream inputStream, Stream publicKeyStream)
+        {
+            bool verified = false;
+
+            using (ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream))
+            {
+                PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
+
+                int lookAhead = ReadInputLine(encodedFile);
+
+                if (lookAhead != -1 && encodedFile.IsClearText())
+                {
+                    while (lookAhead != -1 && encodedFile.IsClearText())
+                    {
+                        lookAhead = ReadInputLine(encodedFile);
+                    }
+                }
+
+                PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
+                PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+                PgpSignature pgpSignature = pgpSignatureList[0];
+
+                verified = publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId);
+            }
 
             return verified;
         }
@@ -2255,6 +2384,35 @@ namespace PgpCore
                 return null;
 
             return pgpSecKey.ExtractPrivateKey(pass);
+        }
+
+        private static int ReadInputLine(Stream encodedFile)
+        {
+            int lookAhead = -1;
+            int character;
+
+            while ((character = encodedFile.ReadByte()) >= 0)
+            {
+                if (character == '\r' || character == '\n')
+                {
+                    lookAhead = ReadPassedEol(character, encodedFile);
+                    break;
+                }
+            }
+
+            return lookAhead;
+        }
+
+        private static int ReadPassedEol(int lastCharacter, Stream encodedFile)
+        {
+            int lookAhead = encodedFile.ReadByte();
+
+            if (lastCharacter == '\r' && lookAhead == '\n')
+            {
+                lookAhead = encodedFile.ReadByte();
+            }
+
+            return lookAhead;
         }
 
         public void Dispose()
