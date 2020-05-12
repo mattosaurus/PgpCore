@@ -91,6 +91,66 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignFileAsync_CreateClearSignedFile(KeyType keyType)
+        {
+            // Arrange
+            await ArrangeAsync(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            await pgp.ClearSignFileAsync(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.True(File.Exists(signedContentFilePath));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndVerifyFileAsync_CreateClearSignedFileAndVerify(KeyType keyType)
+        {
+            // Arrange
+            await ArrangeAsync(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            await pgp.ClearSignFileAsync(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.True(await pgp.VerifyClearFileAsync(signedContentFilePath, publicKeyFilePath1));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndDoNotVerifyFileAsync_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            await ArrangeAsync(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            await pgp.ClearSignFileAsync(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.False(await pgp.VerifyClearFileAsync(signedContentFilePath, publicKeyFilePath2));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task EncryptFileAsync_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange

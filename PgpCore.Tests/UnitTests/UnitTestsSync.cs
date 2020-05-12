@@ -90,6 +90,66 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void ClearSignFile_CreateClearSignedFile(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.ClearSignFile(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.True(File.Exists(signedContentFilePath));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndVerifyFile_CreateClearSignedFileAndVerify(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.ClearSignFile(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.True(pgp.VerifyClearFile(signedContentFilePath, publicKeyFilePath1));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.ClearSignFile(contentFilePath, signedContentFilePath, privateKeyFilePath1, password1);
+
+            // Assert
+            Assert.False(pgp.VerifyClearFile(signedContentFilePath, publicKeyFilePath2));
+
+            // Teardown
+            Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void EncryptFile_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
