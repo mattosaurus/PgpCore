@@ -751,6 +751,24 @@ namespace PgpCore
             }
         }
 
+        private async Task OutputClearSignedAsync(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+            {
+                await OutputClearSignedAsync(inputFileStream, outputStream, encryptionKeys);
+            }
+        }
+
+        private void OutputClearSigned(string inputFilePath, Stream outputStream, EncryptionKeys encryptionKeys)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+            {
+                OutputClearSigned(inputFileStream, outputStream, encryptionKeys);
+            }
+        }
+
         private async Task OutputEncryptedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
         {
             using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
@@ -806,6 +824,76 @@ namespace PgpCore
                     WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
                     inputStream.Dispose();
                 }
+            }
+        }
+
+        private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys)
+        {
+            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+            {
+                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream, encryptionKeys);
+
+                int length = 0;
+                byte[] buf = new byte[BufferSize];
+                while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+                {
+                    // Does the buffer end with a line break?
+                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
+                    if (buf[length - 1] == '\n' && buf[length - 2] == '\r')
+                    {
+                        pgpSignatureGenerator.Update(buf, 0, length - 2);
+                        await armoredOutputStream.WriteAsync(buf, 0, length - 2);
+                    }
+                    else
+                    {
+                        pgpSignatureGenerator.Update(buf, 0, length);
+                        await armoredOutputStream.WriteAsync(buf, 0, length);
+                    }
+                }
+
+                // Add a line break to the stream to ensure a valid signature if we have removed one earlier or it was not supplied
+                armoredOutputStream.Write((byte)'\r');
+                armoredOutputStream.Write((byte)'\n');
+
+                armoredOutputStream.EndClearText();
+
+                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
+                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
+            }
+        }
+
+        private void OutputClearSigned(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys)
+        {
+            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+            {
+                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream, encryptionKeys);
+
+                int length = 0;
+                byte[] buf = new byte[BufferSize];
+                while ((length = inputStream.Read(buf, 0, buf.Length)) > 0)
+                {
+                    // Does the buffer end with a line break?
+                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
+                    if (buf[length - 1] == '\n' && buf[length - 2] == '\r')
+                    {
+                        pgpSignatureGenerator.Update(buf, 0, length - 2);
+                        armoredOutputStream.Write(buf, 0, length - 2);
+                    }
+                    else
+                    {
+                        pgpSignatureGenerator.Update(buf, 0, length);
+                        armoredOutputStream.Write(buf, 0, length);
+                    }
+                }
+
+                // Add a line break to the stream to ensure a valid signature if we have removed one earlier or it was not supplied
+                armoredOutputStream.Write((byte)'\r');
+                armoredOutputStream.Write((byte)'\n');
+
+                armoredOutputStream.EndClearText();
+
+                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
+                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
             }
         }
 
@@ -914,6 +1002,23 @@ namespace PgpCore
                 break;
             }
             pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
+            return pgpSignatureGenerator;
+        }
+
+        private PgpSignatureGenerator InitClearSignatureGenerator(ArmoredOutputStream armoredOutputStream, EncryptionKeys encryptionKeys)
+        {
+            PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
+            pgpSignatureGenerator.InitSign((int)PgpCore.PgpSignatureType.CanonicalTextDocument, encryptionKeys.PrivateKey);
+            armoredOutputStream.BeginClearText(HashAlgorithmTag);
+            foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
+            {
+                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+                subPacketGenerator.SetSignerUserId(false, userId);
+                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
+                // Just the first one!
+                break;
+            }
             return pgpSignatureGenerator;
         }
 
@@ -1108,6 +1213,131 @@ namespace PgpCore
         }
 
         #endregion Sign
+
+        #region ClearSign
+        // https://github.com/bcgit/bc-csharp/blob/f18a2dbbc2c1b4277e24a2e51f09cac02eedf1f5/crypto/test/src/openpgp/examples/ClearSignedFileProcessor.cs
+
+        /// <summary>
+        /// Clear sign the file pointed to by unencryptedFileInfo
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be signed</param>
+        /// <param name="outputFilePath">Output PGP signed file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public async Task ClearSignFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(outputFilePath))
+                throw new ArgumentException("OutputFilePath");
+            if (String.IsNullOrEmpty(privateKeyFilePath))
+                throw new ArgumentException("PrivateKeyFilePath");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
+            if (!File.Exists(privateKeyFilePath))
+                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            using (Stream outputStream = File.Create(outputFilePath))
+            {
+                await OutputClearSignedAsync(inputFilePath, outputStream, encryptionKeys);
+            }
+        }
+
+        /// <summary>
+        /// Clear sign the file pointed to by unencryptedFileInfo
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be signed</param>
+        /// <param name="outputFilePath">Output PGP signed file path</param>
+        /// <param name="privateKeyFilePath">PGP secret key file path</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public void ClearSignFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+            if (String.IsNullOrEmpty(outputFilePath))
+                throw new ArgumentException("OutputFilePath");
+            if (String.IsNullOrEmpty(privateKeyFilePath))
+                throw new ArgumentException("PrivateKeyFilePath");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
+            if (!File.Exists(privateKeyFilePath))
+                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            using (Stream outputStream = File.Create(outputFilePath))
+            {
+                OutputClearSigned(inputFilePath, outputStream, encryptionKeys);
+            }
+        }
+
+        /// <summary>
+        /// Clear sign the provided stream
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be signed</param>
+        /// <param name="outputStream">Output PGP signed stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public async Task SignStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (outputStream == null)
+                throw new ArgumentException("OutputStream");
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyStream");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyStream, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            await OutputClearSignedAsync(inputStream, outputStream, encryptionKeys);
+        }
+
+        /// <summary>
+        /// Clear sign the provided stream
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be signed</param>
+        /// <param name="outputStream">Output PGP signed stream</param>
+        /// <param name="privateKeyStream">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public void ClearSignStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (outputStream == null)
+                throw new ArgumentException("OutputStream");
+            if (privateKeyStream == null)
+                throw new ArgumentException("PrivateKeyStream");
+            if (passPhrase == null)
+                passPhrase = String.Empty;
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(privateKeyStream, passPhrase);
+
+            if (encryptionKeys == null)
+                throw new ArgumentNullException("Encryption Key not found.");
+
+            OutputClearSigned(inputStream, outputStream, encryptionKeys);
+        }
+
+        #endregion ClearSign
 
         #region Decrypt
 
@@ -1861,7 +2091,8 @@ namespace PgpCore
             PgpPublicKey publicKey = Utilities.ReadPublicKey(publicKeyStream);
             bool verified = false;
 
-            System.IO.Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
+            //System.IO.Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
+            ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream);
             PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
             PgpObject pgpObject = factory.NextPgpObject();
 
