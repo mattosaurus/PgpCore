@@ -1009,7 +1009,7 @@ namespace PgpCore
         {
             PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
             PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
-            pgpSignatureGenerator.InitSign((int)PgpCore.PgpSignatureType.CanonicalTextDocument, encryptionKeys.PrivateKey);
+            pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, encryptionKeys.PrivateKey);
             armoredOutputStream.BeginClearText(HashAlgorithmTag);
             foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
             {
