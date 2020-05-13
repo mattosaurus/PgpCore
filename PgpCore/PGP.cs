@@ -1292,7 +1292,7 @@ namespace PgpCore
         /// <param name="outputStream">Output PGP signed stream</param>
         /// <param name="privateKeyStream">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public async Task SignStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
+        public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
