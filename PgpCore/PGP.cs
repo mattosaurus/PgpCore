@@ -979,13 +979,13 @@ namespace PgpCore
         private Stream ChainLiteralOut(Stream compressedOut, FileInfo file)
         {
             PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
-            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), file.Name, file.Length, DateTime.Now);
+            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), file.Name, file.Length, DateTime.UtcNow);
         }
 
         private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name)
         {
             PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
-            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length, DateTime.Now);
+            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length, DateTime.UtcNow);
         }
 
         private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut, EncryptionKeys encryptionKeys)
@@ -2347,7 +2347,7 @@ namespace PgpCore
                 PublicKeyAlgorithm,
                 publicKey,
                 privateKey,
-                DateTime.Now,
+                DateTime.UtcNow,
                 identity,
                 SymmetricKeyAlgorithm,
                 passPhrase,
@@ -2393,7 +2393,7 @@ namespace PgpCore
 
             while ((character = encodedFile.ReadByte()) >= 0)
             {
-                if (character == '\r' || character == '\n')
+                if (character == ' ' || character == '\r' || character == '\n')
                 {
                     lookAhead = ReadPassedEol(character, encodedFile);
                     break;
@@ -2408,6 +2408,11 @@ namespace PgpCore
             int lookAhead = encodedFile.ReadByte();
 
             if (lastCharacter == '\r' && lookAhead == '\n')
+            {
+                lookAhead = encodedFile.ReadByte();
+            }
+
+            if (lastCharacter == ' ' && lookAhead == '\r')
             {
                 lookAhead = encodedFile.ReadByte();
             }
