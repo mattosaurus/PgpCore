@@ -827,33 +827,72 @@ namespace PgpCore
             }
         }
 
+        //private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys)
+        //{
+        //    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+        //    {
+        //        PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream, encryptionKeys);
+
+        //        int length = 0;
+        //        byte[] buf = new byte[BufferSize];
+
+        //        while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+        //        {
+        //            // Does the buffer end with a line break?
+        //            // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
+        //            if (buf[length - 1] == '\n' && buf[length - 2] == '\r')
+        //            {
+        //                pgpSignatureGenerator.Update(buf, 0, length - 2);
+        //                await armoredOutputStream.WriteAsync(buf, 0, length - 2);
+        //            }
+        //            else
+        //            {
+        //                pgpSignatureGenerator.Update(buf, 0, length);
+        //                await armoredOutputStream.WriteAsync(buf, 0, length);
+        //            }
+        //        }
+
+        //        // Add a line break to the stream to ensure a valid signature if we have removed one earlier or it was not supplied
+        //        armoredOutputStream.Write((byte)'\r');
+        //        armoredOutputStream.Write((byte)'\n');
+
+        //        armoredOutputStream.EndClearText();
+
+        //        BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
+        //        pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
+        //    }
+        //}
+
         private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys)
         {
+            using (StreamReader streamReader = new StreamReader(inputStream))
             using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
             {
                 PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream, encryptionKeys);
 
-                int length = 0;
-                byte[] buf = new byte[BufferSize];
-                while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+                while (streamReader.Peek() >= 0)
                 {
-                    // Does the buffer end with a line break?
+                    string line = await streamReader.ReadLineAsync();
+                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+                    // Does the line end with whitespace?
                     // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-                    if (buf[length - 1] == '\n' && buf[length - 2] == '\r')
+                    string cleanLine = line.TrimEnd();
+                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+
+                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
+                    await armoredOutputStream.WriteAsync(lineByteArray, 0, lineByteArray.Length);
+
+                    // Add a line break back to the stream
+                    armoredOutputStream.Write((byte)'\r');
+                    armoredOutputStream.Write((byte)'\n');
+
+                    // Update signature with line breaks unless we're on the last line
+                    if (streamReader.Peek() >= 0)
                     {
-                        pgpSignatureGenerator.Update(buf, 0, length - 2);
-                        await armoredOutputStream.WriteAsync(buf, 0, length - 2);
-                    }
-                    else
-                    {
-                        pgpSignatureGenerator.Update(buf, 0, length);
-                        await armoredOutputStream.WriteAsync(buf, 0, length);
+                        pgpSignatureGenerator.Update((byte)'\r');
+                        pgpSignatureGenerator.Update((byte)'\n');
                     }
                 }
-
-                // Add a line break to the stream to ensure a valid signature if we have removed one earlier or it was not supplied
-                armoredOutputStream.Write((byte)'\r');
-                armoredOutputStream.Write((byte)'\n');
 
                 armoredOutputStream.EndClearText();
 
@@ -864,31 +903,34 @@ namespace PgpCore
 
         private void OutputClearSigned(Stream inputStream, Stream outputStream, EncryptionKeys encryptionKeys)
         {
+            using (StreamReader streamReader = new StreamReader(inputStream))
             using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
             {
                 PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream, encryptionKeys);
 
-                int length = 0;
-                byte[] buf = new byte[BufferSize];
-                while ((length = inputStream.Read(buf, 0, buf.Length)) > 0)
+                while (streamReader.Peek() >= 0)
                 {
-                    // Does the buffer end with a line break?
+                    string line = streamReader.ReadLine();
+                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+                    // Does the line end with whitespace?
                     // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-                    if (buf[length - 1] == '\n' && buf[length - 2] == '\r')
+                    string cleanLine = line.TrimEnd();
+                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+
+                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
+                    armoredOutputStream.Write(lineByteArray, 0, lineByteArray.Length);
+
+                    // Add a line break back to the stream
+                    armoredOutputStream.Write((byte)'\r');
+                    armoredOutputStream.Write((byte)'\n');
+
+                    // Update signature with line breaks unless we're on the last line
+                    if (streamReader.Peek() >= 0)
                     {
-                        pgpSignatureGenerator.Update(buf, 0, length - 2);
-                        armoredOutputStream.Write(buf, 0, length - 2);
-                    }
-                    else
-                    {
-                        pgpSignatureGenerator.Update(buf, 0, length);
-                        armoredOutputStream.Write(buf, 0, length);
+                        pgpSignatureGenerator.Update((byte)'\r');
+                        pgpSignatureGenerator.Update((byte)'\n');
                     }
                 }
-
-                // Add a line break to the stream to ensure a valid signature if we have removed one earlier or it was not supplied
-                armoredOutputStream.Write((byte)'\r');
-                armoredOutputStream.Write((byte)'\n');
 
                 armoredOutputStream.EndClearText();
 
@@ -2393,7 +2435,7 @@ namespace PgpCore
 
             while ((character = encodedFile.ReadByte()) >= 0)
             {
-                if (character == ' ' || character == '\r' || character == '\n')
+                if (character == '\r' || character == '\n')
                 {
                     lookAhead = ReadPassedEol(character, encodedFile);
                     break;
@@ -2408,11 +2450,6 @@ namespace PgpCore
             int lookAhead = encodedFile.ReadByte();
 
             if (lastCharacter == '\r' && lookAhead == '\n')
-            {
-                lookAhead = encodedFile.ReadByte();
-            }
-
-            if (lastCharacter == ' ' && lookAhead == '\r')
             {
                 lookAhead = encodedFile.ReadByte();
             }
