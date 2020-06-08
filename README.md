@@ -39,8 +39,8 @@ using (PGP pgp = new PGP())
 
 [`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
 
-### EncryptFile
-Encrypt the provided file using a public key.
+### Encrypt
+Encrypt the provided file or stream using a public key.
 
 [`gpg --output "C:\TEMP\keys\content__encrypted.pgp" --encrypt "C:\TEMP\keys\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
 #### EncryptFile
@@ -82,8 +82,8 @@ using (PGP pgp = new PGP())
 }
 ```
 
-### DecryptFile
-Decrypt the provided file using the matching private key and passphrase.
+### Decrypt
+Decrypt the provided file or stream using the matching private key and passphrase.
 
 [`gpg --output "C:\TEMP\Content\decrypted.txt" --decrypt "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x110.html)
 #### DecryptFile
@@ -124,8 +124,8 @@ using (PGP pgp = new PGP())
 		await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, "password");
 }
 ```
-### EncryptFileAndSign
-Encrypt the provided file using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
+### Encrypt and Sign
+Encrypt the provided file or stream using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
 
 [`pg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
 #### EncryptFileAndSign
