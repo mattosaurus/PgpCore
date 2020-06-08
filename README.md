@@ -24,11 +24,8 @@ Microsoft.NETCore.App (>= 1.1.2)
 # Usage
 This is intended for usage in .NET Core projects, the latest version that works with .NET Framework is v2.2.0.
 
-## Methods
-Async versions of the below methods are available apart from for GenerateKey.
-
 ### GenerateKey
-Generate a new public and private key for the provided username and password, same with methods that accept a stream rather than a file path.
+Generate a new public and private key for the provided username and password.
 
 ```C#
 using (PGP pgp = new PGP())
@@ -125,5 +122,3 @@ using (PGP pgp = new PGP())
 		await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, "password");
 }
 ```
-
-A good resource for generating keys and messages is <a href="https://wp2pgpmail.com/pgp-key-generator/" alt="PGP Key Generator">PGP Key Generator</a>.
