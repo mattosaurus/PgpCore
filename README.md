@@ -82,7 +82,7 @@ using (PGP pgp = new PGP())
 }
 ```
 
-### DecryptFile
+#### DecryptFile
 Decrypt the provided file using the matching private key and passphrase.
 
 [`gpg --output "C:\TEMP\Content\decrypted.txt" --decrypt "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x110.html)
