@@ -38,6 +38,11 @@ This is intended for usage in .NET Core projects, the latest version that works 
   * [SignFileAsync](#signfileasync)
   * [SignStream](#signstream)
   * [SignStreamAsync](#signstreamasync)
+* [ClearSign](#clearsign)
+  * [ClearSignFile](#clearsignfile)
+  * [ClearSignFileAsync](#clearsignfileasync)
+  * [ClearSignStream](#clearsignstream)
+  * [ClearSignStreamAsync](#clearsignstreamasync)
 * [Encrypt and Sign](#encrypt-and-sign)
   * [EncryptFileAndSign](#encryptfileandsign)
   * [EncryptFileAndSignAsync](#encryptfileandsignasync)
@@ -53,12 +58,16 @@ This is intended for usage in .NET Core projects, the latest version that works 
   * [VerifyFileAsync](#verifyfileasync)
   * [VerifyStream](#verifystream)
   * [VerifyStreamAsync](#verifystreamasync)
+* [VerifyClear](#verify)
+  * [VerifyClearFile](#verifyclearfile)
+  * [VerifyClearFileAsync](#verifyclearfileasync)
+  * [VerifyClearStream](#verifyclearstream)
+  * [VerifyClearStreamAsync](#verifyclearstreamasync)
 * [Decrypt and Verify](#decrypt-and-verify)
   * [DecryptFileAndVerify](#decryptfileandverify)
   * [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
   * [DecryptStreamAndVerify](#decryptstreamandverify)
   * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
-
 
 #### Generate Key
 Generate a new public and private key for the provided username and password.
@@ -154,6 +163,48 @@ using (PGP pgp = new PGP())
 	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
 		await pgp.SignFileAsync(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
+}
+```
+### Clear Sign
+Clear sign the provided file or stream using a private key so that it is still human readable.
+
+[`gpg --output "C:\TEMP\Content\content.txt" --clearsign  "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
+#### ClearSignFile
+```C#
+using (PGP pgp = new PGP())
+{
+	// Clear sign file
+	pgp.ClearSignFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\clearSigned.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### ClearSignFileAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Clear sign file
+	await pgp.ClearSignFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\clearSigned.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### ClearSignStream
+```C#
+using (PGP pgp = new PGP())
+{
+	// Clear sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\clearSigned.pgp"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		pgp.ClearSignFile(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
+}
+```
+#### ClearSignStreamAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Clear sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\clearSigned.pgp"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		await pgp.ClearSignFileAsync(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
 }
 ```
 ### Encrypt and Sign
@@ -280,6 +331,46 @@ using (PGP pgp = new PGP())
 	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
 		bool verified = await pgp.VerifyFileAsync(inputFileStream, publicKeyStream);
+}
+```
+### Verify Clear
+Verify that the clear signed file or stream was signed by the matching private key of the counterparty.
+
+[`gpg --verify "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
+#### VerifyClearFile
+```C#
+using (PGP pgp = new PGP())
+{
+	// Verify clear file
+	bool verified = pgp.VerifyClearFile(@"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\public.asc");
+}
+```
+#### VerifyClearFileAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Verify clear file
+	bool verified = await pgp.VerifyClearFileAsync(@"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\public.asc");
+}
+```
+#### VerifyClearStream
+```C#
+using (PGP pgp = new PGP())
+{
+	// Verify clear stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		bool verified = pgp.VerifyClearFile(inputFileStream, publicKeyStream);
+}
+```
+#### VerifyClearStreamAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Verify clear stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		bool verified = await pgp.VerifyClearFileAsync(inputFileStream, publicKeyStream);
 }
 ```
 ### Decrypt and Verify
