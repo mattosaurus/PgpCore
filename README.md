@@ -26,7 +26,13 @@ This is intended for usage in .NET Core projects, the latest version that works 
 
 ## Methods
 
-#### GenerateKey
+* Generate Key
+* Encrypt
+* Decrypt
+* Encrypt and Sign
+* Decrypt and Verify
+
+#### Generate Key
 Generate a new public and private key for the provided username and password.
 
 ```C#
