@@ -27,14 +27,33 @@ This is intended for usage in .NET Core projects, the latest version that works 
 ## Methods
 
 * [Generate Key](#generate-key)
-* Encrypt
-* Decrypt
-* Encrypt and Sign
-* Decrypt and Verify
+** [GenerateKey](#generatekey)
+* [Encrypt](#encrypt)
+** [EncryptFile](#encryptfile)
+** [EncryptFileAsync](#encryptfileasync)
+** [EncryptStream](#encryptstream)
+** [EncryptStreamAsync](#encryptstreamasync)
+* [Decrypt](#decrypt)
+** [DecryptFile](#decryptfile)
+** [DecryptFileAsync](#decryptfileasync)
+** [DecryptStream](#decryptstream)
+** [DecryptStreamAsync](#decryptstreamasync)
+* [Encrypt and Sign](#encrypt-and-sign)
+** [EncryptFileAndSign](#encryptfileandsign)
+** [EncryptFileAndSignAsync](#encryptfileandsignasync)
+** [EncryptStreamAndSign](#encryptstreamandsign)
+** [EncryptStreamAndSignAsync](#encryptstreamandsignasync)
+* [Decrypt and Verify](#decrypt-and-verify)
+** [DecryptFileAndVerify](#decryptfileandverify)
+** [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
+** [DecryptStreamAndVerify](#decryptstreamandverify)
+** [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
 
 #### Generate Key
 Generate a new public and private key for the provided username and password.
 
+[`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
+###GenerateKey
 ```C#
 using (PGP pgp = new PGP())
 {
@@ -42,9 +61,6 @@ using (PGP pgp = new PGP())
 	pgp.GenerateKey(@"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "email@email.com", "password");
 }
 ```
-
-[`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
-
 ### Encrypt
 Encrypt the provided file or stream using a public key.
 
