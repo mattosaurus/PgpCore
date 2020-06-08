@@ -124,3 +124,47 @@ using (PGP pgp = new PGP())
 		await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, "password");
 }
 ```
+### EncryptFileAndSign
+Encrypt the provided file using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
+
+[`pg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
+#### EncryptFileAndSign
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt file and sign
+	pgp.EncryptFileAndSign(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encryptedAndSigned.pgp", @"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### EncryptFileAndSignAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt file and sign
+	await pgp.EncryptFileAndSignAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encryptedAndSigned.pgp", @"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### EncryptStreamAndSign
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt and sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		pgp.EncryptAndSignStream(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
+}
+```
+#### EncryptStreamAndSignAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt and sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		await pgp.EncryptAndSignStreamAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
+}
+```
