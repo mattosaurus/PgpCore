@@ -33,21 +33,32 @@ This is intended for usage in .NET Core projects, the latest version that works 
   * [EncryptFileAsync](#encryptfileasync)
   * [EncryptStream](#encryptstream)
   * [EncryptStreamAsync](#encryptstreamasync)
-* [Decrypt](#decrypt)
-  * [DecryptFile](#decryptfile)
-  * [DecryptFileAsync](#decryptfileasync)
-  * [DecryptStream](#decryptstream)
-  * [DecryptStreamAsync](#decryptstreamasync)
+* [Sign](#sign)
+  * [SignFile](#signfile)
+  * [SignFileAsync](#signfileasync)
+  * [SignStream](#signstream)
+  * [SignStreamAsync](#signstreamasync)
 * [Encrypt and Sign](#encrypt-and-sign)
   * [EncryptFileAndSign](#encryptfileandsign)
   * [EncryptFileAndSignAsync](#encryptfileandsignasync)
   * [EncryptStreamAndSign](#encryptstreamandsign)
   * [EncryptStreamAndSignAsync](#encryptstreamandsignasync)
+* [Decrypt](#decrypt)
+  * [DecryptFile](#decryptfile)
+  * [DecryptFileAsync](#decryptfileasync)
+  * [DecryptStream](#decryptstream)
+  * [DecryptStreamAsync](#decryptstreamasync)
+* [Verify](#verify)
+  * [VerifyFile](#verifyfile)
+  * [VerifyFileAsync](#verifyfileasync)
+  * [VerifyStream](#verifystream)
+  * [VerifyStreamAsync](#verifystreamasync)
 * [Decrypt and Verify](#decrypt-and-verify)
   * [DecryptFileAndVerify](#decryptfileandverify)
   * [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
   * [DecryptStreamAndVerify](#decryptstreamandverify)
   * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
+
 
 #### Generate Key
 Generate a new public and private key for the provided username and password.
@@ -64,7 +75,7 @@ using (PGP pgp = new PGP())
 ### Encrypt
 Encrypt the provided file or stream using a public key.
 
-[`gpg --output "C:\TEMP\keys\content__encrypted.pgp" --encrypt "C:\TEMP\keys\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
+[`gpg --output "C:\TEMP\Content\encrypted.pgp" --encrypt "C:\TEMP\Content\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
 #### EncryptFile
 ```C#
 using (PGP pgp = new PGP())
@@ -103,7 +114,48 @@ using (PGP pgp = new PGP())
 		await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, publicKeyStream, true, true);
 }
 ```
+### Sign
+Sign the provided file or stream using a private key.
 
+[`gpg --output "C:\TEMP\Content\content.txt" --sign "C:\TEMP\Content\signed.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
+#### SignFile
+```C#
+using (PGP pgp = new PGP())
+{
+	// Sign file
+	pgp.SignFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### SignFileAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Sign file
+	await pgp.SignFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
+}
+```
+#### SignStream
+```C#
+using (PGP pgp = new PGP())
+{
+	// Sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		pgp.SignFile(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
+}
+```
+#### SignStreamAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Sign stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		await pgp.SignFileAsync(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
+}
+```
 ### Decrypt
 Decrypt the provided file or stream using the matching private key and passphrase.
 
