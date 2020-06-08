@@ -22,37 +22,68 @@ BouncyCastle.NetCore (>= 1.8.1.3)
 Microsoft.NETCore.App (>= 1.1.2)
 
 # Usage
-This is intended for usage in .NET Core projects. For further examples see the [tests](https://github.com/mattosaurus/PgpCore/tree/master/PgpCore.Tests/UnitTests).
+This is intended for usage in .NET Core projects, the latest version that works with .NET Framework is v2.2.0.
+
+## Methods
+Async versions of the below methods are available apart from for GenerateKey.
+
+### GenerateKey
+Generate a new public and private key for the provided username and password, same with methods that accept a stream rather than a file path.
 
 ```C#
 using (PGP pgp = new PGP())
 {
-                // Generate keys
-                pgp.GenerateKey(@"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\private.asc", "email@email.com", "password");
-                // Encrypt file
-                pgp.EncryptFile(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted.pgp", @"C:\TEMP\keys\public.asc", true, true);
-		// Encrypt file with multiple keys
-		string[] publicKeys = Directory.GetFiles("C:\TEMP\keys\", "*.asc);
-                pgp.EncryptFile(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted.pgp", publicKeys, true, true);
-                // Encrypt and sign file
-                pgp.EncryptFileAndSign(@"C:\TEMP\keys\content.txt", @"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\public.asc", @"C:\TEMP\keys\private.asc", "password", true, true);
-                // Decrypt file
-                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted.pgp", @"C:\TEMP\keys\content__decrypted.txt", @"C:\TEMP\keys\private.asc", "password");
-                // Decrypt signed file
-                pgp.DecryptFile(@"C:\TEMP\keys\content__encrypted_signed.pgp", @"C:\TEMP\keys\content__decrypted_signed.txt", @"C:\TEMP\keys\private.asc", "password");
-
-                // Encrypt stream
-                using (FileStream inputFileStream = new FileStream(@"C:\TEMP\keys\content.txt", FileMode.Open))
-                using (Stream outputFileStream = File.Create(@"C:\TEMP\keys\content__encrypted2.pgp"))
-                using (Stream publicKeyStream = new FileStream(@"C:\TEMP\keys\public.asc", FileMode.Open))
-                    pgp.EncryptStream(inputFileStream, outputFileStream, publicKeyStream, true, true);
-
-                // Decrypt stream
-                using (FileStream inputFileStream = new FileStream(@"C:\TEMP\keys\content__encrypted2.pgp", FileMode.Open))
-                using (Stream outputFileStream = File.Create(@"C:\TEMP\keys\content__decrypted2.txt"))
-                using (Stream privateKeyStream = new FileStream(@"C:\TEMP\keys\private.asc", FileMode.Open))
-                    pgp.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, "password");
+	// Generate keys
+	pgp.GenerateKey(@"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "email@email.com", "password");
 }
 ```
+
+[`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
+
+### EncryptFile
+Encrypt the provided file using a public key.
+
+[`gpg --output "C:\TEMP\keys\content__encrypted.pgp" --encrypt "C:\TEMP\keys\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
+#### EncryptFile
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt file
+	pgp.EncryptFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Keys\public.asc", true, true);
+}
+```
+#### EncryptFileAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt file
+	await pgp.EncryptFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Keys\public.asc", true, true);
+}
+```
+#### EncryptStream
+#### EncryptStreamAsync
+
+### DecryptFile
+Decrypt the provided file using the matching private key and passphrase.
+
+[`gpg --output "C:\TEMP\Content\decrypted.txt" --decrypt "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x110.html)
+#### DecryptFile
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt file
+	pgp.DecryptFile(@"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Content\decrypted.txt", @"C:\TEMP\Keys\private.asc", "password");
+}
+```
+#### DecryptFileAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt file
+	await pgp.DecryptFileAsync(@"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Content\decrypted.txt", @"C:\TEMP\Keys\private.asc", "password");
+}
+```
+#### DecryptStream
+#### DecryptStreamAsync
 
 A good resource for generating keys and messages is <a href="https://wp2pgpmail.com/pgp-key-generator/" alt="PGP Key Generator">PGP Key Generator</a>.
