@@ -26,7 +26,7 @@ This is intended for usage in .NET Core projects, the latest version that works 
 
 ## Methods
 
-* Generate Key
+* [Generate Key](Generate Key)
 * Encrypt
 * Decrypt
 * Encrypt and Sign
