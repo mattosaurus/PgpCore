@@ -61,7 +61,27 @@ using (PGP pgp = new PGP())
 }
 ```
 #### EncryptStream
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+		pgp.EncryptStream(inputFileStream, outputFileStream, publicKeyStream, true, true);
+}
+```
 #### EncryptStreamAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Encrypt stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+		await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, publicKeyStream, true, true);
+}
+```
 
 ### DecryptFile
 Decrypt the provided file using the matching private key and passphrase.
@@ -84,6 +104,26 @@ using (PGP pgp = new PGP())
 }
 ```
 #### DecryptStream
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encrypted.pgp", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\decrypted.txt"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		pgp.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, "password");
+}
+```
 #### DecryptStreamAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt stream
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encrypted.pgp", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\decrypted.txt"))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		await pgp.DecryptStreamAsync(inputFileStream, outputFileStream, privateKeyStream, "password");
+}
+```
 
 A good resource for generating keys and messages is <a href="https://wp2pgpmail.com/pgp-key-generator/" alt="PGP Key Generator">PGP Key Generator</a>.
