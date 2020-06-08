@@ -150,7 +150,7 @@ using (PGP pgp = new PGP())
 {
 	// Encrypt and sign stream
 	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encryptedAndSigned.pgp"))
 	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
 		pgp.EncryptStreamAndSign(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
@@ -162,9 +162,53 @@ using (PGP pgp = new PGP())
 {
 	// Encrypt and sign stream
 	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encryptedAndSigned.pgp"))
 	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
 		await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
+}
+```
+### Decrypt and Verify
+Decrypt and then verify the provided encrypted and signed file. Usually your counterparty will encrypt with your public key and sign with their private key so you can decrypt with your private key and verify with their public key.
+
+[`gpg --output "C:\TEMP\Content\encryptedAndSigned.pgp" --decrypt "C:\TEMP\Content\decryptedAndVerified.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
+#### DecryptFileAndVerify
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt file and verify
+	pgp.DecryptFileAndVerify(@"C:\TEMP\Content\encryptedAndSigned.pgp", @"C:\TEMP\Content\decryptedAndVerified.txt",  @"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "password");
+}
+```
+#### DecryptFileAndVerifyAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt file and verify
+	await pgp.DecryptFileAndVerifyAsync(@"C:\TEMP\Content\encryptedAndSigned.pgp", @"C:\TEMP\Content\decryptedAndVerified.txt",  @"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "password");
+}
+```
+#### DecryptStreamAndVerify
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt stream and verify
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedAndSigned.pgp", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\decryptedAndVerified.txt"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		pgp.DecryptStreamAndVerify(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password");
+}
+```
+#### DecryptStreamAndVerifyAsync
+```C#
+using (PGP pgp = new PGP())
+{
+	// Decrypt stream and verify
+	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedAndSigned.pgp", FileMode.Open))
+	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\decryptedAndVerified.txt"))
+	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+		await pgp.DecryptStreamAndVerifyAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password");
 }
 ```
