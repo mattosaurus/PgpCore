@@ -24,7 +24,9 @@ Microsoft.NETCore.App (>= 1.1.2)
 # Usage
 This is intended for usage in .NET Core projects, the latest version that works with .NET Framework is v2.2.0.
 
-### GenerateKey
+## Methods
+
+#### GenerateKey
 Generate a new public and private key for the provided username and password.
 
 ```C#
@@ -37,7 +39,7 @@ using (PGP pgp = new PGP())
 
 [`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
 
-### EncryptFile
+#### EncryptFile
 Encrypt the provided file using a public key.
 
 [`gpg --output "C:\TEMP\keys\content__encrypted.pgp" --encrypt "C:\TEMP\keys\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
