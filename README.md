@@ -153,7 +153,7 @@ using (PGP pgp = new PGP())
 	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
 	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		pgp.EncryptAndSignStream(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
+		pgp.EncryptStreamAndSign(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
 }
 ```
 #### EncryptStreamAndSignAsync
@@ -165,6 +165,6 @@ using (PGP pgp = new PGP())
 	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
 	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		await pgp.EncryptAndSignStreamAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
+		await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream, publicKeyStream, privateKeyStream, "password", true, true);
 }
 ```
