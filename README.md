@@ -39,7 +39,7 @@ using (PGP pgp = new PGP())
 
 [`gpg --gen-key`](https://www.gnupg.org/gph/en/manual/c14.html)
 
-#### EncryptFile
+### EncryptFile
 Encrypt the provided file using a public key.
 
 [`gpg --output "C:\TEMP\keys\content__encrypted.pgp" --encrypt "C:\TEMP\keys\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
@@ -82,7 +82,7 @@ using (PGP pgp = new PGP())
 }
 ```
 
-#### DecryptFile
+### DecryptFile
 Decrypt the provided file using the matching private key and passphrase.
 
 [`gpg --output "C:\TEMP\Content\decrypted.txt" --decrypt "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x110.html)
