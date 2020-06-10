@@ -399,7 +399,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <returns></returns>
-        internal static PgpPublicKey ReadPublicKey(Stream inputStream)
+        public static PgpPublicKey ReadPublicKey(Stream inputStream)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 

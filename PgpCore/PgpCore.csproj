@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>2.4.0</Version>
+    <Version>2.4.1</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.4.0.0</FileVersion>
-    <PackageReleaseNotes>v2.4.0 - Add ability to clear sign and verify such files.</PackageReleaseNotes>
+    <FileVersion>2.4.1.0</FileVersion>
+    <PackageReleaseNotes>v2.4.1 - Add ability to clear sign and verify such files.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
