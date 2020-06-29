@@ -291,7 +291,8 @@ namespace PgpCore.Tests
         //public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
         //{
         //    // Arrange
-        //    Arrange(keyType, fileType);
+        //    TestFactory testFactory = new TestFactory();
+        //    testFactory.Arrange(keyType, fileType);
         //    PGP pgp = new PGP();
 
         //    // Act
@@ -301,9 +302,12 @@ namespace PgpCore.Tests
         //    // Assert
         //    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
         //    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+        //    FileInfo contentFileInfo = new FileInfo(testFactory.ContentFilePath);
+        //    FileInfo decryptedFileInfo = new FileInfo(testFactory.DecryptedContentFilePath);
+        //    Assert.True(contentFileInfo.Length == decryptedFileInfo.Length);
 
         //    // Teardown
-        //    Teardown();
+        //    testFactory.Teardown();
         //}
 
         [Theory]
@@ -783,6 +787,37 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
         }
+
+        //[Theory]
+        //[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
+        //public void DecryptLargeStream_DecryptEncryptedStream(KeyType keyType, FileType fileType)
+        //{
+        //    // Arrange
+        //    TestFactory testFactory = new TestFactory();
+        //    testFactory.Arrange(keyType, fileType);
+        //    PGP pgp = new PGP();
+
+        //    // Act
+        //    using (FileStream inputFileStream = new FileStream(testFactory.ContentFilePath, FileMode.Open, FileAccess.Read))
+        //    using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+        //    using (Stream publicKeyStream = new FileStream(testFactory.PublicKeyFilePath, FileMode.Open, FileAccess.Read))
+        //        pgp.EncryptStream(inputFileStream, outputFileStream, publicKeyStream);
+
+        //    using (FileStream inputFileStream = new FileStream(testFactory.EncryptedContentFilePath, FileMode.Open, FileAccess.Read))
+        //    using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+        //    using (Stream privateKeyStream = new FileStream(testFactory.PrivateKeyFilePath, FileMode.Open, FileAccess.Read))
+        //        pgp.DecryptStream(inputFileStream, outputFileStream, privateKeyStream, testFactory.Password);
+
+        //    // Assert
+        //    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
+        //    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+        //    FileInfo contentFileInfo = new FileInfo(testFactory.ContentFilePath);
+        //    FileInfo decryptedFileInfo = new FileInfo(testFactory.DecryptedContentFilePath);
+        //    Assert.True(contentFileInfo.Length == decryptedFileInfo.Length);
+
+        //    // Teardown
+        //    testFactory.Teardown();
+        //}
 
         [Theory]
         [InlineData(KeyType.Generated)]
