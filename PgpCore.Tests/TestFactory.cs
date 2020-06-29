@@ -144,7 +144,7 @@ namespace PgpCore.Tests
             }
             else if (fileType == FileType.GeneratedLarge)
             {
-                CreateRandomFile(ContentFilePath, 7000);
+                CreateRandomFile(ContentFilePath, 5000);
             }
         }
 
@@ -162,7 +162,7 @@ namespace PgpCore.Tests
             }
             else if (fileType == FileType.GeneratedLarge)
             {
-                await CreateRandomFileAsync(ContentFilePath, 7000);
+                await CreateRandomFileAsync(ContentFilePath, 5000);
             }
         }
 
