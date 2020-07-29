@@ -428,7 +428,7 @@ namespace PgpCore
                 {
                     foreach (PgpSignature s in key.GetSignatures())
                     {
-                        if (s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
+                        if (s.HasSubpackets && s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
                             return key;
                     }
                 }
