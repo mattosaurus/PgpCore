@@ -193,7 +193,7 @@ using (PGP pgp = new PGP())
 	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\clearSigned.pgp"))
 	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		pgp.ClearSignFile(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
+		pgp.ClearSignStream(inputFileStream, outputFileStream, privateKeyStream, "password");
 }
 ```
 #### ClearSignStreamAsync
