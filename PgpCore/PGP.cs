@@ -21,7 +21,7 @@ namespace PgpCore
 {
     public enum PGPFileType { Binary, Text, UTF8 }
 
-    public class PGP : IDisposable
+    public class PGP : IPGPEncrypt, IDisposable
     {
         public static readonly PGP Instance = new PGP();
 
