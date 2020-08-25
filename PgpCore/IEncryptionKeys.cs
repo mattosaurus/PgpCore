@@ -15,5 +15,8 @@ namespace PgpCore
         IEnumerable<PgpPublicKey> PublicKeys { get; }
         PgpPrivateKey PrivateKey { get; }
         PgpSecretKey SecretKey { get; }
+        PgpSecretKeyRingBundle SecretKeys { get; }
+
+        PgpPrivateKey FindSecretKey(long keyId);
     }
 }
