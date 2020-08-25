@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PgpCore
 {
-    internal sealed class EncryptionKeys
+    public class EncryptionKeys : IEncryptionKeys
     {
         #region Instance Members (Public)
 
