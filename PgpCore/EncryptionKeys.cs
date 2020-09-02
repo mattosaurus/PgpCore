@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PgpCore
 {
-    internal sealed class EncryptionKeys
+    public class EncryptionKeys : IEncryptionKeys
     {
         #region Instance Members (Public)
 
@@ -16,8 +17,14 @@ namespace PgpCore
         public IEnumerable<PgpPublicKey> PublicKeys { get; private set; }
         public PgpPrivateKey PrivateKey { get; private set; }
         public PgpSecretKey SecretKey { get; private set; }
+        public PgpSecretKeyRingBundle SecretKeys { get; private set; }
 
         #endregion Instance Members (Public)
+
+        #region Instance Members (Private)
+        private readonly string _passPhrase;
+
+        #endregion Instance Members (Private)
 
         #region Constructors
 
@@ -47,6 +54,7 @@ namespace PgpCore
             PublicKey = Utilities.ReadPublicKey(publicKeyFilePath);
             SecretKey = ReadSecretKey(privateKeyFilePath);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
         }
 
         /// <summary>
@@ -82,6 +90,7 @@ namespace PgpCore
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             SecretKey = ReadSecretKey(privateKeyFilePath);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
         }
 
         public EncryptionKeys(string privateKeyFilePath, string passPhrase)
@@ -97,6 +106,7 @@ namespace PgpCore
             PublicKeys = null;
             SecretKey = ReadSecretKey(privateKeyFilePath);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
         }
 
         public EncryptionKeys(Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
@@ -111,6 +121,7 @@ namespace PgpCore
             PublicKey = Utilities.ReadPublicKey(publicKeyStream);
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
         }
 
         public EncryptionKeys(Stream privateKeyStream, string passPhrase)
@@ -123,6 +134,7 @@ namespace PgpCore
             PublicKey = null;
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
         }
 
         public EncryptionKeys(IEnumerable<Stream> publicKeyStreams, Stream privateKeyStream, string passPhrase)
@@ -143,23 +155,62 @@ namespace PgpCore
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
+            _passPhrase = passPhrase;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EncryptionKeys class.
+        /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
+        /// The data is encrypted with the recipients public key and signed with your private key.
+        /// </summary>
+        /// <param name="publicKeyFilePath">The key used to encrypt the data</param>
+        /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
+        public EncryptionKeys(string publicKeyFilePath)
+        {
+            if (String.IsNullOrEmpty(publicKeyFilePath))
+                throw new ArgumentException("PublicKeyFilePath");
+
+            if (!File.Exists(publicKeyFilePath))
+                throw new FileNotFoundException(String.Format("Public Key file [{0}] does not exist.", publicKeyFilePath));
+
+            PublicKey = Utilities.ReadPublicKey(publicKeyFilePath);
+        }
+
+        public EncryptionKeys(Stream publicKeyStream)
+        {
+            if (publicKeyStream == null)
+                throw new ArgumentException("PublicKeyStream");
+
+            PublicKey = Utilities.ReadPublicKey(publicKeyStream);
         }
 
         #endregion Constructors
+
+        #region Public Methods
+
+        public PgpPrivateKey FindSecretKey(long keyId)
+        {
+            PgpSecretKey pgpSecKey = SecretKeys.GetSecretKey(keyId);
+
+            if (pgpSecKey == null)
+                return null;
+
+            return pgpSecKey.ExtractPrivateKey(_passPhrase.ToCharArray());
+        }
+
+        #endregion Public Methods
 
         #region Secret Key
 
         private PgpSecretKey ReadSecretKey(string privateKeyPath)
         {
             using (Stream sr = File.OpenRead(privateKeyPath))
+            using (Stream inputStream = PgpUtilities.GetDecoderStream(sr))
             {
-                using (Stream inputStream = PgpUtilities.GetDecoderStream(sr))
-                {
-                    PgpSecretKeyRingBundle secretKeyRingBundle = new PgpSecretKeyRingBundle(inputStream);
-                    PgpSecretKey foundKey = GetFirstSecretKey(secretKeyRingBundle);
-                    if (foundKey != null)
-                        return foundKey;
-                }
+                SecretKeys = new PgpSecretKeyRingBundle(inputStream);
+                PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
+                if (foundKey != null)
+                    return foundKey;
             }
             throw new ArgumentException("Can't find signing key in key ring.");
         }
@@ -168,8 +219,8 @@ namespace PgpCore
         {
             using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
             {
-                PgpSecretKeyRingBundle secretKeyRingBundle = new PgpSecretKeyRingBundle(inputStream);
-                PgpSecretKey foundKey = GetFirstSecretKey(secretKeyRingBundle);
+                SecretKeys = new PgpSecretKeyRingBundle(inputStream);
+                PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
                 if (foundKey != null)
                     return foundKey;
             }

@@ -310,6 +310,19 @@ namespace PgpCore
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime);
             await PipeFileContentsAsync(file, pOut, 4096);
+            lData.Close();
+        }
+
+        /// <summary>Write out the passed in file as a literal data packet.</summary>
+        public static void WriteFileToLiteralData(
+            Stream output,
+            char fileType,
+            FileInfo file)
+        {
+            PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+            Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime);
+            PipeFileContents(file, pOut, 4096);
+            lData.Close();
         }
 
         /// <summary>Write out the passed in file as a literal data packet in partial packet format.</summary>
@@ -322,6 +335,20 @@ namespace PgpCore
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, file.Name, file.LastWriteTime, buffer);
             await PipeFileContentsAsync(file, pOut, buffer.Length);
+            lData.Close();
+        }
+
+        /// <summary>Write out the passed in file as a literal data packet in partial packet format.</summary>
+        public static void WriteFileToLiteralData(
+            Stream output,
+            char fileType,
+            FileInfo file,
+            byte[] buffer)
+        {
+            PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+            Stream pOut = lData.Open(output, fileType, file.Name, file.LastWriteTime, buffer);
+            PipeFileContents(file, pOut, buffer.Length);
+            lData.Close();
         }
 
         public static async Task WriteStreamToLiteralDataAsync(
@@ -333,6 +360,19 @@ namespace PgpCore
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now);
             await PipeStreamContentsAsync(input, pOut, 4096);
+            lData.Close();
+        }
+
+        public static void WriteStreamToLiteralData(
+            Stream output,
+            char fileType,
+            Stream input,
+            string name)
+        {
+            PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+            Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now);
+            PipeStreamContents(input, pOut, 4096);
+            lData.Close();
         }
 
         public static async Task WriteStreamToLiteralDataAsync(
@@ -345,6 +385,20 @@ namespace PgpCore
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
             Stream pOut = lData.Open(output, fileType, name, DateTime.Now, buffer);
             await PipeStreamContentsAsync(input, pOut, buffer.Length);
+            lData.Close();
+        }
+
+        public static void WriteStreamToLiteralData(
+            Stream output,
+            char fileType,
+            Stream input,
+            byte[] buffer,
+            string name)
+        {
+            PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+            Stream pOut = lData.Open(output, fileType, name, DateTime.Now, buffer);
+            PipeStreamContents(input, pOut, buffer.Length);
+            lData.Close();
         }
 
         /// <summary>
@@ -353,7 +407,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <returns></returns>
-        internal static PgpPublicKey ReadPublicKey(Stream inputStream)
+        public static PgpPublicKey ReadPublicKey(Stream inputStream)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 
@@ -370,11 +424,11 @@ namespace PgpCore
 
                 const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
 
-                foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && !k.IsMasterKey))
+                foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && k.IsMasterKey))
                 {
                     foreach (PgpSignature s in key.GetSignatures())
                     {
-                        if (s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
+                        if (s.HasSubpackets && s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
                             return key;
                     }
                 }
@@ -390,7 +444,7 @@ namespace PgpCore
         {
             if(!File.Exists(publicKeyFilePath))
                 throw new FileNotFoundException(String.Format("File {0} was not found", publicKeyFilePath));
-            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open))
+            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open, FileAccess.Read))
                 return ReadPublicKey(fs);
         }
 
@@ -408,6 +462,20 @@ namespace PgpCore
             }
         }
 
+        private static void PipeFileContents(FileInfo file, Stream pOut, int bufSize)
+        {
+            using (FileStream inputStream = file.OpenRead())
+            {
+                byte[] buf = new byte[bufSize];
+
+                int len;
+                while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
+                {
+                    pOut.Write(buf, 0, len);
+                }
+            }
+        }
+
         private static async Task PipeStreamContentsAsync(Stream input, Stream pOut, int bufSize)
         {
             byte[] buf = new byte[bufSize];
@@ -416,6 +484,17 @@ namespace PgpCore
             while ((len = await input.ReadAsync(buf, 0, buf.Length)) > 0)
             {
                 await pOut.WriteAsync(buf, 0, len);
+            }
+        }
+
+        private static void PipeStreamContents(Stream input, Stream pOut, int bufSize)
+        {
+            byte[] buf = new byte[bufSize];
+
+            int len;
+            while ((len = input.Read(buf, 0, buf.Length)) > 0)
+            {
+                pOut.Write(buf, 0, len);
             }
         }
 
