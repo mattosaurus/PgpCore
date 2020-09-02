@@ -210,7 +210,7 @@ using (PGP pgp = new PGP())
 ### Encrypt and Sign
 Encrypt the provided file or stream using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
 
-[`pg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
+[`gpg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
 #### EncryptFileAndSign
 ```C#
 using (PGP pgp = new PGP())
