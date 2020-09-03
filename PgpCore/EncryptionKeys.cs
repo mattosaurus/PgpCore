@@ -59,16 +59,16 @@ namespace PgpCore
 
         /// <summary>
         /// Initializes a new instance of the EncryptionKeys class.
-        /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
-        /// The data is encrypted with the recipients public key and signed with your private key.
+        /// Two or more keys are required to encrypt and sign data. Your private key and the recipients public key(s).
+        /// The data is encrypted with the recipients public key(s) and signed with your private key.
         /// </summary>
-        /// <param name="publicKeyFilePath">The key used to encrypt the data</param>
+        /// <param name="publicKeyFilePaths">The key(s) used to encrypt the data</param>
         /// <param name="privateKeyFilePath">The key used to sign the data.</param>
         /// <param name="passPhrase">The password required to access the private key</param>
         /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
         public EncryptionKeys(IEnumerable<string> publicKeyFilePaths, string privateKeyFilePath, string passPhrase)
         {
-            //Avoid multiple enumerations of 'publicKeyFilePaths'
+            // Avoid multiple enumerations of 'publicKeyFilePaths'
             string[] publicKeys = publicKeyFilePaths.ToArray();
 
             if (String.IsNullOrEmpty(privateKeyFilePath))
@@ -139,7 +139,7 @@ namespace PgpCore
 
         public EncryptionKeys(IEnumerable<Stream> publicKeyStreams, Stream privateKeyStream, string passPhrase)
         {
-            //Avoid multiple enumerations of 'publicKeyFilePaths'
+            // Avoid multiple enumerations of 'publicKeyFilePaths'
             Stream[] publicKeys = publicKeyStreams.ToArray();
 
             if (privateKeyStream == null)
