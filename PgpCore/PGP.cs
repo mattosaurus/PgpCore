@@ -28,52 +28,21 @@ namespace PgpCore
         private const int BufferSize = 0x10000;
         private const string DefaultFileName = "name";
 
-        public CompressionAlgorithmTag CompressionAlgorithm
-        {
-            get;
-            set;
-        }
+        public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Uncompressed;
 
-        public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm
-        {
-            get;
-            set;
-        }
+        public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.TripleDes;
 
-        public int PgpSignatureType
-        {
-            get;
-            set;
-        }
+        public int PgpSignatureType { get; set; } = PgpSignature.DefaultCertification;
 
-        public PublicKeyAlgorithmTag PublicKeyAlgorithm
-        {
-            get;
-            set;
-        }
-        public PGPFileType FileType
-        {
-            get;
-            set;
-        }
+        public PublicKeyAlgorithmTag PublicKeyAlgorithm { get; set; } = PublicKeyAlgorithmTag.RsaGeneral;
 
-        public HashAlgorithmTag HashAlgorithmTag
-        {
-            get;
-            set;
-        }
+        public PGPFileType FileType { get; set; } = PGPFileType.Binary;
+
+        public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha1;
 
         #region Constructor
 
-        public PGP()
-        {
-            CompressionAlgorithm = CompressionAlgorithmTag.Uncompressed;
-            SymmetricKeyAlgorithm = SymmetricKeyAlgorithmTag.TripleDes;
-            PgpSignatureType = PgpSignature.DefaultCertification;
-            PublicKeyAlgorithm = PublicKeyAlgorithmTag.RsaGeneral;
-            FileType = PGPFileType.Binary;
-            HashAlgorithmTag = HashAlgorithmTag.Sha1;
-        }
+        public PGP() { }
 
         #endregion Constructor
 
