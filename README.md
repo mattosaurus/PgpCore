@@ -1,4 +1,7 @@
 # PgpCore
+
+[![CircleCI](https://circleci.com/gh/mattosaurus/pgpcore/tree/master.svg?style=svg)](<https://circleci.com/gh/mattosaurus/pgpcore/tree/master>)
+
 A .NET Core class library for using PGP.
 
 This is based on <a href="https://github.com/Cinchoo/ChoPGP" alt="ChoPGP">ChoPGP</a> but updated to .NET Core framework and to add in a missing utilities class.
