@@ -681,21 +681,22 @@ namespace PgpCore.Tests
         public void SignStream_CreateSigned_File_From_String(KeyType keyType)
         {
             // Arrange
-            Arrange(keyType);
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType);
             PGP pgp = new PGP();
 
             // Act
             byte[] byteArray = Encoding.ASCII.GetBytes("The quick brown fox jumps over the lazy dog");
             using (Stream inputFileStream = new MemoryStream(byteArray))
-            using (Stream outputFileStream = File.Create(encryptedContentFilePath))
-            using (Stream privateKeyStream = new FileStream(privateKeyFilePath1, FileMode.Open))
-                pgp.SignStream(inputFileStream, outputFileStream, privateKeyStream, password1);
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream privateKeyStream = new FileStream(testFactory.PrivateKeyFilePath, FileMode.Open))
+                pgp.SignStream(inputFileStream, outputFileStream, privateKeyStream, testFactory.Password);
 
             // Assert
-            Assert.True(File.Exists(encryptedContentFilePath));
+            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
 
             // Teardown
-            Teardown();
+            testFactory.Teardown();
         }
 
         [Theory]
