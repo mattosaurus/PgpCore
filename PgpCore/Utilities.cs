@@ -175,7 +175,7 @@ namespace PgpCore
             }
 
             return keySize;
-        }v
+        }
 
         public static KeyParameter MakeKey(
             SymmetricKeyAlgorithmTag algorithm,
