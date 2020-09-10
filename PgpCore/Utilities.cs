@@ -107,7 +107,7 @@ namespace PgpCore
         }
 
         public static string GetSymmetricCipherName(
-            SymmetricKeyAlgorithmTag algorithm)
+                SymmetricKeyAlgorithmTag algorithm)
         {
             switch (algorithm)
             {
@@ -133,6 +133,12 @@ namespace PgpCore
                     return "AES";
                 case SymmetricKeyAlgorithmTag.Twofish:
                     return "Twofish";
+                case SymmetricKeyAlgorithmTag.Camellia128:
+                    return "Camellia";
+                case SymmetricKeyAlgorithmTag.Camellia192:
+                    return "Camellia";
+                case SymmetricKeyAlgorithmTag.Camellia256:
+                    return "Camellia";
                 default:
                     throw new PgpException("unknown symmetric algorithm: " + algorithm);
             }
