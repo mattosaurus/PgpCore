@@ -157,14 +157,17 @@ namespace PgpCore
                 case SymmetricKeyAlgorithmTag.Blowfish:
                 case SymmetricKeyAlgorithmTag.Safer:
                 case SymmetricKeyAlgorithmTag.Aes128:
+                case SymmetricKeyAlgorithmTag.Camellia128:
                     keySize = 128;
                     break;
                 case SymmetricKeyAlgorithmTag.TripleDes:
                 case SymmetricKeyAlgorithmTag.Aes192:
+                case SymmetricKeyAlgorithmTag.Camellia192:
                     keySize = 192;
                     break;
                 case SymmetricKeyAlgorithmTag.Aes256:
                 case SymmetricKeyAlgorithmTag.Twofish:
+                case SymmetricKeyAlgorithmTag.Camellia256:
                     keySize = 256;
                     break;
                 default:
@@ -172,7 +175,7 @@ namespace PgpCore
             }
 
             return keySize;
-        }
+        }v
 
         public static KeyParameter MakeKey(
             SymmetricKeyAlgorithmTag algorithm,
