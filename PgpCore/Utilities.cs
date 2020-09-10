@@ -89,6 +89,12 @@ namespace PgpCore
                 case PublicKeyAlgorithmTag.Dsa:
                     encAlg = "DSA";
                     break;
+                case PublicKeyAlgorithmTag.ECDH:
+                    encAlg = "ECDH";
+                    break;
+                case PublicKeyAlgorithmTag.ECDsa:
+                    encAlg = "ECDSA";
+                    break;
                 case PublicKeyAlgorithmTag.ElGamalEncrypt: // in some malformed cases.
                 case PublicKeyAlgorithmTag.ElGamalGeneral:
                     encAlg = "ElGamal";
