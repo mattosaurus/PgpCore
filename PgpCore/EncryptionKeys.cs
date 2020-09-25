@@ -12,8 +12,7 @@ namespace PgpCore
     public class EncryptionKeys : IEncryptionKeys
     {
         #region Instance Members (Public)
-
-        public PgpPublicKey PublicKey { get; private set; }
+        public PgpPublicKey PublicKey => PublicKeys.FirstOrDefault();
         public IEnumerable<PgpPublicKey> PublicKeys { get; private set; }
         public PgpPrivateKey PrivateKey { get; private set; }
         public PgpSecretKey SecretKey { get; private set; }
@@ -51,7 +50,7 @@ namespace PgpCore
             if (!File.Exists(privateKeyFilePath))
                 throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
 
-            PublicKey = Utilities.ReadPublicKey(publicKeyFilePath);
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFilePath) };
             SecretKey = ReadSecretKey(privateKeyFilePath);
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
@@ -118,7 +117,7 @@ namespace PgpCore
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            PublicKey = Utilities.ReadPublicKey(publicKeyStream);
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyStream) };
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
@@ -131,7 +130,6 @@ namespace PgpCore
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            PublicKey = null;
             SecretKey = ReadSecretKey(privateKeyStream);
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
@@ -173,7 +171,30 @@ namespace PgpCore
             if (!File.Exists(publicKeyFilePath))
                 throw new FileNotFoundException(String.Format("Public Key file [{0}] does not exist.", publicKeyFilePath));
 
-            PublicKey = Utilities.ReadPublicKey(publicKeyFilePath);
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFilePath) };
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the EncryptionKeys class.
+        /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
+        /// The data is encrypted with the recipients public key and signed with your private key.
+        /// </summary>
+        /// <param name="publicKeyFilePath">The key used to encrypt the data</param>
+        /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
+        public EncryptionKeys(IEnumerable<string> publicKeyFilePaths)
+        {
+            // Avoid multiple enumerations of 'publicKeyFilePaths'
+            string[] publicKeys = publicKeyFilePaths.ToArray();
+
+            foreach (string publicKeyFilePath in publicKeys)
+            {
+                if (String.IsNullOrEmpty(publicKeyFilePath))
+                    throw new ArgumentException(nameof(publicKeyFilePath));
+                if (!File.Exists(publicKeyFilePath))
+                    throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
+            }
+
+            PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
         }
 
         public EncryptionKeys(Stream publicKeyStream)
@@ -181,7 +202,20 @@ namespace PgpCore
             if (publicKeyStream == null)
                 throw new ArgumentException("PublicKeyStream");
 
-            PublicKey = Utilities.ReadPublicKey(publicKeyStream);
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyStream) };
+        }
+
+        public EncryptionKeys(IEnumerable<Stream> publicKeyStreams)
+        {
+            Stream[] publicKeys = publicKeyStreams.ToArray();
+
+            foreach (Stream publicKey in publicKeys)
+            {
+                if (publicKey == null)
+                    throw new ArgumentException("PublicKeyStream");
+            }
+
+            PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
         }
 
         #endregion Constructors
