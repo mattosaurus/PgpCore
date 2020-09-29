@@ -11,6 +11,17 @@ namespace PgpCore.Tests
 {
     public class UnitTestsAsync
     {
+        private static class File
+        {
+            public static FileStream Create(string path) => System.IO.File.Create(path);
+            public static bool Exists(string path) => System.IO.File.Exists(path);
+#if NETFRAMEWORK
+            public static Task<string> ReadAllTextAsync(string path) => Task.FromResult(System.IO.File.ReadAllText(path));
+#else
+            public static Task<string> ReadAllTextAsync(string path) => System.IO.File.ReadAllTextAsync(path);
+#endif
+        }
+
         [Fact]
         public async Task GenerateKeyAsync_CreatePublicPrivateKeyFiles()
         {

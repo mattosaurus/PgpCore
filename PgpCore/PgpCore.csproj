@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
-    <Description>.NET Standard and Core class library for using PGP</Description>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>.NET Standard class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
     <Product>PgpCore</Product>
