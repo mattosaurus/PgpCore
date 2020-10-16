@@ -41,9 +41,13 @@ namespace PgpCore
 
         public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha1;
 
+        public IEncryptionKeys EncryptionKeys { get; set; }
+
         #region Constructor
 
         public PGP() { }
+
+        public PGP(IEncryptionKeys encryptionKeys) { EncryptionKeys = encryptionKeys; }
 
         #endregion Constructor
 
