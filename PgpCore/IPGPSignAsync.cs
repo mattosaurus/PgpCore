@@ -17,7 +17,5 @@ namespace PgpCore
 
         Task SignStreamAsync(Stream inputStream, Stream outputStream,
             bool armor, bool withIntegrityCheck, string name);
-
-        void Dispose();
     }
 }
