@@ -1,7 +1,10 @@
 # PgpCore
+
+[![CircleCI](https://circleci.com/gh/mattosaurus/pgpcore/tree/master.svg?style=svg)](<https://circleci.com/gh/mattosaurus/pgpcore/tree/master>)
+
 A .NET Core class library for using PGP.
 
-This is based on <a href="https://github.com/Cinchoo/ChoPGP" alt="ChoPGP">ChoPGP</a> but updated to .NET Core framework and to add in a missing utilities class.
+This is based on <a href="https://github.com/Cinchoo/ChoPGP" alt="ChoPGP">ChoPGP</a> but updated to .NET Standard and to add in a missing utilities class.
 
 # Installation
 To use PgpCore in your C# project, you can either download the PgpCore C# .NET libraries directly from the Github repository or, if you have the NuGet package manager installed, you can grab them automatically.
@@ -17,12 +20,10 @@ Add the following namespaces to use the library:
 using PgpCore;
 ```
 # Dependencies
-BouncyCastle.NetCore (>= 1.8.1.3)
-
-Microsoft.NETCore.App (>= 1.1.2)
+* Portable.BouncyCastle (>= 1.8.6.7)
 
 # Usage
-This is intended for usage in .NET Core projects, the latest version that works with .NET Framework is v2.2.0.
+This is intended for usage in projects [targeting .NET Standard 2.0](https://dotnet.microsoft.com/platform/dotnet-standard#versions).
 
 ## Methods
 

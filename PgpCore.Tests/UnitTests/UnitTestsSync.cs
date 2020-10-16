@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Xunit;
@@ -664,6 +665,31 @@ namespace PgpCore.Tests
             using (FileStream inputFileStream = new FileStream(testFactory.ContentFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
             using (Stream privateKeyStream = new FileStream(testFactory.PrivateKeyFilePath, FileMode.Open, FileAccess.Read))
+                pgp.SignStream(inputFileStream, outputFileStream, privateKeyStream, testFactory.Password);
+
+            // Assert
+            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignStream_CreateSigned_File_From_String(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType);
+            PGP pgp = new PGP();
+
+            // Act
+            byte[] byteArray = Encoding.ASCII.GetBytes("The quick brown fox jumps over the lazy dog");
+            using (Stream inputFileStream = new MemoryStream(byteArray))
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream privateKeyStream = new FileStream(testFactory.PrivateKeyFilePath, FileMode.Open))
                 pgp.SignStream(inputFileStream, outputFileStream, privateKeyStream, testFactory.Password);
 
             // Assert

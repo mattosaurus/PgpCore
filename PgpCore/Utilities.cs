@@ -89,6 +89,12 @@ namespace PgpCore
                 case PublicKeyAlgorithmTag.Dsa:
                     encAlg = "DSA";
                     break;
+                case PublicKeyAlgorithmTag.ECDH:
+                    encAlg = "ECDH";
+                    break;
+                case PublicKeyAlgorithmTag.ECDsa:
+                    encAlg = "ECDSA";
+                    break;
                 case PublicKeyAlgorithmTag.ElGamalEncrypt: // in some malformed cases.
                 case PublicKeyAlgorithmTag.ElGamalGeneral:
                     encAlg = "ElGamal";
@@ -101,7 +107,7 @@ namespace PgpCore
         }
 
         public static string GetSymmetricCipherName(
-            SymmetricKeyAlgorithmTag algorithm)
+                SymmetricKeyAlgorithmTag algorithm)
         {
             switch (algorithm)
             {
@@ -127,6 +133,12 @@ namespace PgpCore
                     return "AES";
                 case SymmetricKeyAlgorithmTag.Twofish:
                     return "Twofish";
+                case SymmetricKeyAlgorithmTag.Camellia128:
+                    return "Camellia";
+                case SymmetricKeyAlgorithmTag.Camellia192:
+                    return "Camellia";
+                case SymmetricKeyAlgorithmTag.Camellia256:
+                    return "Camellia";
                 default:
                     throw new PgpException("unknown symmetric algorithm: " + algorithm);
             }
@@ -145,14 +157,17 @@ namespace PgpCore
                 case SymmetricKeyAlgorithmTag.Blowfish:
                 case SymmetricKeyAlgorithmTag.Safer:
                 case SymmetricKeyAlgorithmTag.Aes128:
+                case SymmetricKeyAlgorithmTag.Camellia128:
                     keySize = 128;
                     break;
                 case SymmetricKeyAlgorithmTag.TripleDes:
                 case SymmetricKeyAlgorithmTag.Aes192:
+                case SymmetricKeyAlgorithmTag.Camellia192:
                     keySize = 192;
                     break;
                 case SymmetricKeyAlgorithmTag.Aes256:
                 case SymmetricKeyAlgorithmTag.Twofish:
+                case SymmetricKeyAlgorithmTag.Camellia256:
                     keySize = 256;
                     break;
                 default:
