@@ -136,6 +136,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
 
@@ -229,6 +231,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
 
@@ -305,6 +309,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -411,6 +417,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -516,6 +524,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -603,6 +613,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -690,6 +702,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -772,6 +786,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1252,6 +1268,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -1320,6 +1338,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -1388,6 +1408,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1451,6 +1473,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1510,6 +1534,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -1556,6 +1582,8 @@ namespace PgpCore
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentException("OutputFilePath");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             if (!File.Exists(inputFilePath))
                 throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", inputFilePath));
@@ -1603,6 +1631,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             await OutputClearSignedAsync(inputStream, outputStream);
         }
@@ -1643,6 +1673,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentException("EncryptionKeys");
 
             OutputClearSigned(inputStream, outputStream);
         }
