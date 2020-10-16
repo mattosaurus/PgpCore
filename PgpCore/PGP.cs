@@ -52,6 +52,7 @@ namespace PgpCore
         #endregion Constructor
 
         #region Encrypt
+        #region EncryptFileAsync
 
         /// <summary>
         /// PGP Encrypt the file.
@@ -70,7 +71,8 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            await EncryptFileAsync(inputFilePath, outputFilePath, new EncryptionKeys(publicKeyFilePath), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            await EncryptFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -90,27 +92,8 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            await EncryptFileAsync(inputFilePath, outputFilePath, new EncryptionKeys(publicKeyFilePaths), armor, withIntegrityCheck, name);
-        }
-
-        /// <summary>
-        /// PGP Encrypt the file.
-        /// </summary>
-        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
-        /// <param name="outputFilePath">Output PGP encrypted file path</param>
-        /// <param name="publicKeyFilePath">PGP public key file path</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
-        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
-        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public void EncryptFile(
-            string inputFilePath,
-            string outputFilePath,
-            string publicKeyFilePath,
-            bool armor = true,
-            bool withIntegrityCheck = true,
-            string name = DefaultFileName)
-        {
-            EncryptFile(inputFilePath, outputFilePath, new EncryptionKeys(publicKeyFilePath), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths);
+            await EncryptFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -130,6 +113,25 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
+            EncryptionKeys = encryptionKeys;
+            await EncryptFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the file.
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task EncryptFileAsync(
+            string inputFilePath,
+            string outputFilePath,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
+        {
             if (String.IsNullOrEmpty(inputFilePath))
                 throw new ArgumentException("InputFilePath");
             if (String.IsNullOrEmpty(outputFilePath))
@@ -139,7 +141,31 @@ namespace PgpCore
 
             using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputStream = File.Create(outputFilePath))
-                await EncryptStreamAsync(inputStream, outputStream, encryptionKeys, armor, withIntegrityCheck, name);
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+        }
+
+        #endregion EncryptFileAsync
+        #region EncryptFile
+
+        /// <summary>
+        /// PGP Encrypt the file.
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="publicKeyFilePath">PGP public key file path</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public void EncryptFile(
+            string inputFilePath,
+            string outputFilePath,
+            string publicKeyFilePath,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -159,9 +185,8 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
-            using (Stream outputStream = File.Create(outputFilePath))
-                EncryptStream(inputStream, outputStream, new EncryptionKeys(publicKeyFilePaths), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths);
+            EncryptFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -169,7 +194,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFilePath">Plain data file path to be encrypted</param>
         /// <param name="outputFilePath">Output PGP encrypted file path</param>
-        /// <param name="publicKeyFilePaths">IEnumerable of PGP public key file paths</param>
+        /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
@@ -177,6 +202,25 @@ namespace PgpCore
             string inputFilePath,
             string outputFilePath,
             IEncryptionKeys encryptionKeys,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+            EncryptFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the file.
+        /// </summary>
+        /// <param name="inputFilePath">Plain data file path to be encrypted</param>
+        /// <param name="outputFilePath">Output PGP encrypted file path</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public void EncryptFile(
+            string inputFilePath,
+            string outputFilePath,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
@@ -190,8 +234,11 @@ namespace PgpCore
 
             using (FileStream inputStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
             using (Stream outputStream = File.Create(outputFilePath))
-                EncryptStream(inputStream, outputStream, encryptionKeys, armor, withIntegrityCheck, name);
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
         }
+
+        #endregion EncryptFile
+        #region EncryptStreamAsync
 
         /// <summary>
         /// PGP Encrypt the stream.
@@ -210,27 +257,8 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            await EncryptStreamAsync(inputStream, outputStream, new EncryptionKeys(publicKeyStream), armor, withIntegrityCheck, name);
-        }
-
-        /// <summary>
-        /// PGP Encrypt the stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be encrypted</param>
-        /// <param name="outputStream">Output PGP encrypted stream</param>
-        /// <param name="publicKeyStream">PGP public key stream</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
-        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
-        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public void EncryptStream(
-            Stream inputStream,
-            Stream outputStream,
-            Stream publicKeyStream,
-            bool armor = true,
-            bool withIntegrityCheck = true,
-            string name = DefaultFileName)
-        {
-            EncryptStream(inputStream, outputStream, new EncryptionKeys(publicKeyStream), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyStream);
+            await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -244,7 +272,8 @@ namespace PgpCore
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            await EncryptStreamAsync(inputStream, outputStream, new EncryptionKeys(publicKeyStreams), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyStreams);
+            await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -257,6 +286,20 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+            await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -276,7 +319,7 @@ namespace PgpCore
 
             PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-            foreach (PgpPublicKey publicKey in encryptionKeys.PublicKeys)
+            foreach (PgpPublicKey publicKey in EncryptionKeys.PublicKeys)
             {
                 pk.AddMethod(publicKey);
             }
@@ -300,6 +343,30 @@ namespace PgpCore
             }
         }
 
+        #endregion EncryptStreamAsync
+        #region EncryptStream
+
+        /// <summary>
+        /// PGP Encrypt the stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public void EncryptStream(
+            Stream inputStream,
+            Stream outputStream,
+            Stream publicKeyStream,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeyStream);
+            EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+        }
+
         /// <summary>
         /// PGP Encrypt the stream.
         /// </summary>
@@ -311,7 +378,8 @@ namespace PgpCore
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptStream(inputStream, outputStream, new EncryptionKeys(publicKeyStreams), armor, withIntegrityCheck, name);
+            EncryptionKeys = new EncryptionKeys(publicKeyStreams);
+            EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
         }
 
         /// <summary>
@@ -324,6 +392,20 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public void EncryptStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+            EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+        }
+
+        /// <summary>
+        /// PGP Encrypt the stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be encrypted</param>
+        /// <param name="outputStream">Output PGP encrypted stream</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -343,7 +425,7 @@ namespace PgpCore
 
             PgpEncryptedDataGenerator pk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-            foreach (PgpPublicKey publicKey in encryptionKeys.PublicKeys)
+            foreach (PgpPublicKey publicKey in EncryptionKeys.PublicKeys)
             {
                 pk.AddMethod(publicKey);
             }
@@ -367,6 +449,7 @@ namespace PgpCore
             }
         }
 
+        #endregion EncryptStream
         #endregion Encrypt
 
         #region Encrypt and Sign
