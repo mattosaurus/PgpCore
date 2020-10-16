@@ -16,6 +16,9 @@ namespace PgpCore
         Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, 
             bool armor, bool withIntegrityCheck, string name);
 
+        Task EncryptStreamAsync(Stream inputStream, Stream outputStream,
+            bool armor, bool withIntegrityCheck, string name);
+
         void Dispose();
     }
 }

@@ -15,6 +15,8 @@ namespace PgpCore
 
         void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams, bool armor, bool withIntegrityCheck, string name);
 
+        void EncryptStream(Stream inputStream, Stream outputStream, bool armor, bool withIntegrityCheck, string name);
+
         void Dispose();
     }
 }
