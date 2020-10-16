@@ -16,7 +16,8 @@ namespace PgpCore
 
         void SignStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
             bool armor, bool withIntegrityCheck, string name);
-        
-        void Dispose();
+
+        void SignStream(Stream inputStream, Stream outputStream,
+            bool armor, bool withIntegrityCheck, string name);
     }
 }
