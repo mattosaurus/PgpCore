@@ -807,422 +807,10 @@ namespace PgpCore
         }
 
         #endregion EncryptStreamAndSign
-
-        private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, IEncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
-        {
-            using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
-            {
-                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-                {
-                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
-                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
-                    {
-                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-                        {
-                            await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
-                        }
-                    }
-                }
-            }
-        }
-
-        private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
-            {
-                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-                {
-                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
-                    {
-                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-                        {
-                            await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
-                        }
-                    }
-                }
-            }
-        }
-
-        private void OutputEncrypted(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
-            {
-                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-                {
-                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
-                    {
-                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-                        {
-                            WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
-                        }
-                    }
-                }
-            }
-        }
-
-        private async Task OutputSignedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-            using (Stream compressedOut = ChainCompressedOut(outputStream))
-            {
-                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
-                {
-                    using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-                    {
-                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
-                    }
-                }
-            }
-        }
-
-        private void OutputSigned(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-            using (Stream compressedOut = ChainCompressedOut(outputStream))
-            {
-                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
-                {
-                    using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-                    {
-                        WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
-                    }
-                }
-            }
-        }
-
-        private async Task OutputClearSignedAsync(string inputFilePath, Stream outputStream)
-        {
-            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-            {
-                await OutputClearSignedAsync(inputFileStream, outputStream);
-            }
-        }
-
-        private void OutputClearSigned(string inputFilePath, Stream outputStream)
-        {
-            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
-            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
-            {
-                OutputClearSigned(inputFileStream, outputStream);
-            }
-        }
-
-        private async Task OutputEncryptedAsync(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
-            {
-                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-                {
-                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                    using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
-                    {
-                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
-                    }
-                }
-            }
-        }
-
-        private void OutputEncrypted(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
-            {
-                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-                {
-                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                    using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
-                    {
-                        WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
-                    }
-                }
-            }
-        }
-
-        private async Task OutputSignedAsync(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream compressedOut = ChainCompressedOut(outputStream))
-            {
-                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
-                {
-                    await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
-                }
-            }
-        }
-
-        private void OutputSigned(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
-        {
-            using (Stream compressedOut = ChainCompressedOut(outputStream))
-            {
-                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
-                {
-                    WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
-                }
-            }
-        }
-
-        private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream)
-        {
-            using (StreamReader streamReader = new StreamReader(inputStream))
-            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
-            {
-                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
-
-                while (streamReader.Peek() >= 0)
-                {
-                    string line = await streamReader.ReadLineAsync();
-                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
-                    // Does the line end with whitespace?
-                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-                    string cleanLine = line.TrimEnd();
-                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
-
-                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
-                    await armoredOutputStream.WriteAsync(lineByteArray, 0, lineByteArray.Length);
-
-                    // Add a line break back to the stream
-                    armoredOutputStream.Write((byte)'\r');
-                    armoredOutputStream.Write((byte)'\n');
-
-                    // Update signature with line breaks unless we're on the last line
-                    if (streamReader.Peek() >= 0)
-                    {
-                        pgpSignatureGenerator.Update((byte)'\r');
-                        pgpSignatureGenerator.Update((byte)'\n');
-                    }
-                }
-
-                armoredOutputStream.EndClearText();
-
-                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
-                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
-            }
-        }
-
-        private void OutputClearSigned(Stream inputStream, Stream outputStream)
-        {
-            using (StreamReader streamReader = new StreamReader(inputStream))
-            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
-            {
-                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
-
-                while (streamReader.Peek() >= 0)
-                {
-                    string line = streamReader.ReadLine();
-                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
-                    // Does the line end with whitespace?
-                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-                    string cleanLine = line.TrimEnd();
-                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
-
-                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
-                    armoredOutputStream.Write(lineByteArray, 0, lineByteArray.Length);
-
-                    // Add a line break back to the stream
-                    armoredOutputStream.Write((byte)'\r');
-                    armoredOutputStream.Write((byte)'\n');
-
-                    // Update signature with line breaks unless we're on the last line
-                    if (streamReader.Peek() >= 0)
-                    {
-                        pgpSignatureGenerator.Update((byte)'\r');
-                        pgpSignatureGenerator.Update((byte)'\n');
-                    }
-                }
-
-                armoredOutputStream.EndClearText();
-
-                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
-                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
-            }
-        }
-
-        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
-        {
-            int length = 0;
-            byte[] buf = new byte[BufferSize];
-            while ((length = await inputFilePath.ReadAsync(buf, 0, buf.Length)) > 0)
-            {
-                await literalOut.WriteAsync(buf, 0, length);
-                signatureGenerator.Update(buf, 0, length);
-            }
-            signatureGenerator.Generate().Encode(compressedOut);
-        }
-
-        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
-        {
-            int length = 0;
-            byte[] buf = new byte[BufferSize];
-            while ((length = inputFilePath.Read(buf, 0, buf.Length)) > 0)
-            {
-                literalOut.Write(buf, 0, length);
-                signatureGenerator.Update(buf, 0, length);
-            }
-            signatureGenerator.Generate().Encode(compressedOut);
-        }
-
-        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
-        {
-            int length = 0;
-            byte[] buf = new byte[BufferSize];
-            while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
-            {
-                await literalOut.WriteAsync(buf, 0, length);
-                signatureGenerator.Update(buf, 0, length);
-            }
-            signatureGenerator.Generate().Encode(compressedOut);
-        }
-
-        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
-        {
-            int length = 0;
-            byte[] buf = new byte[BufferSize];
-            while ((length = inputStream.Read(buf, 0, buf.Length)) > 0)
-            {
-                literalOut.Write(buf, 0, length);
-                signatureGenerator.Update(buf, 0, length);
-            }
-            signatureGenerator.Generate().Encode(compressedOut);
-        }
-
-        private Stream ChainEncryptedOut(Stream outputStream, IEncryptionKeys encryptionKeys, bool withIntegrityCheck)
-        {
-            PgpEncryptedDataGenerator encryptedDataGenerator;
-            encryptedDataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-
-            foreach (PgpPublicKey publicKey in encryptionKeys.PublicKeys)
-            {
-                encryptedDataGenerator.AddMethod(publicKey);
-            }
-
-            return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
-        }
-
-        private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
-        {
-            PgpEncryptedDataGenerator encryptedDataGenerator;
-            encryptedDataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-
-            foreach (PgpPublicKey publicKey in EncryptionKeys.PublicKeys)
-            {
-                encryptedDataGenerator.AddMethod(publicKey);
-            }
-
-            return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
-        }
-
-        private Stream ChainCompressedOut(Stream encryptedOut)
-        {
-            if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
-            {
-                PgpCompressedDataGenerator compressedDataGenerator = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
-                return compressedDataGenerator.Open(encryptedOut);
-            }
-            else
-                return encryptedOut;
-        }
-
-        private Stream ChainLiteralOut(Stream compressedOut, FileInfo file)
-        {
-            PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
-            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), file.Name, file.Length, DateTime.UtcNow);
-        }
-
-        private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name)
-        {
-            PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
-            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length, DateTime.UtcNow);
-        }
-
-        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut, IEncryptionKeys encryptionKeys)
-        {
-            PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
-            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
-            pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, encryptionKeys.PrivateKey);
-            foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
-            {
-                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-                subPacketGenerator.SetSignerUserId(false, userId);
-                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-                // Just the first one!
-                break;
-            }
-            pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
-            return pgpSignatureGenerator;
-        }
-
-        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
-        {
-            PublicKeyAlgorithmTag tag = EncryptionKeys.SecretKey.PublicKey.Algorithm;
-            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
-            pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, EncryptionKeys.PrivateKey);
-            foreach (string userId in EncryptionKeys.SecretKey.PublicKey.GetUserIds())
-            {
-                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-                subPacketGenerator.SetSignerUserId(false, userId);
-                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-                // Just the first one!
-                break;
-            }
-            pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
-            return pgpSignatureGenerator;
-        }
-
-        private PgpSignatureGenerator InitClearSignatureGenerator(ArmoredOutputStream armoredOutputStream, IEncryptionKeys encryptionKeys)
-        {
-            PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
-            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
-            pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, encryptionKeys.PrivateKey);
-            armoredOutputStream.BeginClearText(HashAlgorithmTag);
-            foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
-            {
-                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-                subPacketGenerator.SetSignerUserId(false, userId);
-                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-                // Just the first one!
-                break;
-            }
-            return pgpSignatureGenerator;
-        }
-
-        private PgpSignatureGenerator InitClearSignatureGenerator(ArmoredOutputStream armoredOutputStream)
-        {
-            PublicKeyAlgorithmTag tag = EncryptionKeys.SecretKey.PublicKey.Algorithm;
-            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
-            pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, EncryptionKeys.PrivateKey);
-            armoredOutputStream.BeginClearText(HashAlgorithmTag);
-            foreach (string userId in EncryptionKeys.SecretKey.PublicKey.GetUserIds())
-            {
-                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-                subPacketGenerator.SetSignerUserId(false, userId);
-                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-                // Just the first one!
-                break;
-            }
-            return pgpSignatureGenerator;
-        }
-
         #endregion Encrypt and Sign
 
         #region Sign
-
+        #region SignFileAsync
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo and
         /// </summary>
@@ -1292,6 +880,9 @@ namespace PgpCore
                     await OutputSignedAsync(inputFilePath, outputStream, withIntegrityCheck, name);
             }
         }
+
+        #endregion SignFileAsync
+        #region SignFile
 
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo and
@@ -1363,6 +954,9 @@ namespace PgpCore
             }
         }
 
+        #endregion SignFile
+        #region SignStreamAsync
+
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
@@ -1427,6 +1021,9 @@ namespace PgpCore
             else
                 await OutputSignedAsync(inputStream, outputStream, withIntegrityCheck, name);
         }
+
+        #endregion SignStreamAsync
+        #region SignStream
 
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
@@ -1493,9 +1090,12 @@ namespace PgpCore
                 OutputSigned(inputStream, outputStream, withIntegrityCheck, name);
         }
 
+        #endregion SignStream
         #endregion Sign
 
         #region ClearSign
+        #region ClearSignFileAsync
+
         // https://github.com/bcgit/bc-csharp/blob/f18a2dbbc2c1b4277e24a2e51f09cac02eedf1f5/crypto/test/src/openpgp/examples/ClearSignedFileProcessor.cs
 
         /// <summary>
@@ -1546,6 +1146,9 @@ namespace PgpCore
             }
         }
 
+        #endregion ClearSignFileAsync
+        #region ClearSignFile
+
         /// <summary>
         /// Clear sign the file pointed to by unencryptedFileInfo
         /// </summary>
@@ -1594,6 +1197,9 @@ namespace PgpCore
             }
         }
 
+        #endregion ClearSignFile
+        #region ClearSignStreamAsync
+
         /// <summary>
         /// Clear sign the provided stream
         /// </summary>
@@ -1637,6 +1243,9 @@ namespace PgpCore
             await OutputClearSignedAsync(inputStream, outputStream);
         }
 
+        #endregion ClearSignStreamAsync
+        #region ClearSignStream
+
         /// <summary>
         /// Clear sign the provided stream
         /// </summary>
@@ -1679,6 +1288,7 @@ namespace PgpCore
             OutputClearSigned(inputStream, outputStream);
         }
 
+        #endregion ClearSignStream
         #endregion ClearSign
 
         #region Decrypt
@@ -2829,6 +2439,416 @@ namespace PgpCore
         #endregion GenerateKey
 
         #region Private helpers
+        private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, IEncryptionKeys encryptionKeys, bool withIntegrityCheck, string name)
+        {
+            using (Stream encryptedOut = ChainEncryptedOut(outputStream, encryptionKeys, withIntegrityCheck))
+            {
+                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
+                {
+                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut, encryptionKeys);
+                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                    {
+                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                        {
+                            await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                            inputFileStream.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task OutputEncryptedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
+            {
+                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
+                {
+                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                    {
+                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                        {
+                            await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                            inputFileStream.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void OutputEncrypted(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
+            {
+                FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
+                {
+                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                    using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                    {
+                        using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                        {
+                            WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                            inputFileStream.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task OutputSignedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                {
+                    using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                    {
+                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                        inputFileStream.Dispose();
+                    }
+                }
+            }
+        }
+
+        private void OutputSigned(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                using (Stream literalOut = ChainLiteralOut(compressedOut, unencryptedFileInfo))
+                {
+                    using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+                    {
+                        WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
+                        inputFileStream.Dispose();
+                    }
+                }
+            }
+        }
+
+        private async Task OutputClearSignedAsync(string inputFilePath, Stream outputStream)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+            {
+                await OutputClearSignedAsync(inputFileStream, outputStream);
+            }
+        }
+
+        private void OutputClearSigned(string inputFilePath, Stream outputStream)
+        {
+            FileInfo unencryptedFileInfo = new FileInfo(inputFilePath);
+            using (FileStream inputFileStream = unencryptedFileInfo.OpenRead())
+            {
+                OutputClearSigned(inputFileStream, outputStream);
+            }
+        }
+
+        private async Task OutputEncryptedAsync(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
+            {
+                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
+                {
+                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                    using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                    {
+                        await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
+                        inputStream.Dispose();
+                    }
+                }
+            }
+        }
+
+        private void OutputEncrypted(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
+            {
+                using (Stream compressedOut = ChainCompressedOut(encryptedOut))
+                {
+                    PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                    using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                    {
+                        WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
+                        inputStream.Dispose();
+                    }
+                }
+            }
+        }
+
+        private async Task OutputSignedAsync(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                {
+                    await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
+                    inputStream.Dispose();
+                }
+            }
+        }
+
+        private void OutputSigned(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
+        {
+            using (Stream compressedOut = ChainCompressedOut(outputStream))
+            {
+                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                {
+                    WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
+                    inputStream.Dispose();
+                }
+            }
+        }
+
+        private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream)
+        {
+            using (StreamReader streamReader = new StreamReader(inputStream))
+            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+            {
+                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
+
+                while (streamReader.Peek() >= 0)
+                {
+                    string line = await streamReader.ReadLineAsync();
+                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+                    // Does the line end with whitespace?
+                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
+                    string cleanLine = line.TrimEnd();
+                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+
+                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
+                    await armoredOutputStream.WriteAsync(lineByteArray, 0, lineByteArray.Length);
+
+                    // Add a line break back to the stream
+                    armoredOutputStream.Write((byte)'\r');
+                    armoredOutputStream.Write((byte)'\n');
+
+                    // Update signature with line breaks unless we're on the last line
+                    if (streamReader.Peek() >= 0)
+                    {
+                        pgpSignatureGenerator.Update((byte)'\r');
+                        pgpSignatureGenerator.Update((byte)'\n');
+                    }
+                }
+
+                armoredOutputStream.EndClearText();
+
+                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
+                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
+            }
+        }
+
+        private void OutputClearSigned(Stream inputStream, Stream outputStream)
+        {
+            using (StreamReader streamReader = new StreamReader(inputStream))
+            using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+            {
+                PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
+
+                while (streamReader.Peek() >= 0)
+                {
+                    string line = streamReader.ReadLine();
+                    byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+                    // Does the line end with whitespace?
+                    // Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
+                    string cleanLine = line.TrimEnd();
+                    byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+
+                    pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
+                    armoredOutputStream.Write(lineByteArray, 0, lineByteArray.Length);
+
+                    // Add a line break back to the stream
+                    armoredOutputStream.Write((byte)'\r');
+                    armoredOutputStream.Write((byte)'\n');
+
+                    // Update signature with line breaks unless we're on the last line
+                    if (streamReader.Peek() >= 0)
+                    {
+                        pgpSignatureGenerator.Update((byte)'\r');
+                        pgpSignatureGenerator.Update((byte)'\n');
+                    }
+                }
+
+                armoredOutputStream.EndClearText();
+
+                BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(armoredOutputStream);
+                pgpSignatureGenerator.Generate().Encode(bcpgOutputStream);
+            }
+        }
+
+        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
+        {
+            int length = 0;
+            byte[] buf = new byte[BufferSize];
+            while ((length = await inputFilePath.ReadAsync(buf, 0, buf.Length)) > 0)
+            {
+                await literalOut.WriteAsync(buf, 0, length);
+                signatureGenerator.Update(buf, 0, length);
+            }
+            signatureGenerator.Generate().Encode(compressedOut);
+        }
+
+        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, FileStream inputFilePath, PgpSignatureGenerator signatureGenerator)
+        {
+            int length = 0;
+            byte[] buf = new byte[BufferSize];
+            while ((length = inputFilePath.Read(buf, 0, buf.Length)) > 0)
+            {
+                literalOut.Write(buf, 0, length);
+                signatureGenerator.Update(buf, 0, length);
+            }
+            signatureGenerator.Generate().Encode(compressedOut);
+        }
+
+        private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
+        {
+            int length = 0;
+            byte[] buf = new byte[BufferSize];
+            while ((length = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+            {
+                await literalOut.WriteAsync(buf, 0, length);
+                signatureGenerator.Update(buf, 0, length);
+            }
+            signatureGenerator.Generate().Encode(compressedOut);
+        }
+
+        private void WriteOutputAndSign(Stream compressedOut, Stream literalOut, Stream inputStream, PgpSignatureGenerator signatureGenerator)
+        {
+            int length = 0;
+            byte[] buf = new byte[BufferSize];
+            while ((length = inputStream.Read(buf, 0, buf.Length)) > 0)
+            {
+                literalOut.Write(buf, 0, length);
+                signatureGenerator.Update(buf, 0, length);
+            }
+            signatureGenerator.Generate().Encode(compressedOut);
+        }
+
+        private Stream ChainEncryptedOut(Stream outputStream, IEncryptionKeys encryptionKeys, bool withIntegrityCheck)
+        {
+            PgpEncryptedDataGenerator encryptedDataGenerator;
+            encryptedDataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
+
+            foreach (PgpPublicKey publicKey in encryptionKeys.PublicKeys)
+            {
+                encryptedDataGenerator.AddMethod(publicKey);
+            }
+
+            return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
+        }
+
+        private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
+        {
+            PgpEncryptedDataGenerator encryptedDataGenerator;
+            encryptedDataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
+
+            foreach (PgpPublicKey publicKey in EncryptionKeys.PublicKeys)
+            {
+                encryptedDataGenerator.AddMethod(publicKey);
+            }
+
+            return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
+        }
+
+        private Stream ChainCompressedOut(Stream encryptedOut)
+        {
+            if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
+            {
+                PgpCompressedDataGenerator compressedDataGenerator = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
+                return compressedDataGenerator.Open(encryptedOut);
+            }
+            else
+                return encryptedOut;
+        }
+
+        private Stream ChainLiteralOut(Stream compressedOut, FileInfo file)
+        {
+            PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
+            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), file.Name, file.Length, DateTime.UtcNow);
+        }
+
+        private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name)
+        {
+            PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
+            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length, DateTime.UtcNow);
+        }
+
+        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut, IEncryptionKeys encryptionKeys)
+        {
+            PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
+            pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, encryptionKeys.PrivateKey);
+            foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
+            {
+                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+                subPacketGenerator.SetSignerUserId(false, userId);
+                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
+                // Just the first one!
+                break;
+            }
+            pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
+            return pgpSignatureGenerator;
+        }
+
+        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
+        {
+            PublicKeyAlgorithmTag tag = EncryptionKeys.SecretKey.PublicKey.Algorithm;
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
+            pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, EncryptionKeys.PrivateKey);
+            foreach (string userId in EncryptionKeys.SecretKey.PublicKey.GetUserIds())
+            {
+                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+                subPacketGenerator.SetSignerUserId(false, userId);
+                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
+                // Just the first one!
+                break;
+            }
+            pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
+            return pgpSignatureGenerator;
+        }
+
+        private PgpSignatureGenerator InitClearSignatureGenerator(ArmoredOutputStream armoredOutputStream, IEncryptionKeys encryptionKeys)
+        {
+            PublicKeyAlgorithmTag tag = encryptionKeys.SecretKey.PublicKey.Algorithm;
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
+            pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, encryptionKeys.PrivateKey);
+            armoredOutputStream.BeginClearText(HashAlgorithmTag);
+            foreach (string userId in encryptionKeys.SecretKey.PublicKey.GetUserIds())
+            {
+                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+                subPacketGenerator.SetSignerUserId(false, userId);
+                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
+                // Just the first one!
+                break;
+            }
+            return pgpSignatureGenerator;
+        }
+
+        private PgpSignatureGenerator InitClearSignatureGenerator(ArmoredOutputStream armoredOutputStream)
+        {
+            PublicKeyAlgorithmTag tag = EncryptionKeys.SecretKey.PublicKey.Algorithm;
+            PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
+            pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, EncryptionKeys.PrivateKey);
+            armoredOutputStream.BeginClearText(HashAlgorithmTag);
+            foreach (string userId in EncryptionKeys.SecretKey.PublicKey.GetUserIds())
+            {
+                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+                subPacketGenerator.SetSignerUserId(false, userId);
+                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
+                // Just the first one!
+                break;
+            }
+            return pgpSignatureGenerator;
+        }
 
         private char FileTypeToChar()
         {
