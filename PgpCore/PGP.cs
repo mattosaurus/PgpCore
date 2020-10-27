@@ -2445,46 +2445,53 @@ namespace PgpCore
 
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList enc = null;
+            PgpObject message = null;
+
             if (obj is PgpEncryptedDataList)
                 enc = (PgpEncryptedDataList)obj;
+            else if (obj is PgpCompressedData)
+                message = (PgpCompressedData)obj;
             else
                 enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
 
-            // If enc is null at this point, we failed to detect the contents of the encrypted stream.
-            if (enc == null)
+            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+            if (enc == null && message == null)
                 throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
+            if (enc != null)
             {
-                privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
-
-                if (privateKey != null)
+                foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
                 {
-                    pbe = pked;
-                    break;
+                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
+                }
+
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
+
+                PgpObjectFactory plainFact = null;
+
+                using (Stream clear = pbe.GetDataStream(privateKey))
+                {
+                    plainFact = new PgpObjectFactory(clear);
+                }
+
+                message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList)
+                {
+                    message = plainFact.NextPgpObject();
                 }
             }
-
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
-
-            PgpObjectFactory plainFact = null;
-
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
-
-            PgpObject message = plainFact.NextPgpObject();
-
-            if (message is PgpOnePassSignatureList)
-            {
-                message = plainFact.NextPgpObject();
-            }
-
+            
             if (message is PgpCompressedData)
             {
                 PgpCompressedData cData = (PgpCompressedData)message;
