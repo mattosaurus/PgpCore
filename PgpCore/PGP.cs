@@ -2150,7 +2150,7 @@ namespace PgpCore
         }
 
         #endregion OutputEncrypted
-        #region OutputSigned
+        #region OutputSignedAsync
 
         private async Task OutputSignedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
         {
@@ -2316,7 +2316,7 @@ namespace PgpCore
         }
 
         #endregion OutputClearSigned
-        #region Decrypt
+        #region DecryptAsync
 
         /// <summary>
         /// PGP decrypt a given stream.
@@ -2434,6 +2434,9 @@ namespace PgpCore
             else
                 throw new PgpException("Message is not a simple encrypted file.");
         }
+
+        #endregion DecryptAsync
+        #region Decrypt
 
         /// <summary>
         /// PGP decrypt a given stream.
