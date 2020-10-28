@@ -2150,7 +2150,7 @@ namespace PgpCore
         }
 
         #endregion OutputEncrypted
-        #region OutputSigned
+        #region OutputSignedAsync
 
         private async Task OutputSignedAsync(string inputFilePath, Stream outputStream, bool withIntegrityCheck, string name)
         {
@@ -2316,7 +2316,7 @@ namespace PgpCore
         }
 
         #endregion OutputClearSigned
-        #region Decrypt
+        #region DecryptAsync
 
         /// <summary>
         /// PGP decrypt a given stream.
@@ -2339,40 +2339,51 @@ namespace PgpCore
 
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList enc = null;
+            PgpObject message = null;
+
             if (obj is PgpEncryptedDataList)
                 enc = (PgpEncryptedDataList)obj;
+            else if (obj is PgpCompressedData)
+                message = (PgpCompressedData)obj;
             else
                 enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+            if (enc == null && message == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
+            if (enc != null)
             {
-                privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
-
-                if (privateKey != null)
+                foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
                 {
-                    pbe = pked;
-                    break;
+                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
                 }
-            }
 
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
 
-            PgpObjectFactory plainFact = null;
+                PgpObjectFactory plainFact = null;
 
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
+                using (Stream clear = pbe.GetDataStream(privateKey))
+                {
+                    plainFact = new PgpObjectFactory(clear);
+                }
 
-            PgpObject message = plainFact.NextPgpObject();
-
-            if (message is PgpOnePassSignatureList)
-            {
                 message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList)
+                {
+                    message = plainFact.NextPgpObject();
+                }
             }
 
             if (message is PgpCompressedData)
@@ -2424,6 +2435,9 @@ namespace PgpCore
                 throw new PgpException("Message is not a simple encrypted file.");
         }
 
+        #endregion DecryptAsync
+        #region Decrypt
+
         /// <summary>
         /// PGP decrypt a given stream.
         /// </summary>
@@ -2445,46 +2459,53 @@ namespace PgpCore
 
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList enc = null;
+            PgpObject message = null;
+
             if (obj is PgpEncryptedDataList)
                 enc = (PgpEncryptedDataList)obj;
+            else if (obj is PgpCompressedData)
+                message = (PgpCompressedData)obj;
             else
                 enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
 
-            // If enc is null at this point, we failed to detect the contents of the encrypted stream.
-            if (enc == null)
+            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+            if (enc == null && message == null)
                 throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
+            if (enc != null)
             {
-                privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
-
-                if (privateKey != null)
+                foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
                 {
-                    pbe = pked;
-                    break;
+                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
+                }
+
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
+
+                PgpObjectFactory plainFact = null;
+
+                using (Stream clear = pbe.GetDataStream(privateKey))
+                {
+                    plainFact = new PgpObjectFactory(clear);
+                }
+
+                message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList)
+                {
+                    message = plainFact.NextPgpObject();
                 }
             }
-
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
-
-            PgpObjectFactory plainFact = null;
-
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
-
-            PgpObject message = plainFact.NextPgpObject();
-
-            if (message is PgpOnePassSignatureList)
-            {
-                message = plainFact.NextPgpObject();
-            }
-
+            
             if (message is PgpCompressedData)
             {
                 PgpCompressedData cData = (PgpCompressedData)message;
@@ -2544,58 +2565,106 @@ namespace PgpCore
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
         private async Task DecryptAndVerifyAsync(Stream inputStream, Stream outputStream)
         {
-            PgpEncryptedDataList encryptedDataList = Utilities.GetEncryptedDataList(PgpUtilities.GetDecoderStream(inputStream));
+            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+
+            PgpObject obj = null;
+            if (objFactory != null)
+                obj = objFactory.NextPgpObject();
+
+            // the first object might be a PGP marker packet.
+            PgpEncryptedDataList encryptedDataList = null;
+            PgpObject message = null;
+
+            if (obj is PgpEncryptedDataList)
+                encryptedDataList = (PgpEncryptedDataList)obj;
+            else if (obj is PgpCompressedData)
+                message = (PgpCompressedData)obj;
+            else
+                encryptedDataList = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+            if (encryptedDataList == null && message == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
+            if (encryptedDataList != null)
             {
-                privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
-
-                if (privateKey != null)
+                foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
                 {
-                    pbe = pked;
-                    break;
+                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
                 }
+
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
+
+                PgpObjectFactory plainFact = null;
+
+                using (Stream clear = pbe.GetDataStream(privateKey))
+                {
+                    plainFact = new PgpObjectFactory(clear);
+                }
+
+                message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                {
+                    PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = plainFact.NextPgpObject();
+                }
+                else
+                    throw new PgpException("File was not signed.");
             }
-
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
-
-            PgpObjectFactory plainFact = null;
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
-
-            PgpObject message = plainFact.NextPgpObject();
 
             if (message is PgpCompressedData cData)
             {
+                PgpObjectFactory of = null;
+
                 using (Stream compDataIn = cData.GetDataStream())
                 {
-                    plainFact = new PgpObjectFactory(compDataIn);
+                    of = new PgpObjectFactory(compDataIn);
                 }
 
-                message = plainFact.NextPgpObject();
+                message = of.NextPgpObject();
+                if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                {
+                    PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = of.NextPgpObject();
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    await Streams.PipeAllAsync(unc, outputStream);
+                }
+                else
+                {
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    await Streams.PipeAllAsync(unc, outputStream);
+                }
             }
-
-            if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+            else if (message is PgpLiteralData)
             {
-                PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                PgpLiteralData ld = (PgpLiteralData)message;
+                string outFileName = ld.FileName;
 
-                var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
-                if (verified == false)
-                    throw new PgpException("Failed to verify file.");
-
-                message = plainFact.NextPgpObject();
-            }
-            else
-                throw new PgpException("File was not signed.");
-
-            if (message is PgpLiteralData ld)
-            {
                 Stream unc = ld.GetInputStream();
                 await Streams.PipeAllAsync(unc, outputStream);
 
@@ -2608,7 +2677,7 @@ namespace PgpCore
                 }
             }
             else
-                throw new PgpException("Message is not a simple encrypted file.");
+                throw new PgpException("File was not signed.");
         }
 
         #endregion DecryptAndVerifyAsync
@@ -2621,58 +2690,106 @@ namespace PgpCore
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
         private void DecryptAndVerify(Stream inputStream, Stream outputStream)
         {
-            PgpEncryptedDataList encryptedDataList = Utilities.GetEncryptedDataList(PgpUtilities.GetDecoderStream(inputStream));
+            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+
+            PgpObject obj = null;
+            if (objFactory != null)
+                obj = objFactory.NextPgpObject();
+
+            // the first object might be a PGP marker packet.
+            PgpEncryptedDataList encryptedDataList = null;
+            PgpObject message = null;
+
+            if (obj is PgpEncryptedDataList)
+                encryptedDataList = (PgpEncryptedDataList)obj;
+            else if (obj is PgpCompressedData)
+                message = (PgpCompressedData)obj;
+            else
+                encryptedDataList = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+            if (encryptedDataList == null && message == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
             // decrypt
             PgpPrivateKey privateKey = null;
             PgpPublicKeyEncryptedData pbe = null;
-            foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
+            if (encryptedDataList != null)
             {
-                privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
-
-                if (privateKey != null)
+                foreach (PgpPublicKeyEncryptedData pked in encryptedDataList.GetEncryptedDataObjects())
                 {
-                    pbe = pked;
-                    break;
+                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+
+                    if (privateKey != null)
+                    {
+                        pbe = pked;
+                        break;
+                    }
                 }
+
+                if (privateKey == null)
+                    throw new ArgumentException("Secret key for message not found.");
+
+                PgpObjectFactory plainFact = null;
+
+                using (Stream clear = pbe.GetDataStream(privateKey))
+                {
+                    plainFact = new PgpObjectFactory(clear);
+                }
+
+                message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                {
+                    PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = plainFact.NextPgpObject();
+                }
+                else
+                    throw new PgpException("File was not signed.");
             }
-
-            if (privateKey == null)
-                throw new ArgumentException("Secret key for message not found.");
-
-            PgpObjectFactory plainFact = null;
-            using (Stream clear = pbe.GetDataStream(privateKey))
-            {
-                plainFact = new PgpObjectFactory(clear);
-            }
-
-            PgpObject message = plainFact.NextPgpObject();
 
             if (message is PgpCompressedData cData)
             {
+                PgpObjectFactory of = null;
+
                 using (Stream compDataIn = cData.GetDataStream())
                 {
-                    plainFact = new PgpObjectFactory(compDataIn);
+                    of = new PgpObjectFactory(compDataIn);
                 }
 
-                message = plainFact.NextPgpObject();
+                message = of.NextPgpObject();
+                if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                {
+                    PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = of.NextPgpObject();
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    Streams.PipeAll(unc, outputStream);
+                }
+                else
+                {
+                    PgpLiteralData Ld = null;
+                    Ld = (PgpLiteralData)message;
+                    Stream unc = Ld.GetInputStream();
+                    Streams.PipeAll(unc, outputStream);
+                }
             }
-
-            if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+            else if (message is PgpLiteralData)
             {
-                PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                PgpLiteralData ld = (PgpLiteralData)message;
+                string outFileName = ld.FileName;
 
-                var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
-                if (verified == false)
-                    throw new PgpException("Failed to verify file.");
-
-                message = plainFact.NextPgpObject();
-            }
-            else
-                throw new PgpException("File was not signed.");
-
-            if (message is PgpLiteralData ld)
-            {
                 Stream unc = ld.GetInputStream();
                 Streams.PipeAll(unc, outputStream);
 
@@ -2685,7 +2802,7 @@ namespace PgpCore
                 }
             }
             else
-                throw new PgpException("Message is not a simple encrypted file.");
+                throw new PgpException("File was not signed.");
         }
 
         #endregion DecryptAndVerify
