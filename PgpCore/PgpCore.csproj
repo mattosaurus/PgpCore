@@ -10,16 +10,17 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>3.2.0</Version>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <FileVersion>3.2.0.0</FileVersion>
-    <PackageReleaseNotes>v3.1.0 - Handle compressed data packet following signature</PackageReleaseNotes>
+    <Version>4.0.0</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <PackageReleaseNotes>v4.0.0 - Assembly strong name returned</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
