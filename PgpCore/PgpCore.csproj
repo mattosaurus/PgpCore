@@ -1,26 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFramework>netstandard2.0</TargetFramework>
-	  <Description>.NET Standard class library for using PGP</Description>
-	  <Authors>mattosaurus</Authors>
-	  <Company />
-	  <Product>PgpCore</Product>
-	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	  <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
-	  <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
-	  <PackageTags>PGP .NET Core</PackageTags>
-	  <Version>3.3.0</Version>
-	  <AssemblyVersion>3.3.0.0</AssemblyVersion>
-	  <FileVersion>3.3.0.0</FileVersion>
-	  <PackageReleaseNotes>v3.3.0 - Assembly strong name returned</PackageReleaseNotes>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
-	  <DelaySign>false</DelaySign>
-	  <PublishRepositoryUrl>true</PublishRepositoryUrl>
-	  <IncludeSymbols>true</IncludeSymbols>
-	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	  <SignAssembly>true</SignAssembly>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>.NET Standard class library for using PGP</Description>
+    <Authors>mattosaurus</Authors>
+    <Company />
+    <Product>PgpCore</Product>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
+    <PackageTags>PGP .NET Core</PackageTags>
+    <Version>3.3.0</Version>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.0.0</FileVersion>
+    <PackageReleaseNotes>v3.3.0 - Assembly strong name returned</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
