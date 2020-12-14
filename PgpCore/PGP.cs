@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Asn1.Pkcs;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -2624,7 +2624,7 @@ namespace PgpCore
 
                     message = plainFact.NextPgpObject();
                 }
-                else
+                else if (!(message is PgpCompressedData))
                     throw new PgpException("File was not signed.");
             }
 
@@ -2749,7 +2749,7 @@ namespace PgpCore
 
                     message = plainFact.NextPgpObject();
                 }
-                else
+                else if (!(message is PgpCompressedData))
                     throw new PgpException("File was not signed.");
             }
 
