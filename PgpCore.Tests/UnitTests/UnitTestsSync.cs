@@ -502,6 +502,34 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            PGP pgp = new PGP
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip,
+            };
+
+            // Act
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            pgp.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            string decryptedContent = File.ReadAllText(testFactory.DecryptedContentFilePath);
+
+            // Assert
+            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
+            Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+        
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void DecryptFileAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
         {
             // Arrange

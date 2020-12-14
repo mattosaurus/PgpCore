@@ -509,6 +509,34 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task DecryptFileAndVerifyAsync_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            PGP pgp = new PGP
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip,
+            };
+
+            // Act
+            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            await pgp.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            string decryptedContent = await File.ReadAllTextAsync(testFactory.DecryptedContentFilePath);
+
+            // Assert
+            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
+            Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task DecryptFileAndVerifyAsync_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
         {
             // Arrange
