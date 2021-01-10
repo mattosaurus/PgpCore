@@ -831,7 +831,7 @@ namespace PgpCore
 
 	        var outStream = new MemoryStream();
 
-	        EncryptStreamAndSign(inputStream, outStream, new EncryptionKeys(publicKeyIn, privateKeyIn, passphrase));
+	        EncryptStreamAndSign(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
 
 	        outStream.Seek(0, SeekOrigin.Begin);
 
@@ -1123,14 +1123,14 @@ namespace PgpCore
 
         #endregion SignStream
         #region SignArmor
-        public string SignArmor(string inputData, string key)
+        public string SignArmor(string inputData, string key, string passphrase)
         {
 	        var inputStream = inputData.GetStream();
 	        var keyIn       = key.GetStream(Encoding.ASCII);
 
 	        var outStream = new MemoryStream();
 
-	        SignStream(inputStream, outStream, new EncryptionKeys(keyIn));
+	        SignStream(inputStream, outStream, keyIn, passphrase);
 
 	        outStream.Seek(0, SeekOrigin.Begin);
 
