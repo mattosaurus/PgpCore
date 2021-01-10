@@ -1767,6 +1767,22 @@ namespace PgpCore
         }
 
         #endregion DecryptStreamAndVerify
+        #region DecryptArmorAndVerify
+        public string DecryptArmorAndVerify(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+	        var inputStream  = inputData.GetStream();
+	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
+	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        DecryptStreamAndVerify(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion DecryptArmorAndVerify
         #region VerifyFileAsync
 
         /// <summary>
@@ -2014,6 +2030,15 @@ namespace PgpCore
         }
 
         #endregion VerifyStream
+        #region VerifyArmor
+        public bool VerifyArmor(string inputData, string key)
+        {
+	        var inputStream  = inputData.GetStream();
+	        var keyIn  = key.GetStream(Encoding.ASCII);
+
+	        return VerifyStream(inputStream, keyIn);
+        }
+        #endregion VerifyArmor
         #region VerifyClearStreamAsync
 
         /// <summary>
@@ -2092,6 +2117,14 @@ namespace PgpCore
         }
 
         #endregion VerifyClearStream
+        #region VerifyClearArmor
+        public bool VerifyClearArmor(string inputData)
+        {
+	        var inputStream = inputData.GetStream();
+
+	        return VerifyClear(inputStream);
+        }
+        #endregion VerifyClearArmor
         #endregion DecryptAndVerify
 
         #region GenerateKey
