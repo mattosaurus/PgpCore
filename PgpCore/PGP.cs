@@ -458,6 +458,21 @@ namespace PgpCore
         }
 
         #endregion EncryptStream
+        #region EncryptArmor
+        public string EncryptArmor(string inputData, string key)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        EncryptStream(inputStream, outStream, keyIn);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion EncryptArmor
         #endregion Encrypt
 
         #region Encrypt and Sign
