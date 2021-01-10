@@ -849,7 +849,7 @@ namespace PgpCore
         /// <param name="outputFilePath">Output PGP signed file path</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task SignFileAsync(string inputFilePath, string outputFilePath, 
+        public async Task SignFileAsync(string inputFilePath, string outputFilePath,
             bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -908,7 +908,7 @@ namespace PgpCore
         /// <param name="encryptionKeys">Encryption keys</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys, 
+        public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
             bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
@@ -1488,6 +1488,21 @@ namespace PgpCore
         }
 
         #endregion DecryptStream
+        #region DecryptArmor
+        public string DecryptArmor(string inputData, string key, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        DecryptStream(inputStream, outStream, keyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion DecryptArmor
         #endregion Decrypt
 
         #region DecryptAndVerify
@@ -2505,7 +2520,7 @@ namespace PgpCore
                     message = plainFact.NextPgpObject();
                 }
             }
-            
+
             if (message is PgpCompressedData)
             {
                 PgpCompressedData cData = (PgpCompressedData)message;
@@ -3327,7 +3342,7 @@ namespace PgpCore
 
             publicOut.Dispose();
         }
-        
+
         /*
         * Search a secret key ring collection for a secret key corresponding to keyId if it exists.
         */
