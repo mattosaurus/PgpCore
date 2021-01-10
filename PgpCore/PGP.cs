@@ -822,6 +822,22 @@ namespace PgpCore
         }
 
         #endregion EncryptStreamAndSign
+        #region EncryptArmorAndSign
+        public string EncryptArmorAndSign(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
+	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        EncryptStreamAndSign(inputStream, outStream, new EncryptionKeys(publicKeyIn, privateKeyIn, passphrase));
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion EncryptArmorAndSign
         #endregion Encrypt and Sign
 
         #region Sign
@@ -1106,6 +1122,21 @@ namespace PgpCore
         }
 
         #endregion SignStream
+        #region SignArmor
+        public string SignArmor(string inputData, string key)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        SignStream(inputStream, outStream, new EncryptionKeys(keyIn));
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion SignArmor
         #endregion Sign
 
         #region ClearSign
@@ -1304,6 +1335,21 @@ namespace PgpCore
         }
 
         #endregion ClearSignStream
+        #region ClearSignArmor
+        public string ClearSignArmor(string inputData, string key, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        ClearSignStream(inputStream, outStream, keyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion ClearSignArmor
         #endregion ClearSign
 
         #region Decrypt
