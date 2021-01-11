@@ -2017,7 +2017,58 @@ namespace PgpCore
 
         #endregion VerifyClearStream
         #endregion DecryptAndVerify
+        #region GetRecipients
 
+        /// <summary>
+        /// PGP get a recipients keys id of an encrypted file.
+        /// </summary>
+        /// <param name="inputFilePath">PGP encrypted data file path</param>
+        /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
+        public IEnumerable<long> GetFileRecipients(string inputFilePath)
+        {
+            if (String.IsNullOrEmpty(inputFilePath))
+                throw new ArgumentException("InputFilePath");
+
+            if (!File.Exists(inputFilePath))
+                throw new FileNotFoundException(String.Format("Encrypted File [{0}] not found.", inputFilePath));
+
+            using (Stream inputStream = File.OpenRead(inputFilePath))
+                return GetStreamRecipients(inputStream);
+        }
+
+        /// <summary>
+        /// PGP get a recipients keys id of an encrypted stream.
+        /// </summary>
+        /// <param name="inputStream">PGP encrypted data stream</param>
+        /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
+        public IEnumerable<long> GetStreamRecipients(Stream inputStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+
+            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+
+            PgpObject obj = null;
+            if (objFactory != null)
+                obj = objFactory.NextPgpObject();
+
+            // the first object might be a PGP marker packet.
+            PgpEncryptedDataList enc = null;
+
+            if (obj is PgpEncryptedDataList list)
+                enc = list;
+            else
+                enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
+
+            // If enc is null at this point, we failed to detect the contents of the encrypted stream.
+            if (enc == null)
+                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
+
+            // Return keys id
+            return enc.GetEncryptedDataObjects().OfType<PgpPublicKeyEncryptedData>().Select(k => k.KeyId);
+        }
+
+        #endregion GetRecipients
         #region GenerateKey
 
         public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8)
