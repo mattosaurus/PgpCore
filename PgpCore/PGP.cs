@@ -458,6 +458,21 @@ namespace PgpCore
         }
 
         #endregion EncryptStream
+        #region EncryptArmorAsync
+        public async Task<string> EncryptArmorAsync(string inputData, string key)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await EncryptStreamAsync(inputStream, outStream, keyIn);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion EncryptArmorAsync
         #region EncryptArmor
         public string EncryptArmor(string inputData, string key)
         {
@@ -822,6 +837,22 @@ namespace PgpCore
         }
 
         #endregion EncryptStreamAndSign
+        #region EncryptArmorAndSignAsync
+        public async Task<string> EncryptArmorAndSignAsync(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var publicKeyIn = await publicKey.GetStreamAsync(Encoding.ASCII);
+            var privateKeyIn = await privateKey.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await EncryptStreamAndSignAsync(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion EncryptArmorAndSignAsync
         #region EncryptArmorAndSign
         public string EncryptArmorAndSign(string inputData, string publicKey, string privateKey, string passphrase)
         {
@@ -1122,6 +1153,21 @@ namespace PgpCore
         }
 
         #endregion SignStream
+        #region SignArmorAsync
+        public async Task<string> SignArmorAsync(string inputData, string key, string passphrase)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await SignStreamAsync(inputStream, outStream, keyIn, passphrase);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion SignArmorAsync
         #region SignArmor
         public string SignArmor(string inputData, string key, string passphrase)
         {
@@ -1335,6 +1381,21 @@ namespace PgpCore
         }
 
         #endregion ClearSignStream
+        #region ClearSignArmorAsync
+        public async Task<string> ClearSignArmorAsync(string inputData, string key, string passphrase)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await ClearSignStreamAsync(inputStream, outStream, keyIn, passphrase);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion ClearSignArmorAsync
         #region ClearSignArmor
         public string ClearSignArmor(string inputData, string key, string passphrase)
         {
@@ -1549,6 +1610,21 @@ namespace PgpCore
         }
 
         #endregion DecryptStream
+        #region DecryptArmorAsync
+        public async Task<string> DecryptArmorAsync(string inputData, string key, string passphrase)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await DecryptStreamAsync(inputStream, outStream, keyIn, passphrase);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion DecryptArmorAsync
         #region DecryptArmor
         public string DecryptArmor(string inputData, string key, string passphrase)
         {
@@ -1767,6 +1843,22 @@ namespace PgpCore
         }
 
         #endregion DecryptStreamAndVerify
+        #region DecryptArmorAndVerifyAsync
+        public async Task<string> DecryptArmorAndVerifyAsync(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var privateKeyIn = await privateKey.GetStreamAsync(Encoding.ASCII);
+            var publicKeyIn = await publicKey.GetStreamAsync(Encoding.ASCII);
+
+            var outStream = new MemoryStream();
+
+            await DecryptStreamAndVerifyAsync(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+
+            outStream.Seek(0, SeekOrigin.Begin);
+
+            return await outStream.GetStringAsync();
+        }
+        #endregion DecryptArmorAndVerifyAsync
         #region DecryptArmorAndVerify
         public string DecryptArmorAndVerify(string inputData, string publicKey, string privateKey, string passphrase)
         {
@@ -2030,6 +2122,16 @@ namespace PgpCore
         }
 
         #endregion VerifyStream
+
+        #region VerifyArmorAsync
+        public async Task<bool> VerifyArmorAsync(string inputData, string key)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+
+            return await VerifyStreamAsync(inputStream, keyIn);
+        }
+        #endregion VerifyArmorAsync
         #region VerifyArmor
         public bool VerifyArmor(string inputData, string key)
         {
@@ -2117,6 +2219,14 @@ namespace PgpCore
         }
 
         #endregion VerifyClearStream
+        #region VerifyClearArmorAsync
+        public async Task<bool> VerifyClearArmorAsync(string inputData)
+        {
+            var inputStream = await inputData.GetStreamAsync();
+
+            return await VerifyClearAsync(inputStream);
+        }
+        #endregion VerifyClearArmorAsync
         #region VerifyClearArmor
         public bool VerifyClearArmor(string inputData)
         {
