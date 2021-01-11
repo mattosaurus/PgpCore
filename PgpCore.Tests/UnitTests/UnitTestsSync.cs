@@ -30,6 +30,48 @@ namespace PgpCore.Tests
             testFactory.Teardown();
         }
 
+        [Fact]
+        public void GenerateKey_CreatePublicPrivateKeyFiles_WithVersion()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.GenerateKey(testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+
+            // Assert
+            Assert.True(File.Exists(testFactory.PublicKeyFilePath));
+            Assert.Contains("Version", File.ReadAllText(testFactory.PublicKeyFilePath));
+            Assert.True(File.Exists(testFactory.PrivateKeyFilePath));
+            Assert.Contains("Version", File.ReadAllText(testFactory.PrivateKeyFilePath));
+
+            // Cleanup
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void GenerateKey_CreatePublicPrivateKeyFiles_NoVersion()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP();
+
+            // Act
+            pgp.GenerateKey(testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password, emitVersion: false);
+
+            // Assert
+            Assert.True(File.Exists(testFactory.PublicKeyFilePath));
+            Assert.DoesNotContain("Version", File.ReadAllText(testFactory.PublicKeyFilePath));
+            Assert.True(File.Exists(testFactory.PrivateKeyFilePath));
+            Assert.DoesNotContain("Version", File.ReadAllText(testFactory.PrivateKeyFilePath));
+
+            // Cleanup
+            testFactory.Teardown();
+        }
+
         #region File
         [Theory]
         [MemberData(nameof(KeyTypeValues))]

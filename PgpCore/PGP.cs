@@ -2020,12 +2020,12 @@ namespace PgpCore
 
         #region GenerateKey
 
-        public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8)
+        public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
         {
-            await Task.Run(() => GenerateKey(publicKeyFilePath, privateKeyFilePath, username, password, strength, certainty));
+            await Task.Run(() => GenerateKey(publicKeyFilePath, privateKeyFilePath, username, password, strength, certainty, emitVersion));
         }
 
-        public void GenerateKey(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8)
+        public void GenerateKey(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
         {
             if (String.IsNullOrEmpty(publicKeyFilePath))
                 throw new ArgumentException("PublicKeyFilePath");
@@ -2034,10 +2034,10 @@ namespace PgpCore
 
             using (Stream pubs = File.Open(publicKeyFilePath, FileMode.Create))
             using (Stream pris = File.Open(privateKeyFilePath, FileMode.Create))
-                GenerateKey(pubs, pris, username, password, strength, certainty);
+                GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion);
         }
 
-        public void GenerateKey(Stream publicKeyStream, Stream privateKeyStream, string username = null, string password = null, int strength = 1024, int certainty = 8, bool armor = true)
+        public void GenerateKey(Stream publicKeyStream, Stream privateKeyStream, string username = null, string password = null, int strength = 1024, int certainty = 8, bool armor = true, bool emitVersion = true)
         {
             username = username == null ? string.Empty : username;
             password = password == null ? string.Empty : password;
@@ -2046,7 +2046,7 @@ namespace PgpCore
             kpg.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(0x13), new SecureRandom(), strength, certainty));
             AsymmetricCipherKeyPair kp = kpg.GenerateKeyPair();
 
-            ExportKeyPair(privateKeyStream, publicKeyStream, kp.Public, kp.Private, username, password.ToCharArray(), armor);
+            ExportKeyPair(privateKeyStream, publicKeyStream, kp.Public, kp.Private, username, password.ToCharArray(), armor, emitVersion);
         }
 
         #endregion GenerateKey
@@ -3285,7 +3285,7 @@ namespace PgpCore
                     AsymmetricKeyParameter privateKey,
                     string identity,
                     char[] passPhrase,
-                    bool armor)
+                    bool armor, bool emitVersion)
         {
             if (secretOut == null)
                 throw new ArgumentException("secretOut");
@@ -3294,7 +3294,12 @@ namespace PgpCore
 
             if (armor)
             {
-                secretOut = new ArmoredOutputStream(secretOut);
+                var secretOutArmored = new ArmoredOutputStream(secretOut);
+                if (!emitVersion)
+                {
+                    secretOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
+                }
+                secretOut = secretOutArmored;
             }
 
             PgpSecretKey secretKey = new PgpSecretKey(
@@ -3318,7 +3323,12 @@ namespace PgpCore
 
             if (armor)
             {
-                publicOut = new ArmoredOutputStream(publicOut);
+                var publicOutArmored = new ArmoredOutputStream(publicOut);
+                if (!emitVersion)
+                {
+                    publicOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
+                }
+                publicOut = publicOutArmored;
             }
 
             PgpPublicKey key = secretKey.PublicKey;
