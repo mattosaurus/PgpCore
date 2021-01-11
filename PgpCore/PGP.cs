@@ -458,6 +458,21 @@ namespace PgpCore
         }
 
         #endregion EncryptStream
+        #region EncryptArmor
+        public string EncryptArmor(string inputData, string key)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        EncryptStream(inputStream, outStream, keyIn);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion EncryptArmor
         #endregion Encrypt
 
         #region Encrypt and Sign
@@ -807,6 +822,22 @@ namespace PgpCore
         }
 
         #endregion EncryptStreamAndSign
+        #region EncryptArmorAndSign
+        public string EncryptArmorAndSign(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
+	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        EncryptStreamAndSign(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion EncryptArmorAndSign
         #endregion Encrypt and Sign
 
         #region Sign
@@ -849,7 +880,7 @@ namespace PgpCore
         /// <param name="outputFilePath">Output PGP signed file path</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task SignFileAsync(string inputFilePath, string outputFilePath, 
+        public async Task SignFileAsync(string inputFilePath, string outputFilePath,
             bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             if (String.IsNullOrEmpty(inputFilePath))
@@ -908,7 +939,7 @@ namespace PgpCore
         /// <param name="encryptionKeys">Encryption keys</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys, 
+        public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
             bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
@@ -1091,6 +1122,21 @@ namespace PgpCore
         }
 
         #endregion SignStream
+        #region SignArmor
+        public string SignArmor(string inputData, string key, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        SignStream(inputStream, outStream, keyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion SignArmor
         #endregion Sign
 
         #region ClearSign
@@ -1289,6 +1335,21 @@ namespace PgpCore
         }
 
         #endregion ClearSignStream
+        #region ClearSignArmor
+        public string ClearSignArmor(string inputData, string key, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        ClearSignStream(inputStream, outStream, keyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion ClearSignArmor
         #endregion ClearSign
 
         #region Decrypt
@@ -1488,6 +1549,21 @@ namespace PgpCore
         }
 
         #endregion DecryptStream
+        #region DecryptArmor
+        public string DecryptArmor(string inputData, string key, string passphrase)
+        {
+	        var inputStream = inputData.GetStream();
+	        var keyIn       = key.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        DecryptStream(inputStream, outStream, keyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion DecryptArmor
         #endregion Decrypt
 
         #region DecryptAndVerify
@@ -1691,6 +1767,22 @@ namespace PgpCore
         }
 
         #endregion DecryptStreamAndVerify
+        #region DecryptArmorAndVerify
+        public string DecryptArmorAndVerify(string inputData, string publicKey, string privateKey, string passphrase)
+        {
+	        var inputStream  = inputData.GetStream();
+	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
+	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
+
+	        var outStream = new MemoryStream();
+
+	        DecryptStreamAndVerify(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+
+	        outStream.Seek(0, SeekOrigin.Begin);
+
+	        return outStream.GetString();
+        }
+        #endregion DecryptArmorAndVerify
         #region VerifyFileAsync
 
         /// <summary>
@@ -1938,6 +2030,15 @@ namespace PgpCore
         }
 
         #endregion VerifyStream
+        #region VerifyArmor
+        public bool VerifyArmor(string inputData, string key)
+        {
+	        var inputStream  = inputData.GetStream();
+	        var keyIn  = key.GetStream(Encoding.ASCII);
+
+	        return VerifyStream(inputStream, keyIn);
+        }
+        #endregion VerifyArmor
         #region VerifyClearStreamAsync
 
         /// <summary>
@@ -2016,6 +2117,14 @@ namespace PgpCore
         }
 
         #endregion VerifyClearStream
+        #region VerifyClearArmor
+        public bool VerifyClearArmor(string inputData)
+        {
+	        var inputStream = inputData.GetStream();
+
+	        return VerifyClear(inputStream);
+        }
+        #endregion VerifyClearArmor
         #endregion DecryptAndVerify
 
         #region GenerateKey
@@ -2505,7 +2614,7 @@ namespace PgpCore
                     message = plainFact.NextPgpObject();
                 }
             }
-            
+
             if (message is PgpCompressedData)
             {
                 PgpCompressedData cData = (PgpCompressedData)message;
@@ -3337,7 +3446,7 @@ namespace PgpCore
 
             publicOut.Dispose();
         }
-        
+
         /*
         * Search a secret key ring collection for a secret key corresponding to keyId if it exists.
         */
