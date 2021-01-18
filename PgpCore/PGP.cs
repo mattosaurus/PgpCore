@@ -459,33 +459,177 @@ namespace PgpCore
 
         #endregion EncryptStream
         #region EncryptArmorAsync
-        public async Task<string> EncryptArmorAsync(string inputData, string key)
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAsync(
+            string input,
+            string publicKey,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await EncryptStreamAsync(inputStream, outStream, keyIn);
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="publicKeys">IEnumerable of PGP public keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAsync(string input, IEnumerable<string> publicKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()));
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAsync(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
+
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion EncryptArmorAsync
         #region EncryptArmor
-        public string EncryptArmor(string inputData, string key)
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmor(
+            string input,
+            string publicKey,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName)
         {
-	        var inputStream = inputData.GetStream();
-	        var keyIn       = key.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        EncryptStream(inputStream, outStream, keyIn);
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="publicKeys">IEnumerable of PGP public keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmor(string input, IEnumerable<string> publicKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList());
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmor(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
+
+        /// <summary>
+        /// PGP Encrypt the string.
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmor(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion EncryptArmor
         #endregion Encrypt
@@ -838,35 +982,151 @@ namespace PgpCore
 
         #endregion EncryptStreamAndSign
         #region EncryptArmorAndSignAsync
-        public async Task<string> EncryptArmorAndSignAsync(string inputData, string publicKey, string privateKey, string passphrase)
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAndSignAsync(string input, string publicKey,
+            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var publicKeyIn = await publicKey.GetStreamAsync(Encoding.ASCII);
-            var privateKeyIn = await privateKey.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync(), await privateKey.GetStreamAsync(), passPhrase);
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await EncryptStreamAndSignAsync(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="publicKeys">IEnumerable of PGP public keys</param>
+        /// <param name="privateKey">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAndSignAsync(string input, List<string> publicKeys,
+            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()), await privateKey.GetStreamAsync(), passPhrase);
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAndSignAsync(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
+
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public async Task<string> EncryptArmorAndSignAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion EncryptArmorAndSignAsync
         #region EncryptArmorAndSign
-        public string EncryptArmorAndSign(string inputData, string publicKey, string privateKey, string passphrase)
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmorAndSign(string input, string publicKey,
+            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-	        var inputStream = inputData.GetStream();
-	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
-	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream(), privateKey.GetStream(), passPhrase);
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        EncryptStreamAndSign(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="publicKeys">IEnumerable of PGP public keys</param>
+        /// <param name="privateKey">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmorAndSign(string input, List<string> publicKeys,
+            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList(), privateKey.GetStream(), passPhrase);
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// Encrypt and sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        public string EncryptArmorAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion EncryptArmorAndSign
         #endregion Encrypt and Sign
@@ -1154,33 +1414,123 @@ namespace PgpCore
 
         #endregion SignStream
         #region SignArmorAsync
-        public async Task<string> SignArmorAsync(string inputData, string key, string passphrase)
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public async Task<string> SignArmorAsync(string input, string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await SignStreamAsync(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public async Task<string> SignArmorAsync(string input, IEncryptionKeys encryptionKeys,
+            bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public async Task<string> SignArmorAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion SignArmorAsync
         #region SignArmor
-        public string SignArmor(string inputData, string key, string passphrase)
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public string SignArmor(string input, string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-	        var inputStream = inputData.GetStream();
-	        var keyIn       = key.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        SignStream(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public string SignArmor(string input, IEncryptionKeys encryptionKeys,
+            bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            EncryptionKeys = encryptionKeys;
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// Sign the string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+        /// <param name="name">Name of signed file in message, defaults to the input file name</param>
+        public string SignArmor(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion SignArmor
         #endregion Sign
@@ -1382,33 +1732,109 @@ namespace PgpCore
 
         #endregion ClearSignStream
         #region ClearSignArmorAsync
-        public async Task<string> ClearSignArmorAsync(string inputData, string key, string passphrase)
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public async Task<string> ClearSignArmorAsync(string input, string privateKey, string passPhrase)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await ClearSignStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await ClearSignStreamAsync(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<string> ClearSignArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await ClearSignStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        public async Task<string> ClearSignArmorAsync(string input)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await ClearSignStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion ClearSignArmorAsync
         #region ClearSignArmor
-        public string ClearSignArmor(string inputData, string key, string passphrase)
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public string ClearSignArmor(string input, string privateKey, string passPhrase)
         {
-	        var inputStream = inputData.GetStream();
-	        var keyIn       = key.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                ClearSignStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        ClearSignStream(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public string ClearSignArmor(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                ClearSignStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// Clear sign the provided string
+        /// </summary>
+        /// <param name="input">Plain string to be signed</param>
+        public string ClearSignArmor(string input)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                ClearSignStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion ClearSignArmor
         #endregion ClearSign
@@ -1611,33 +2037,109 @@ namespace PgpCore
 
         #endregion DecryptStream
         #region DecryptArmorAsync
-        public async Task<string> DecryptArmorAsync(string inputData, string key, string passphrase)
+        /// <summary>
+        /// PGP decrypt a given stream.
+        /// </summary>
+        /// <param name="input">PGP encrypted data stream</param>
+        /// <param name="privateKey">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public async Task<string> DecryptArmorAsync(string input, string privateKey, string passPhrase)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await DecryptStreamAsync(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// PGP decrypt a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<string> DecryptArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// PGP decrypt a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string</param>
+        public async Task<string> DecryptArmorAsync(string input)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion DecryptArmorAsync
         #region DecryptArmor
-        public string DecryptArmor(string inputData, string key, string passphrase)
+        /// <summary>
+        /// PGP decrypt a given stream.
+        /// </summary>
+        /// <param name="input">PGP encrypted data stream</param>
+        /// <param name="privateKey">PGP secret key stream</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public string DecryptArmor(string input, string privateKey, string passPhrase)
         {
-	        var inputStream = inputData.GetStream();
-	        var keyIn       = key.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        DecryptStream(inputStream, outStream, keyIn, passphrase);
+        /// <summary>
+        /// PGP decrypt a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public string DecryptArmor(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// PGP decrypt a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string</param>
+        public string DecryptArmor(string input)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStream(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion DecryptArmor
         #endregion Decrypt
@@ -1844,35 +2346,111 @@ namespace PgpCore
 
         #endregion DecryptStreamAndVerify
         #region DecryptArmorAndVerifyAsync
-        public async Task<string> DecryptArmorAndVerifyAsync(string inputData, string publicKey, string privateKey, string passphrase)
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public async Task<string> DecryptArmorAndVerifyAsync(string input, string publicKey, string privateKey, string passPhrase)
         {
-            var inputStream = await inputData.GetStreamAsync();
-            var privateKeyIn = await privateKey.GetStreamAsync(Encoding.ASCII);
-            var publicKeyIn = await publicKey.GetStreamAsync(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync(), await privateKey.GetStreamAsync(), passPhrase);
 
-            var outStream = new MemoryStream();
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAndVerifyAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            await DecryptStreamAndVerifyAsync(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        /// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
+        public async Task<string> DecryptArmorAndVerifyAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-            outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAndVerifyAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
+        }
 
-            return await outStream.GetStringAsync();
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        public async Task<string> DecryptArmorAndVerifyAsync(string input)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                await DecryptStreamAndVerifyAsync(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return await outputStream.GetStringAsync();
+            }
         }
         #endregion DecryptArmorAndVerifyAsync
         #region DecryptArmorAndVerify
-        public string DecryptArmorAndVerify(string inputData, string publicKey, string privateKey, string passphrase)
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        /// <param name="privateKey">PGP secret key</param>
+        /// <param name="passPhrase">PGP secret key password</param>
+        public string DecryptArmorAndVerify(string input, string publicKey, string privateKey, string passPhrase)
         {
-	        var inputStream  = inputData.GetStream();
-	        var privateKeyIn = privateKey.GetStream(Encoding.ASCII);
-	        var publicKeyIn = publicKey.GetStream(Encoding.ASCII);
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream(), privateKey.GetStream(), passPhrase);
 
-	        var outStream = new MemoryStream();
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStreamAndVerify(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        DecryptStreamAndVerify(inputStream, outStream, publicKeyIn, privateKeyIn, passphrase);
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        /// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
+        public string DecryptArmorAndVerify(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
 
-	        outStream.Seek(0, SeekOrigin.Begin);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStreamAndVerify(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
+        }
 
-	        return outStream.GetString();
+        /// <summary>
+        /// PGP decrypt and verify a given string.
+        /// </summary>
+        /// <param name="input">PGP encrypted string to be decrypted and verified</param>
+        public string DecryptArmorAndVerify(string input)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                DecryptStreamAndVerify(inputStream, outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+                return outputStream.GetString();
+            }
         }
         #endregion DecryptArmorAndVerify
         #region VerifyFileAsync
@@ -1961,6 +2539,176 @@ namespace PgpCore
         }
 
         #endregion VerifyFile
+        #region VerifyStreamAsync
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        public async Task<bool> VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeyStream);
+            return await VerifyStreamAsync(inputStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<bool> VerifyStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+            return await VerifyStreamAsync(inputStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        public async Task<bool> VerifyStreamAsync(Stream inputStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentNullException("EncryptionKeys");
+
+            return await VerifyAsync(inputStream);
+        }
+
+        #endregion VerifyStreamAsync
+        #region VerifyStream
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="publicKeyStream">PGP public key stream</param>
+        public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKeyStream);
+            return Verify(inputStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public bool VerifyStream(Stream inputStream, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+            return Verify(inputStream);
+        }
+
+        /// <summary>
+        /// PGP verify a given stream.
+        /// </summary>
+        /// <param name="inputStream">Plain data stream to be verified</param>
+        public bool VerifyStream(Stream inputStream)
+        {
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (EncryptionKeys == null)
+                throw new ArgumentNullException("EncryptionKeys");
+
+            return Verify(inputStream);
+        }
+
+        #endregion VerifyStream
+        #region VerifyArmorAsync
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="publicKey">PGP public key stream</param>
+        public async Task<bool> VerifyArmorAsync(string input, string publicKey)
+        {
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<bool> VerifyArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        public async Task<bool> VerifyArmorAsync(string input)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
+        #endregion VerifyArmorAsync
+        #region VerifyArmor
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        public bool VerifyArmor(string input, string publicKey)
+        {
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
+
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyStream(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public bool VerifyArmor(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyStream(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        public bool VerifyArmor(string input)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyStream(inputStream);
+            }
+        }
+        #endregion VerifyArmor
         #region VerifyClearFileAsync
 
         /// <summary>
@@ -2044,103 +2792,6 @@ namespace PgpCore
         }
 
         #endregion VerifyClearFile
-        #region VerifyStreamAsync
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        /// <param name="publicKeyStream">PGP public key stream</param>
-        public async Task<bool> VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
-        {
-            EncryptionKeys = new EncryptionKeys(publicKeyStream);
-            return await VerifyStreamAsync(inputStream);
-        }
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<bool> VerifyStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
-        {
-            EncryptionKeys = encryptionKeys;
-            return await VerifyStreamAsync(inputStream);
-        }
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        public async Task<bool> VerifyStreamAsync(Stream inputStream)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (EncryptionKeys == null)
-                throw new ArgumentNullException("EncryptionKeys");
-
-            return await VerifyAsync(inputStream);
-        }
-
-        #endregion VerifyStreamAsync
-        #region VerifyStream
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        /// <param name="publicKeyStream">PGP public key stream</param>
-        public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
-        {
-            EncryptionKeys = new EncryptionKeys(publicKeyStream);
-            return Verify(inputStream);
-        }
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        /// <param name="encryptionKeys">Encryption keys</param>
-        public bool VerifyStream(Stream inputStream, IEncryptionKeys encryptionKeys)
-        {
-            EncryptionKeys = encryptionKeys;
-            return Verify(inputStream);
-        }
-
-        /// <summary>
-        /// PGP verify a given stream.
-        /// </summary>
-        /// <param name="inputStream">Plain data stream to be verified</param>
-        public bool VerifyStream(Stream inputStream)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (EncryptionKeys == null)
-                throw new ArgumentNullException("EncryptionKeys");
-
-            return Verify(inputStream);
-        }
-
-        #endregion VerifyStream
-
-        #region VerifyArmorAsync
-        public async Task<bool> VerifyArmorAsync(string inputData, string key)
-        {
-            var inputStream = await inputData.GetStreamAsync();
-            var keyIn = await key.GetStreamAsync(Encoding.ASCII);
-
-            return await VerifyStreamAsync(inputStream, keyIn);
-        }
-        #endregion VerifyArmorAsync
-        #region VerifyArmor
-        public bool VerifyArmor(string inputData, string key)
-        {
-	        var inputStream  = inputData.GetStream();
-	        var keyIn  = key.GetStream(Encoding.ASCII);
-
-	        return VerifyStream(inputStream, keyIn);
-        }
-        #endregion VerifyArmor
         #region VerifyClearStreamAsync
 
         /// <summary>
@@ -2220,19 +2871,95 @@ namespace PgpCore
 
         #endregion VerifyClearStream
         #region VerifyClearArmorAsync
-        public async Task<bool> VerifyClearArmorAsync(string inputData)
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        public async Task<bool> VerifyClearArmorAsync(string input, string publicKey)
         {
-            var inputStream = await inputData.GetStreamAsync();
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
-            return await VerifyClearAsync(inputStream);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyClearStreamAsync(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<bool> VerifyClearArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyClearStreamAsync(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public async Task<bool> VerifyClearArmorAsync(string input)
+        {
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return await VerifyClearStreamAsync(inputStream);
+            }
         }
         #endregion VerifyClearArmorAsync
         #region VerifyClearArmor
-        public bool VerifyClearArmor(string inputData)
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        public bool VerifyClearArmor(string input, string publicKey)
         {
-	        var inputStream = inputData.GetStream();
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
-	        return VerifyClear(inputStream);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyClearStream(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public bool VerifyClearArmor(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyClearStream(inputStream);
+            }
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public bool VerifyClearArmor(string input)
+        {
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                return VerifyClearStream(inputStream);
+            }
         }
         #endregion VerifyClearArmor
         #endregion DecryptAndVerify
