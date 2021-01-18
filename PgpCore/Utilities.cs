@@ -463,6 +463,14 @@ namespace PgpCore
                 return ReadPublicKey(fs);
         }
 
+        public static PgpPublicKey ReadPublicKey(FileInfo publicKeyFile)
+        {
+            if (!publicKeyFile.Exists)
+                throw new FileNotFoundException(String.Format("File {0} was not found", publicKeyFile));
+            using (FileStream fs = publicKeyFile.OpenRead())
+                return ReadPublicKey(fs);
+        }
+
         private static async Task PipeFileContentsAsync(FileInfo file, Stream pOut, int bufSize)
         {
             using (FileStream inputStream = file.OpenRead())
