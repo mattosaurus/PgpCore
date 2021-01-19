@@ -464,13 +464,11 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="publicKey">PGP public key</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task<string> EncryptArmorAsync(
             string input,
             string publicKey,
-            bool armor = true,
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
@@ -479,7 +477,7 @@ namespace PgpCore
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -490,17 +488,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, IEnumerable<string> publicKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmorAsync(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()));
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -511,17 +508,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmorAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -531,15 +527,14 @@ namespace PgpCore
         /// PGP Encrypt the string.
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmorAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -551,13 +546,11 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="publicKey">PGP public key</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public string EncryptArmor(
             string input,
             string publicKey,
-            bool armor = true,
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
@@ -566,7 +559,7 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -577,17 +570,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, IEnumerable<string> publicKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmor(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList());
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -598,17 +590,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmor(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -618,15 +609,14 @@ namespace PgpCore
         /// PGP Encrypt the string.
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmor(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -989,17 +979,16 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task<string> EncryptArmorAndSignAsync(string input, string publicKey,
-            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync(), await privateKey.GetStreamAsync(), passPhrase);
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1012,17 +1001,16 @@ namespace PgpCore
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public async Task<string> EncryptArmorAndSignAsync(string input, List<string> publicKeys,
-            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()), await privateKey.GetStreamAsync(), passPhrase);
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1033,16 +1021,15 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmorAndSignAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1052,14 +1039,13 @@ namespace PgpCore
         /// Encrypt and sign the string
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmorAndSignAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await EncryptStreamAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1073,17 +1059,16 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public string EncryptArmorAndSign(string input, string publicKey,
-            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream(), privateKey.GetStream(), passPhrase);
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStreamAndSign(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -1096,17 +1081,16 @@ namespace PgpCore
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         public string EncryptArmorAndSign(string input, List<string> publicKeys,
-            string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList(), privateKey.GetStream(), passPhrase);
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStreamAndSign(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -1116,14 +1100,13 @@ namespace PgpCore
         /// Encrypt and sign the string
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmorAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmorAndSign(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name);
+                EncryptStreamAndSign(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -1420,16 +1403,15 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task<string> SignArmorAsync(string input, string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> SignArmorAsync(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await SignStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1440,17 +1422,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public async Task<string> SignArmorAsync(string input, IEncryptionKeys encryptionKeys,
-            bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await SignStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1460,14 +1441,13 @@ namespace PgpCore
         /// Sign the string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task<string> SignArmorAsync(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> SignArmorAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name);
+                await SignStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -1480,16 +1460,15 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public string SignArmor(string input, string privateKey, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string SignArmor(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                SignStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -1500,17 +1479,16 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public string SignArmor(string input, IEncryptionKeys encryptionKeys,
-            bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+            bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                SignStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -1520,14 +1498,13 @@ namespace PgpCore
         /// Sign the string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public string SignArmor(string input, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string SignArmor(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                SignStream(inputStream, outputStream, armor, withIntegrityCheck, name);
+                SignStream(inputStream, outputStream, true, withIntegrityCheck, name);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
