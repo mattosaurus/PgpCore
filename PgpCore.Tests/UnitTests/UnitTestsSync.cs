@@ -1168,6 +1168,635 @@ namespace PgpCore.Tests
         }
         #endregion Stream
 
+        #region Armor
+        [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptArmor_CreateEncryptedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            PGP pgp = new PGP();
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(HashAlgorithmTagValues))]
+        public void EncryptArmor_CreateEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            PGP pgp = new PGP();
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            pgp.HashAlgorithmTag = hashAlgorithmTag;
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignArmor_CreateSignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignArmor_CreateClearSignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(clearSignedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndVerifyArmor_CreateClearSignedStringAndVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.True(pgp.VerifyClearArmor(clearSignedContent, publicKey));
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndDoNotVerifyArmor_CreateClearSignedStringAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            testFactory2.Arrange(KeyType.Generated);
+            string publicKey = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.False(pgp.VerifyClearArmor(clearSignedContent, publicKey));
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void EncryptArmor_CreateEncryptedStringWithMultipleKeys(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
+
+            PGP pgp = new PGP();
+            List<string> keys = new List<string>()
+            {
+                System.IO.File.ReadAllText(testFactory.PublicKeyFilePath),
+                System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath)
+            };
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, keys);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void EncryptArmorAndSign_CreateEncryptedAndSignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedAndSignedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void EncryptArmorAndSign_CreateEncryptedAndSignedStringWithMultipleKeys(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+            List<string> keys = new List<string>()
+            {
+                System.IO.File.ReadAllText(testFactory.PublicKeyFilePath),
+                System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath)
+            };
+
+            // Act
+            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedAndSignedContent);
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmor_DecryptEncryptedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(HashAlgorithmTagValues))]
+        public void DecryptArmor_DecryptEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+            pgp.HashAlgorithmTag = hashAlgorithmTag;
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmor_DecryptEncryptedStringWithMultipleKeys(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            string privateKey2 = System.IO.File.ReadAllText(testFactory2.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+            List<string> keys = new List<string>()
+            {
+                System.IO.File.ReadAllText(testFactory.PublicKeyFilePath),
+                System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath)
+            };
+
+            // Act
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, keys);
+            string decryptedContent1 = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+            string decryptedContent2 = pgp.DecryptArmor(encryptedContent, privateKey2, testFactory2.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent1);
+            Assert.NotNull(decryptedContent2);
+            Assert.Equal(testFactory.Content, decryptedContent1.Trim());
+            Assert.Equal(testFactory.Content, decryptedContent2.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmor_DecryptSignedAndEncryptedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmor_DecryptSignedAndEncryptedStringWithMultipleKeys(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            string privateKey2 = System.IO.File.ReadAllText(testFactory2.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+            List<string> keys = new List<string>()
+            {
+                System.IO.File.ReadAllText(testFactory.PublicKeyFilePath),
+                System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath)
+            };
+
+            // Act
+            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
+            string decryptedContent1 = pgp.DecryptArmor(encryptedAndSignedContent, privateKey, testFactory.Password);
+            string decryptedContent2 = pgp.DecryptArmor(encryptedAndSignedContent, privateKey2, testFactory2.Password);
+
+            // Assert
+            Assert.NotNull(encryptedAndSignedContent);
+            Assert.NotNull(decryptedContent1);
+            Assert.NotNull(decryptedContent2);
+            Assert.Equal(testFactory.Content, decryptedContent1.Trim());
+            Assert.Equal(testFactory.Content, decryptedContent2.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmorAndVerify_DecryptUnsignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string publicKey2 = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+            string privateKey2 = System.IO.File.ReadAllText(testFactory2.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string decryptedContent = null;
+            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey2);
+            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent,
+               publicKey, privateKey2, testFactory2.Password));
+
+            // Assert
+            Assert.Equal("File was not signed.", ex.Message);
+            Assert.NotNull(encryptedContent);
+            Assert.Null(decryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmorAndVerify_DecryptWithWrongKey(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string publicKey2 = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string decryptedContent = null;
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent,
+               publicKey2, privateKey, testFactory.Password));
+
+            // Assert
+            Assert.Equal("Failed to verify file.", ex.Message);
+            Assert.NotNull(encryptedContent);
+            Assert.Null(decryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedAndCompressedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip,
+            };
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedStringDifferentKeys(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            string publicKey2 = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+            string privateKey2 = System.IO.File.ReadAllText(testFactory2.PrivateKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey2, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey2, testFactory2.Password);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.NotNull(decryptedContent);
+            Assert.Equal(testFactory.Content, decryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_VerifyEncryptedAndSignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmor(encryptedContent, publicKey);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.True(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifyEncryptedAndSignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            string publicKey2 = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmor(encryptedContent, publicKey2);
+
+            // Assert
+            Assert.NotNull(encryptedContent);
+            Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_VerifySignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmor(signedContent, publicKey);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.True(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Verify_DoNotVerifySignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            string publicKey2 = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmor(signedContent, publicKey2);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+        #endregion Armor
+
         public static IEnumerable<object[]> KeyTypeValues()
         {
             foreach (var keyType in Enum.GetValues(typeof(KeyType)))
