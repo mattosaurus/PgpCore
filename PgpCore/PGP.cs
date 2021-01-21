@@ -71,7 +71,7 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             await EncryptFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -92,7 +92,7 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths.Select(x => new FileInfo(x)).ToList());
             await EncryptFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -166,7 +166,7 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             EncryptFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -187,7 +187,7 @@ namespace PgpCore
             bool withIntegrityCheck = true,
             string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths.Select(x => new FileInfo(x)).ToList());
             EncryptFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -640,7 +640,7 @@ namespace PgpCore
         public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath), new FileInfo(privateKeyFilePath), passPhrase);
             await EncryptFileAndSignAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -657,7 +657,7 @@ namespace PgpCore
         public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths.Select(x => new FileInfo(x)).ToList(), new FileInfo(privateKeyFilePath), passPhrase);
             await EncryptFileAndSignAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -729,7 +729,7 @@ namespace PgpCore
         public void EncryptFileAndSign(string inputFilePath, string outputFilePath, string publicKeyFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath), new FileInfo(privateKeyFilePath), passPhrase);
             EncryptFileAndSign(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -746,7 +746,7 @@ namespace PgpCore
         public void EncryptFileAndSign(string inputFilePath, string outputFilePath, IEnumerable<string> publicKeyFilePaths,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(publicKeyFilePaths.Select(x => new FileInfo(x)).ToList(), new FileInfo(privateKeyFilePath), passPhrase);
             EncryptFileAndSign(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -1128,7 +1128,7 @@ namespace PgpCore
         public async Task SignFileAsync(string inputFilePath, string outputFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             await SignFileAsync(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -1201,7 +1201,7 @@ namespace PgpCore
         public void SignFile(string inputFilePath, string outputFilePath,
             string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             SignFile(inputFilePath, outputFilePath, armor, withIntegrityCheck, name);
         }
 
@@ -1526,7 +1526,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public async Task ClearSignFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             await ClearSignFileAsync(inputFilePath, outputFilePath);
         }
 
@@ -1577,7 +1577,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public void ClearSignFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             ClearSignFile(inputFilePath, outputFilePath);
         }
 
@@ -1828,7 +1828,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             await DecryptFileAsync(inputFilePath, outputFilePath);
         }
 
@@ -1878,7 +1878,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public void DecryptFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(privateKeyFilePath), passPhrase);
             DecryptFile(inputFilePath, outputFilePath);
         }
 
@@ -2134,7 +2134,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath), new FileInfo(privateKeyFilePath), passPhrase);
             await DecryptFileAndVerifyAsync(inputFilePath, outputFilePath);
         }
 
@@ -2185,7 +2185,7 @@ namespace PgpCore
         /// <param name="passPhrase">PGP secret key password</param>
         public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath, privateKeyFilePath, passPhrase);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath), new FileInfo(privateKeyFilePath), passPhrase);
             DecryptFileAndVerify(inputFilePath, outputFilePath);
         }
 
@@ -2439,7 +2439,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePath">PGP public key file path</param>
         public async Task<bool> VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             return await VerifyFileAsync(inputFilePath);
         }
 
@@ -2482,7 +2482,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePath">PGP public key file path</param>
         public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             return VerifyFile(inputFilePath);
         }
 
@@ -2695,7 +2695,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePath">PGP public key file path</param>
         public async Task<bool> VerifyClearFileAsync(string inputFilePath, string publicKeyFilePath)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             return await VerifyClearFileAsync(inputFilePath);
         }
 
@@ -2735,7 +2735,7 @@ namespace PgpCore
         /// <param name="publicKeyFilePath">PGP public key file path</param>
         public bool VerifyClearFile(string inputFilePath, string publicKeyFilePath)
         {
-            EncryptionKeys = new EncryptionKeys(publicKeyFilePath);
+            EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
             return VerifyClearFile(inputFilePath);
         }
 

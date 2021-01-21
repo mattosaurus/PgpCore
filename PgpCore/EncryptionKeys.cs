@@ -32,26 +32,21 @@ namespace PgpCore
         /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
         /// The data is encrypted with the recipients public key and signed with your private key.
         /// </summary>
-        /// <param name="publicKeyFilePath">The key used to encrypt the data</param>
-        /// <param name="privateKeyFilePath">The key used to sign the data.</param>
+        /// <param name="publicKey">The key used to encrypt the data</param>
+        /// <param name="privateKey">The key used to sign the data.</param>
         /// <param name="passPhrase">The password required to access the private key</param>
         /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
-        public EncryptionKeys(string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
+        public EncryptionKeys(string publicKey, string privateKey, string passPhrase)
         {
-            if (String.IsNullOrEmpty(publicKeyFilePath))
+            if (String.IsNullOrEmpty(publicKey))
                 throw new ArgumentException("PublicKeyFilePath");
-            if (String.IsNullOrEmpty(privateKeyFilePath))
+            if (String.IsNullOrEmpty(privateKey))
                 throw new ArgumentException("PrivateKeyFilePath");
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            if (!File.Exists(publicKeyFilePath))
-                throw new FileNotFoundException(String.Format("Public Key file [{0}] does not exist.", publicKeyFilePath));
-            if (!File.Exists(privateKeyFilePath))
-                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
-
-            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFilePath) };
-            SecretKey = ReadSecretKey(privateKeyFilePath);
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKey.GetStream()) };
+            SecretKey = ReadSecretKey(privateKey.GetStream());
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
         }
@@ -90,33 +85,25 @@ namespace PgpCore
         /// Two or more keys are required to encrypt and sign data. Your private key and the recipients public key(s).
         /// The data is encrypted with the recipients public key(s) and signed with your private key.
         /// </summary>
-        /// <param name="publicKeyFilePaths">The key(s) used to encrypt the data</param>
-        /// <param name="privateKeyFilePath">The key used to sign the data.</param>
+        /// <param name="publicKeys">The key(s) used to encrypt the data</param>
+        /// <param name="privateKey">The key used to sign the data.</param>
         /// <param name="passPhrase">The password required to access the private key</param>
         /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
-        public EncryptionKeys(IEnumerable<string> publicKeyFilePaths, string privateKeyFilePath, string passPhrase)
+        public EncryptionKeys(IEnumerable<string> publicKeys, string privateKey, string passPhrase)
         {
-            // Avoid multiple enumerations of 'publicKeyFilePaths'
-            string[] publicKeys = publicKeyFilePaths.ToArray();
-
-            if (String.IsNullOrEmpty(privateKeyFilePath))
+            if (String.IsNullOrEmpty(privateKey))
                 throw new ArgumentException("PrivateKeyFilePath");
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            if (!File.Exists(privateKeyFilePath))
-                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
-
-            foreach (string publicKeyFilePath in publicKeys)
+            foreach (string publicKey in publicKeys)
             {
-                if (String.IsNullOrEmpty(publicKeyFilePath))
-                    throw new ArgumentException(nameof(publicKeyFilePath));
-                if (!File.Exists(publicKeyFilePath))
-                    throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
+                if (String.IsNullOrEmpty(publicKey))
+                    throw new ArgumentException(nameof(publicKey));
             }
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
-            SecretKey = ReadSecretKey(privateKeyFilePath);
+            SecretKey = ReadSecretKey(privateKey.GetStream());
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
         }
@@ -157,18 +144,15 @@ namespace PgpCore
             _passPhrase = passPhrase;
         }
 
-        public EncryptionKeys(string privateKeyFilePath, string passPhrase)
+        public EncryptionKeys(string privateKey, string passPhrase)
         {
-            if (String.IsNullOrEmpty(privateKeyFilePath))
-                throw new ArgumentException("PrivateKeyFilePath");
+            if (String.IsNullOrEmpty(privateKey))
+                throw new ArgumentException("PrivateKey");
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            if (!File.Exists(privateKeyFilePath))
-                throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFilePath));
-
             PublicKeys = null;
-            SecretKey = ReadSecretKey(privateKeyFilePath);
+            SecretKey = ReadSecretKey(privateKey.GetStream());
             PrivateKey = ReadPrivateKey(passPhrase);
             _passPhrase = passPhrase;
         }
@@ -242,17 +226,14 @@ namespace PgpCore
         /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
         /// The data is encrypted with the recipients public key and signed with your private key.
         /// </summary>
-        /// <param name="publicKeyFilePath">The key used to encrypt the data</param>
+        /// <param name="publicKey">The key used to encrypt the data</param>
         /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
-        public EncryptionKeys(string publicKeyFilePath)
+        public EncryptionKeys(string publicKey)
         {
-            if (String.IsNullOrEmpty(publicKeyFilePath))
-                throw new ArgumentException("PublicKeyFilePath");
+            if (String.IsNullOrEmpty(publicKey))
+                throw new ArgumentException("PublicKey");
 
-            if (!File.Exists(publicKeyFilePath))
-                throw new FileNotFoundException(String.Format("Public Key file [{0}] does not exist.", publicKeyFilePath));
-
-            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFilePath) };
+            PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKey.GetStream()) };
         }
 
         /// <summary>
@@ -278,22 +259,17 @@ namespace PgpCore
         /// Two keys are required to encrypt and sign data. Your private key and the recipients public key.
         /// The data is encrypted with the recipients public key and signed with your private key.
         /// </summary>
-        /// <param name="publicKeyFilePaths">The keys used to encrypt the data</param>
+        /// <param name="publicKeys">The keys used to encrypt the data</param>
         /// <exception cref="ArgumentException">Public key not found. Private key not found. Missing password</exception>
-        public EncryptionKeys(IEnumerable<string> publicKeyFilePaths)
+        public EncryptionKeys(IEnumerable<string> publicKeys)
         {
-            // Avoid multiple enumerations of 'publicKeyFilePaths'
-            string[] publicKeys = publicKeyFilePaths.ToArray();
-
-            foreach (string publicKeyFilePath in publicKeys)
+            foreach (string publicKey in publicKeys)
             {
-                if (String.IsNullOrEmpty(publicKeyFilePath))
-                    throw new ArgumentException(nameof(publicKeyFilePath));
-                if (!File.Exists(publicKeyFilePath))
-                    throw new FileNotFoundException(String.Format("Input file [{0}] does not exist.", publicKeyFilePath));
+                if (String.IsNullOrEmpty(publicKey))
+                    throw new ArgumentException(nameof(publicKey));
             }
 
-            PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
+            PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x.GetStream())).ToList();
         }
 
         /// <summary>
