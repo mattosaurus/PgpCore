@@ -1180,7 +1180,7 @@ namespace PgpCore.Tests
             string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, publicKey);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1201,7 +1201,7 @@ namespace PgpCore.Tests
             pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, publicKey);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1223,7 +1223,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
+            string signedContent = pgp.SignArmoredString(testFactory.Content, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(signedContent);
@@ -1245,7 +1245,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(clearSignedContent);
@@ -1258,7 +1258,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndVerifyArmor_CreateClearSignedStringAndVerify(KeyType keyType)
+        public void ClearSignAndVerifyArmoredString_CreateClearSignedStringAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1268,10 +1268,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content, privateKey, testFactory.Password);
 
             // Assert
-            Assert.True(pgp.VerifyClearArmor(clearSignedContent, publicKey));
+            Assert.True(pgp.VerifyClearArmoredString(clearSignedContent, publicKey));
 
             // Teardown
             testFactory.Teardown();
@@ -1281,7 +1281,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndDoNotVerifyArmor_CreateClearSignedStringAndDoNotVerify(KeyType keyType)
+        public void ClearSignAndDoNotVerifyArmoredString_CreateClearSignedStringAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1294,10 +1294,10 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string clearSignedContent = pgp.ClearSignArmor(testFactory.Content, privateKey, testFactory.Password);
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content, privateKey, testFactory.Password);
 
             // Assert
-            Assert.False(pgp.VerifyClearArmor(clearSignedContent, publicKey));
+            Assert.False(pgp.VerifyClearArmoredString(clearSignedContent, publicKey));
 
             // Teardown
             testFactory.Teardown();
@@ -1324,7 +1324,7 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, keys);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, keys);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1338,7 +1338,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void EncryptArmorAndSign_CreateEncryptedAndSignedString(KeyType keyType)
+        public void EncryptArmoredStringAndSign_CreateEncryptedAndSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1348,7 +1348,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string encryptedAndSignedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1361,7 +1361,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void EncryptArmorAndSign_CreateEncryptedAndSignedStringWithMultipleKeys(KeyType keyType)
+        public void EncryptArmoredStringAndSign_CreateEncryptedAndSignedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1378,7 +1378,7 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
+            string encryptedAndSignedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1392,7 +1392,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmor_DecryptEncryptedString(KeyType keyType)
+        public void DecryptArmoredString_DecryptEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1402,8 +1402,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
-            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, publicKey);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1416,7 +1416,7 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public void DecryptArmor_DecryptEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void DecryptArmoredString_DecryptEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1427,8 +1427,8 @@ namespace PgpCore.Tests
             pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey);
-            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, publicKey);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1443,7 +1443,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmor_DecryptEncryptedStringWithMultipleKeys(KeyType keyType)
+        public void DecryptArmoredString_DecryptEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1461,9 +1461,9 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, keys);
-            string decryptedContent1 = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
-            string decryptedContent2 = pgp.DecryptArmor(encryptedContent, privateKey2, testFactory2.Password);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, keys);
+            string decryptedContent1 = pgp.DecryptArmoredString(encryptedContent, privateKey, testFactory.Password);
+            string decryptedContent2 = pgp.DecryptArmoredString(encryptedContent, privateKey2, testFactory2.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1480,7 +1480,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmor_DecryptSignedAndEncryptedString(KeyType keyType)
+        public void DecryptArmoredString_DecryptSignedAndEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1490,8 +1490,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            string decryptedContent = pgp.DecryptArmor(encryptedContent, privateKey, testFactory.Password);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1506,7 +1506,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmor_DecryptSignedAndEncryptedStringWithMultipleKeys(KeyType keyType)
+        public void DecryptArmoredString_DecryptSignedAndEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1524,9 +1524,9 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedAndSignedContent = pgp.EncryptArmorAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
-            string decryptedContent1 = pgp.DecryptArmor(encryptedAndSignedContent, privateKey, testFactory.Password);
-            string decryptedContent2 = pgp.DecryptArmor(encryptedAndSignedContent, privateKey2, testFactory2.Password);
+            string encryptedAndSignedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, keys, privateKey, testFactory.Password);
+            string decryptedContent1 = pgp.DecryptArmoredString(encryptedAndSignedContent, privateKey, testFactory.Password);
+            string decryptedContent2 = pgp.DecryptArmoredString(encryptedAndSignedContent, privateKey2, testFactory2.Password);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1543,7 +1543,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmorAndVerify_DecryptUnsignedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptUnsignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1558,8 +1558,8 @@ namespace PgpCore.Tests
 
             // Act
             string decryptedContent = null;
-            string encryptedContent = pgp.EncryptArmor(testFactory.Content, publicKey2);
-            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent,
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, publicKey2);
+            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent,
                publicKey, privateKey2, testFactory2.Password));
 
             // Assert
@@ -1575,7 +1575,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmorAndVerify_DecryptWithWrongKey(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptWithWrongKey(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1590,8 +1590,8 @@ namespace PgpCore.Tests
 
             // Act
             string decryptedContent = null;
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent,
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            var ex = Assert.Throws<PgpException>(() => decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent,
                publicKey2, privateKey, testFactory.Password));
 
             // Assert
@@ -1607,7 +1607,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1617,8 +1617,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1633,7 +1633,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedAndCompressedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedAndCompressedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1646,8 +1646,8 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent, publicKey, privateKey, testFactory.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1662,7 +1662,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptArmorAndVerify_DecryptSignedAndEncryptedStringDifferentKeys(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedStringDifferentKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -1677,8 +1677,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey2, privateKey, testFactory.Password);
-            string decryptedContent = pgp.DecryptArmorAndVerify(encryptedContent, publicKey, privateKey2, testFactory2.Password);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey2, privateKey, testFactory.Password);
+            string decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent, publicKey, privateKey2, testFactory2.Password);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1703,8 +1703,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            bool verified = pgp.VerifyArmor(encryptedContent, publicKey);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmoredString(encryptedContent, publicKey);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1732,8 +1732,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string encryptedContent = pgp.EncryptArmorAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
-            bool verified = pgp.VerifyArmor(encryptedContent, publicKey2);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content, publicKey, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmoredString(encryptedContent, publicKey2);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1757,8 +1757,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
-            bool verified = pgp.VerifyArmor(signedContent, publicKey);
+            string signedContent = pgp.SignArmoredString(testFactory.Content, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmoredString(signedContent, publicKey);
 
             // Assert
             Assert.NotNull(signedContent);
@@ -1785,8 +1785,8 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            string signedContent = pgp.SignArmor(testFactory.Content, privateKey, testFactory.Password);
-            bool verified = pgp.VerifyArmor(signedContent, publicKey2);
+            string signedContent = pgp.SignArmoredString(testFactory.Content, privateKey, testFactory.Password);
+            bool verified = pgp.VerifyArmoredString(signedContent, publicKey2);
 
             // Assert
             Assert.NotNull(signedContent);

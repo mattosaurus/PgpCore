@@ -458,7 +458,7 @@ namespace PgpCore
         }
 
         #endregion EncryptStream
-        #region EncryptArmorAsync
+        #region EncryptArmoredStringAsync
         /// <summary>
         /// PGP Encrypt the string.
         /// </summary>
@@ -466,7 +466,7 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(
+        public async Task<string> EncryptArmoredStringAsync(
             string input,
             string publicKey,
             bool withIntegrityCheck = true,
@@ -490,7 +490,7 @@ namespace PgpCore
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmoredStringAsync(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()));
 
@@ -510,7 +510,7 @@ namespace PgpCore
         /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmoredStringAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -529,7 +529,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmoredStringAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -539,8 +539,8 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion EncryptArmorAsync
-        #region EncryptArmor
+        #endregion EncryptArmoredStringAsync
+        #region EncryptArmoredString
         /// <summary>
         /// PGP Encrypt the string.
         /// </summary>
@@ -548,7 +548,7 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(
+        public string EncryptArmoredString(
             string input,
             string publicKey,
             bool withIntegrityCheck = true,
@@ -572,7 +572,7 @@ namespace PgpCore
         /// <param name="publicKeys">IEnumerable of PGP public keys</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmoredString(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList());
 
@@ -592,7 +592,7 @@ namespace PgpCore
         /// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmoredString(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -611,7 +611,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmor(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmoredString(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -621,7 +621,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion EncryptArmor
+        #endregion EncryptArmoredString
         #endregion Encrypt
 
         #region Encrypt and Sign
@@ -971,7 +971,7 @@ namespace PgpCore
         }
 
         #endregion EncryptStreamAndSign
-        #region EncryptArmorAndSignAsync
+        #region EncryptArmoredStringAndSignAsync
         /// <summary>
         /// Encrypt and sign the string
         /// </summary>
@@ -980,7 +980,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, string publicKey,
+        public async Task<string> EncryptArmoredStringAndSignAsync(string input, string publicKey,
             string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync(), await privateKey.GetStreamAsync(), passPhrase);
@@ -1002,7 +1002,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, List<string> publicKeys,
+        public async Task<string> EncryptArmoredStringAndSignAsync(string input, List<string> publicKeys,
             string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await Task.WhenAll(publicKeys.Select(x => x.GetStreamAsync()).ToList()), await privateKey.GetStreamAsync(), passPhrase);
@@ -1022,7 +1022,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmoredStringAndSignAsync(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -1040,7 +1040,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public async Task<string> EncryptArmorAndSignAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> EncryptArmoredStringAndSignAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -1050,8 +1050,8 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion EncryptArmorAndSignAsync
-        #region EncryptArmorAndSign
+        #endregion EncryptArmoredStringAndSignAsync
+        #region EncryptArmoredStringAndSign
         /// <summary>
         /// Encrypt and sign the string
         /// </summary>
@@ -1060,7 +1060,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmorAndSign(string input, string publicKey,
+        public string EncryptArmoredStringAndSign(string input, string publicKey,
             string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream(), privateKey.GetStream(), passPhrase);
@@ -1082,7 +1082,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmorAndSign(string input, List<string> publicKeys,
+        public string EncryptArmoredStringAndSign(string input, List<string> publicKeys,
             string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(publicKeys.Select(x => x.GetStream()).ToList(), privateKey.GetStream(), passPhrase);
@@ -1101,7 +1101,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
-        public string EncryptArmorAndSign(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string EncryptArmoredStringAndSign(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -1111,7 +1111,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion EncryptArmorAndSign
+        #endregion EncryptArmoredStringAndSign
         #endregion Encrypt and Sign
 
         #region Sign
@@ -1396,7 +1396,7 @@ namespace PgpCore
         }
 
         #endregion SignStream
-        #region SignArmorAsync
+        #region SignArmoredStringAsync
         /// <summary>
         /// Sign the string
         /// </summary>
@@ -1404,7 +1404,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task<string> SignArmorAsync(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> SignArmoredStringAsync(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
@@ -1423,7 +1423,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task<string> SignArmorAsync(string input, IEncryptionKeys encryptionKeys,
+        public async Task<string> SignArmoredStringAsync(string input, IEncryptionKeys encryptionKeys,
             bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
@@ -1442,7 +1442,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public async Task<string> SignArmorAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public async Task<string> SignArmoredStringAsync(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -1452,8 +1452,8 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion SignArmorAsync
-        #region SignArmor
+        #endregion SignArmoredStringAsync
+        #region SignArmoredString
         /// <summary>
         /// Sign the string
         /// </summary>
@@ -1461,7 +1461,7 @@ namespace PgpCore
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public string SignArmor(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string SignArmoredString(string input, string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
@@ -1480,7 +1480,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public string SignArmor(string input, IEncryptionKeys encryptionKeys,
+        public string SignArmoredString(string input, IEncryptionKeys encryptionKeys,
             bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             EncryptionKeys = encryptionKeys;
@@ -1499,7 +1499,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
-        public string SignArmor(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
+        public string SignArmoredString(string input, bool withIntegrityCheck = true, string name = DefaultFileName)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -1509,7 +1509,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion SignArmor
+        #endregion SignArmoredString
         #endregion Sign
 
         #region ClearSign
@@ -1708,14 +1708,14 @@ namespace PgpCore
         }
 
         #endregion ClearSignStream
-        #region ClearSignArmorAsync
+        #region ClearSignArmoredStringAsync
         /// <summary>
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public async Task<string> ClearSignArmorAsync(string input, string privateKey, string passPhrase)
+        public async Task<string> ClearSignArmoredStringAsync(string input, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
@@ -1733,7 +1733,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<string> ClearSignArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<string> ClearSignArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -1750,7 +1750,7 @@ namespace PgpCore
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        public async Task<string> ClearSignArmorAsync(string input)
+        public async Task<string> ClearSignArmoredStringAsync(string input)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -1760,15 +1760,15 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion ClearSignArmorAsync
-        #region ClearSignArmor
+        #endregion ClearSignArmoredStringAsync
+        #region ClearSignArmoredString
         /// <summary>
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public string ClearSignArmor(string input, string privateKey, string passPhrase)
+        public string ClearSignArmoredString(string input, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
@@ -1786,7 +1786,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public string ClearSignArmor(string input, IEncryptionKeys encryptionKeys)
+        public string ClearSignArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -1803,7 +1803,7 @@ namespace PgpCore
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        public string ClearSignArmor(string input)
+        public string ClearSignArmoredString(string input)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -1813,7 +1813,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion ClearSignArmor
+        #endregion ClearSignArmoredString
         #endregion ClearSign
 
         #region Decrypt
@@ -2013,14 +2013,14 @@ namespace PgpCore
         }
 
         #endregion DecryptStream
-        #region DecryptArmorAsync
+        #region DecryptArmoredStringAsync
         /// <summary>
-        /// PGP decrypt a given stream.
+        /// PGP decrypt a given string.
         /// </summary>
         /// <param name="input">PGP encrypted data stream</param>
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public async Task<string> DecryptArmorAsync(string input, string privateKey, string passPhrase)
+        public async Task<string> DecryptArmoredStringAsync(string input, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
 
@@ -2038,7 +2038,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<string> DecryptArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<string> DecryptArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2055,7 +2055,7 @@ namespace PgpCore
         /// PGP decrypt a given string.
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
-        public async Task<string> DecryptArmorAsync(string input)
+        public async Task<string> DecryptArmoredStringAsync(string input)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -2065,15 +2065,15 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion DecryptArmorAsync
-        #region DecryptArmor
+        #endregion DecryptArmoredStringAsync
+        #region DecryptArmoredString
         /// <summary>
         /// PGP decrypt a given stream.
         /// </summary>
         /// <param name="input">PGP encrypted data stream</param>
         /// <param name="privateKey">PGP secret key stream</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public string DecryptArmor(string input, string privateKey, string passPhrase)
+        public string DecryptArmoredString(string input, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
 
@@ -2091,7 +2091,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public string DecryptArmor(string input, IEncryptionKeys encryptionKeys)
+        public string DecryptArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2108,7 +2108,7 @@ namespace PgpCore
         /// PGP decrypt a given string.
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
-        public string DecryptArmor(string input)
+        public string DecryptArmoredString(string input)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -2118,7 +2118,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion DecryptArmor
+        #endregion DecryptArmoredString
         #endregion Decrypt
 
         #region DecryptAndVerify
@@ -2322,7 +2322,7 @@ namespace PgpCore
         }
 
         #endregion DecryptStreamAndVerify
-        #region DecryptArmorAndVerifyAsync
+        #region DecryptArmoredStringAndVerifyAsync
         /// <summary>
         /// PGP decrypt and verify a given string.
         /// </summary>
@@ -2330,7 +2330,7 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public async Task<string> DecryptArmorAndVerifyAsync(string input, string publicKey, string privateKey, string passPhrase)
+        public async Task<string> DecryptArmoredStringAndVerifyAsync(string input, string publicKey, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync(), await privateKey.GetStreamAsync(), passPhrase);
 
@@ -2348,7 +2348,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
         /// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
-        public async Task<string> DecryptArmorAndVerifyAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<string> DecryptArmoredStringAndVerifyAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2365,7 +2365,7 @@ namespace PgpCore
         /// PGP decrypt and verify a given string.
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
-        public async Task<string> DecryptArmorAndVerifyAsync(string input)
+        public async Task<string> DecryptArmoredStringAndVerifyAsync(string input)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -2375,8 +2375,8 @@ namespace PgpCore
                 return await outputStream.GetStringAsync();
             }
         }
-        #endregion DecryptArmorAndVerifyAsync
-        #region DecryptArmorAndVerify
+        #endregion DecryptArmoredStringAndVerifyAsync
+        #region DecryptArmoredStringAndVerify
         /// <summary>
         /// PGP decrypt and verify a given string.
         /// </summary>
@@ -2384,7 +2384,7 @@ namespace PgpCore
         /// <param name="publicKey">PGP public key</param>
         /// <param name="privateKey">PGP secret key</param>
         /// <param name="passPhrase">PGP secret key password</param>
-        public string DecryptArmorAndVerify(string input, string publicKey, string privateKey, string passPhrase)
+        public string DecryptArmoredStringAndVerify(string input, string publicKey, string privateKey, string passPhrase)
         {
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream(), privateKey.GetStream(), passPhrase);
 
@@ -2402,7 +2402,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
         /// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
-        public string DecryptArmorAndVerify(string input, IEncryptionKeys encryptionKeys)
+        public string DecryptArmoredStringAndVerify(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2419,7 +2419,7 @@ namespace PgpCore
         /// PGP decrypt and verify a given string.
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
-        public string DecryptArmorAndVerify(string input)
+        public string DecryptArmoredStringAndVerify(string input)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -2429,7 +2429,7 @@ namespace PgpCore
                 return outputStream.GetString();
             }
         }
-        #endregion DecryptArmorAndVerify
+        #endregion DecryptArmoredStringAndVerify
         #region VerifyFileAsync
 
         /// <summary>
@@ -2594,13 +2594,13 @@ namespace PgpCore
         }
 
         #endregion VerifyStream
-        #region VerifyArmorAsync
+        #region VerifyArmoredStringAsync
         /// <summary>
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
         /// <param name="publicKey">PGP public key stream</param>
-        public async Task<bool> VerifyArmorAsync(string input, string publicKey)
+        public async Task<bool> VerifyArmoredStringAsync(string input, string publicKey)
         {
             EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
@@ -2616,7 +2616,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<bool> VerifyArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<bool> VerifyArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2631,7 +2631,7 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        public async Task<bool> VerifyArmorAsync(string input)
+        public async Task<bool> VerifyArmoredStringAsync(string input)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -2639,14 +2639,14 @@ namespace PgpCore
                 return await VerifyStreamAsync(inputStream);
             }
         }
-        #endregion VerifyArmorAsync
-        #region VerifyArmor
+        #endregion VerifyArmoredStringAsync
+        #region VerifyArmoredString
         /// <summary>
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
         /// <param name="publicKey">PGP public key</param>
-        public bool VerifyArmor(string input, string publicKey)
+        public bool VerifyArmoredString(string input, string publicKey)
         {
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
@@ -2662,7 +2662,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public bool VerifyArmor(string input, IEncryptionKeys encryptionKeys)
+        public bool VerifyArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2677,7 +2677,7 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        public bool VerifyArmor(string input)
+        public bool VerifyArmoredString(string input)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -2685,7 +2685,7 @@ namespace PgpCore
                 return VerifyStream(inputStream);
             }
         }
-        #endregion VerifyArmor
+        #endregion VerifyArmoredString
         #region VerifyClearFileAsync
 
         /// <summary>
@@ -2847,13 +2847,13 @@ namespace PgpCore
         }
 
         #endregion VerifyClearStream
-        #region VerifyClearArmorAsync
+        #region VerifyClearArmoredStringAsync
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="publicKey">PGP public key</param>
-        public async Task<bool> VerifyClearArmorAsync(string input, string publicKey)
+        public async Task<bool> VerifyClearArmoredStringAsync(string input, string publicKey)
         {
             EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
@@ -2869,7 +2869,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<bool> VerifyClearArmorAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<bool> VerifyClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2884,7 +2884,7 @@ namespace PgpCore
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        public async Task<bool> VerifyClearArmorAsync(string input)
+        public async Task<bool> VerifyClearArmoredStringAsync(string input)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
@@ -2892,14 +2892,14 @@ namespace PgpCore
                 return await VerifyClearStreamAsync(inputStream);
             }
         }
-        #endregion VerifyClearArmorAsync
-        #region VerifyClearArmor
+        #endregion VerifyClearArmoredStringAsync
+        #region VerifyClearArmoredString
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="publicKey">PGP public key</param>
-        public bool VerifyClearArmor(string input, string publicKey)
+        public bool VerifyClearArmoredString(string input, string publicKey)
         {
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
@@ -2915,7 +2915,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public bool VerifyClearArmor(string input, IEncryptionKeys encryptionKeys)
+        public bool VerifyClearArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -2930,7 +2930,7 @@ namespace PgpCore
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        public bool VerifyClearArmor(string input)
+        public bool VerifyClearArmoredString(string input)
         {
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
@@ -2938,7 +2938,7 @@ namespace PgpCore
                 return VerifyClearStream(inputStream);
             }
         }
-        #endregion VerifyClearArmor
+        #endregion VerifyClearArmoredString
         #endregion DecryptAndVerify
 
         #region GenerateKey
