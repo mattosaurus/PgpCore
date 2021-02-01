@@ -32,15 +32,49 @@ namespace PgpCore.Tests
 
         public string ContentFilePath => $"{ContentDirectory}{Constants.CONTENTFILENAME}";
 
+        public FileInfo ContentFileInfo => new FileInfo(ContentFilePath);
+
+        public Stream ContentStream => GetFileStream(ContentFileInfo);
+
         public string EncryptedContentFilePath => $"{ContentDirectory}{Constants.ENCRYPTEDCONTENTFILENAME}";
+
+        public FileInfo EncryptedContentFileInfo => new FileInfo(EncryptedContentFilePath);
+
+        public string EncryptedContent => File.ReadAllText(EncryptedContentFilePath);
+
+        public Stream EncryptedContentStream => GetFileStream(EncryptedContentFileInfo);
 
         public string SignedContentFilePath => $"{ContentDirectory}{Constants.SIGNEDCONTENTFILENAME}";
 
+        public FileInfo SignedContentFileInfo => new FileInfo(SignedContentFilePath);
+
+        public string SignedContent => File.ReadAllText(SignedContentFilePath);
+
+        public Stream SignedContentStream => GetFileStream(SignedContentFileInfo);
+
         public string DecryptedContentFilePath => $"{ContentDirectory}{Constants.DECRYPTEDCONTENTFILENAME}";
+
+        public FileInfo DecryptedContentFileInfo => new FileInfo(DecryptedContentFilePath);
+
+        public string DecryptedContent => File.ReadAllText(DecryptedContentFilePath);
+
+        public Stream DecryptedContentStream => GetFileStream(DecryptedContentFileInfo);
 
         public string PrivateKeyFilePath => $"{KeyDirectory}{Constants.PRIVATEKEYFILENAME}";
 
+        public FileInfo PrivateKeyFileInfo => new FileInfo(PrivateKeyFilePath);
+
+        public string PrivateKey => File.ReadAllText(PrivateKeyFilePath);
+
+        public Stream PrivateKeyStream => GetFileStream(PrivateKeyFileInfo);
+
         public string PublicKeyFilePath => $"{KeyDirectory}{Constants.PUBLICKEYFILENAME}";
+
+        public FileInfo PublicKeyFileInfo => new FileInfo(PublicKeyFilePath);
+
+        public string PublicKey => File.ReadAllText(PublicKeyFilePath);
+
+        public Stream PublicKeyStream => GetFileStream(PublicKeyFileInfo);
 
         public string UserName => _userName != null ? _userName : $"{_uniqueIdentifier}@email.com" ;
 
@@ -259,6 +293,19 @@ namespace PgpCore.Tests
                     }
                 }
             }
+        }
+
+        private Stream GetFileStream(FileInfo fileInfo)
+        {
+            Stream outputStream = new MemoryStream();
+            using (FileStream fileStream = fileInfo.OpenRead())
+            {
+                fileStream.CopyTo(outputStream);
+            }
+
+            outputStream.Position = 0;
+            outputStream.Seek(0, SeekOrigin.Begin);
+            return outputStream;
         }
     }
 

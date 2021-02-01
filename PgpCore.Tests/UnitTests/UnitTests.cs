@@ -9,29 +9,18 @@ using Xunit;
 
 namespace PgpCore.Tests
 {
-    public class UnitTestsAsync
+    public class UnitTests
     {
-        private static class File
-        {
-            public static FileStream Create(string path) => System.IO.File.Create(path);
-            public static bool Exists(string path) => System.IO.File.Exists(path);
-#if NETFRAMEWORK
-            public static Task<string> ReadAllTextAsync(string path) => Task.FromResult(System.IO.File.ReadAllText(path));
-#else
-            public static Task<string> ReadAllTextAsync(string path) => System.IO.File.ReadAllTextAsync(path);
-#endif
-        }
-
         [Fact]
-        public async Task GenerateKeyAsync_CreatePublicPrivateKeyFiles()
+        public void GenerateKey_CreatePublicPrivateKeyFiles()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync();
+            testFactory.Arrange();
             PGP pgp = new PGP();
 
             // Act
-            await pgp.GenerateKeyAsync(testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            pgp.GenerateKey(testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
 
             // Assert
             Assert.True(File.Exists(testFactory.PublicKeyFilePath));
@@ -44,16 +33,16 @@ namespace PgpCore.Tests
         #region File
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
-        public async Task EncryptFileAsync_CreateEncryptedFile(KeyType keyType)
+        public void EncryptFile_CreateEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
@@ -64,17 +53,17 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public async Task EncryptFileAsync_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void EncryptFile_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+            testFactory.Arrange(KeyType.Known, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
             PGP pgp = new PGP(encryptionKeys);
             pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
-            await pgp.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
@@ -87,16 +76,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task SignFileAsync_CreateSignedFile(KeyType keyType)
+        public void SignFile_CreateSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.SignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            pgp.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.SignedContentFilePath));
@@ -109,16 +98,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignFileAsync_CreateClearSignedFile(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.ClearSignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.SignedContentFilePath));
@@ -131,19 +120,19 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignAndVerifyFileAsync_CreateClearSignedFileAndVerify(KeyType keyType)
+        public void ClearSignAndVerifyFile_CreateClearSignedFileAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.ClearSignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
 
             // Assert
-            Assert.True(await pgp.VerifyClearFileAsync(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
+            Assert.True(pgp.VerifyClearFile(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
 
             // Teardown
             testFactory.Teardown();
@@ -153,23 +142,23 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignAndDoNotVerifyFileAsync_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
             EncryptionKeys encryptionKeysSign = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             EncryptionKeys encryptionKeysVerify = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
             PGP pgpSign = new PGP(encryptionKeysSign);
             PGP pgpVerify = new PGP(encryptionKeysVerify);
 
             // Act
-            await pgpSign.ClearSignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            pgpSign.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
 
             // Assert
-            Assert.False(await pgpVerify.VerifyClearFileAsync(testFactory.SignedContentFilePath));
+            Assert.False(pgpVerify.VerifyClearFile(testFactory.SignedContentFilePath));
 
             // Teardown
             testFactory.Teardown();
@@ -180,13 +169,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptFileAsync_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void EncryptFile_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
 
             List<FileInfo> keys = new List<FileInfo>()
             {
@@ -198,7 +187,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
@@ -212,16 +201,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptFileAndSignAsync_CreateEncryptedAndSignedFile(KeyType keyType)
+        public void EncryptFileAndSign_CreateEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
@@ -234,13 +223,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptFileAndSignAsync_CreateEncryptedAndSignedFileWithMultipleKeys(KeyType keyType)
+        public void EncryptFileAndSign_CreateEncryptedAndSignedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
 
             List<FileInfo> keys = new List<FileInfo>()
             {
@@ -252,7 +241,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
@@ -266,19 +255,19 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAsync_DecryptEncryptedFile(KeyType keyType)
+        public void DecryptFile_DecryptEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgpEncrypt = new PGP(encryptionKeys);
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -291,11 +280,11 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public async Task DecryptFileAsync_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void DecryptFile_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+            testFactory.Arrange(KeyType.Known, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgpEncrypt = new PGP(encryptionKeys);
@@ -303,8 +292,8 @@ namespace PgpCore.Tests
             pgpEncrypt.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
-            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -317,7 +306,7 @@ namespace PgpCore.Tests
 
         ////[Theory]
         ////[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
-        ////public async Task DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
+        ////public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
         ////{
         ////    // Arrange
         ////    Arrange(keyType, fileType);
@@ -339,13 +328,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAsync_DecryptEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void DecryptFile_DecryptEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<FileInfo> keys = new List<FileInfo>()
             {
@@ -360,9 +349,9 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgpEncrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
+            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgpEncrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -379,17 +368,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAsync_DecryptSignedAndEncryptedFile(KeyType keyType)
+        public void DecryptFile_DecryptSignedAndEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, armor: false);
-            await pgp.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, armor: false);
+            pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -404,13 +393,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAsync_DecryptSignedAndEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void DecryptFile_DecryptSignedAndEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<FileInfo> keys = new List<FileInfo>()
             {
@@ -425,9 +414,9 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgpEncrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
+            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgpEncrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -444,12 +433,12 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAndVerifyAsync_DecryptUnsignedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptUnsignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
@@ -458,8 +447,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            var ex = await Assert.ThrowsAsync<PgpException>(async () => await pgpDecrypt.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath,
+            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            var ex = Assert.Throws<PgpException>( () => pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath,
                 testFactory.DecryptedContentFilePath));
 
             // Assert
@@ -477,13 +466,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAndVerifyAsync_DecryptWithWrongKey(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptWithWrongKey(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
@@ -492,8 +481,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            var ex = await Assert.ThrowsAsync<PgpException>(async () => await pgpDecrypt.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath,
+            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            var ex = Assert.Throws<PgpException>( () => pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath,
                 testFactory.DecryptedContentFilePath));
 
             // Assert
@@ -510,18 +499,18 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAndVerifyAsync_DecryptSignedAndEncryptedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
 
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgp.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -536,11 +525,11 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAndVerifyAsync_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
 
             PGP pgp = new PGP(encryptionKeys)
@@ -549,8 +538,8 @@ namespace PgpCore.Tests
             };
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgp.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgp.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -565,13 +554,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptFileAndVerifyAsync_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory2.PrivateKeyFileInfo, testFactory2.Password);
@@ -580,8 +569,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            await pgpDecrypt.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -596,17 +585,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifyEncryptedAndSignedFile(KeyType keyType)
+        public void Verify_VerifyEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            bool verified = await pgp.VerifyFileAsync(testFactory.EncryptedContentFilePath);
+            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -620,13 +609,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
+        public void Verify_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
@@ -635,8 +624,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.EncryptFileAndSignAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            bool verified = await pgpDecrypt.VerifyFileAsync(testFactory.EncryptedContentFilePath);
+            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            bool verified = pgpDecrypt.VerifyFile(testFactory.EncryptedContentFilePath);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -650,17 +639,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifySignedFile(KeyType keyType)
+        public void Verify_VerifySignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.SignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-            bool verified = await pgp.VerifyFileAsync(testFactory.SignedContentFilePath);
+            pgp.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            bool verified = pgp.VerifyFile(testFactory.SignedContentFilePath);
 
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
@@ -674,13 +663,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifySignedFile(KeyType keyType)
+        public void Verify_DoNotVerifySignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
@@ -688,8 +677,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            await pgpEncrypt.SignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-            bool verified = await pgpDecrypt.VerifyFileAsync(testFactory.SignedContentFilePath);
+            pgpEncrypt.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            bool verified = pgpDecrypt.VerifyFile(testFactory.SignedContentFilePath);
 
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
@@ -705,18 +694,18 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptStreamAsync_CreateEncryptedFile(KeyType keyType)
+        public void EncryptStream_CreateEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStream(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -729,18 +718,18 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task SignStreamAsync_CreateSignedFile(KeyType keyType)
+        public void SignStream_CreateSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.SignStreamAsync(inputFileStream, outputFileStream);
+                pgp.SignStream(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -753,13 +742,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptStreamAsync_CreateEncryptedStreamWithMultipleKeys(KeyType keyType)
+        public void EncryptStream_CreateEncryptedStreamWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<Stream> keys = new List<Stream>()
             {
@@ -774,7 +763,7 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStream(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -787,18 +776,18 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptStreamAndSignAsync_CreateEncryptedAndSignedStream(KeyType keyType)
+        public void EncryptStreamAndSign_CreateEncryptedAndSignedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -811,13 +800,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptStreamAndSignAsync_CreateEncryptedAndSignedStreamWithMultipleKeys(KeyType keyType)
+        public void EncryptStreamAndSign_CreateEncryptedAndSignedStreamWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<Stream> keys = new List<Stream>()
             {
@@ -832,7 +821,7 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -845,11 +834,11 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptStreamAsync_DecryptEncryptedStream(KeyType keyType)
+        public void DecryptStream_DecryptEncryptedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgpEncrypt = new PGP(encryptionKeys);
@@ -858,11 +847,11 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgpEncrypt.EncryptStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
-                await pgpDecrypt.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -877,13 +866,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptStreamAsync_DecryptEncryptedStreamWithMultipleKeys(KeyType keyType)
+        public void DecryptStream_DecryptEncryptedStreamWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<Stream> keys = new List<Stream>()
             {
@@ -900,15 +889,15 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgpEncrypt.EncryptStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
-                await pgpEncrypt.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.DecryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory2.DecryptedContentFilePath))
-                await pgpDecrypt.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -925,22 +914,22 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptStreamAsync_DecryptSignedAndEncryptedStream(KeyType keyType)
+        public void DecryptStream_DecryptSignedAndEncryptedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
-                await pgp.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgp.DecryptStream(inputFileStream, outputFileStream);
 
             bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
 
@@ -958,13 +947,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptStreamAsync_DecryptSignedAndEncryptedStreamWithMultipleKeys(KeyType keyType)
+        public void DecryptStream_DecryptSignedAndEncryptedStreamWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<Stream> keys = new List<Stream>()
             {
@@ -981,20 +970,20 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgpEncrypt.EncryptStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
-                await pgpEncrypt.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.DecryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
             using (Stream outputFileStream = File.Create(testFactory2.DecryptedContentFilePath))
-                await pgpDecrypt.DecryptStreamAsync(inputFileStream, outputFileStream);
+                pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             bool verified = false;
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-                verified = await pgpEncrypt.VerifyStreamAsync(inputFileStream);
+                verified = pgpEncrypt.VerifyStream(inputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -1012,23 +1001,23 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifyEncryptedAndSignedStream(KeyType keyType)
+        public void Verify_VerifyEncryptedAndSignedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+                pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             bool verified = false;
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-                verified = await pgp.VerifyStreamAsync(inputFileStream);
+                verified = pgp.VerifyStream(inputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -1042,13 +1031,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifyEncryptedAndSignedStream(KeyType keyType)
+        public void Verify_DoNotVerifyEncryptedAndSignedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyStream);
 
@@ -1058,12 +1047,12 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                await pgpEncrypt.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             bool verified = false;
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-                verified = await pgpDecrypt.VerifyStreamAsync(inputFileStream);
+                verified = pgpDecrypt.VerifyStream(inputFileStream);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -1077,11 +1066,11 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifySignedStream(KeyType keyType)
+        public void Verify_VerifySignedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
             bool verified = false;
@@ -1089,10 +1078,10 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.SignedContentFilePath))
-                await pgp.SignStreamAsync(inputFileStream, outputFileStream);
+                pgp.SignStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.SignedContentStream)
-                verified = await pgp.VerifyStreamAsync(inputFileStream);
+                verified = pgp.VerifyStream(inputFileStream);
 
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
@@ -1106,13 +1095,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifySignedStream(KeyType keyType)
+        public void Verify_DoNotVerifySignedStream(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyStream, testFactory2.PrivateKeyStream, testFactory2.Password);
@@ -1124,10 +1113,10 @@ namespace PgpCore.Tests
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = File.Create(testFactory.SignedContentFilePath))
-                await pgpEncrypt.SignStreamAsync(inputFileStream, outputFileStream);
+                pgpEncrypt.SignStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.SignedContentStream)
-                verified = await pgpDecrypt.VerifyStreamAsync(inputFileStream);
+                verified = pgpDecrypt.VerifyStream(inputFileStream);
 
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
@@ -1141,16 +1130,16 @@ namespace PgpCore.Tests
         #region Armor
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
-        public async Task EncryptArmoredStringAsync_CreateEncryptedString(KeyType keyType)
+        public void EncryptArmoredString_CreateEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1161,17 +1150,17 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public async Task EncryptArmoredStringAsync_CreateEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void EncryptArmoredString_CreateEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+            testFactory.Arrange(KeyType.Known, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
             PGP pgp = new PGP(encryptionKeys);
             pgp.HashAlgorithmTag = hashAlgorithmTag;
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1184,16 +1173,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task SignArmoredStringAsync_CreateSignedString(KeyType keyType)
+        public void SignArmoredString_CreateSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string signedContent = await pgp.SignArmoredStringAsync(testFactory.Content);
+            string signedContent = pgp.SignArmoredString(testFactory.Content);
 
             // Assert
             Assert.NotNull(signedContent);
@@ -1206,16 +1195,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignArmoredStringAsync_CreateClearSignedString(KeyType keyType)
+        public void ClearSignArmoredString_CreateClearSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content);
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content);
 
             // Assert
             Assert.NotNull(clearSignedContent);
@@ -1228,19 +1217,19 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignAndVerifyArmoredStringAsync_CreateClearSignedStringAndVerify(KeyType keyType)
+        public void ClearSignAndVerifyArmoredString_CreateClearSignedStringAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content);
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content);
 
             // Assert
-            Assert.True(await pgp.VerifyClearArmoredStringAsync(clearSignedContent));
+            Assert.True(pgp.VerifyClearArmoredString(clearSignedContent));
 
             // Teardown
             testFactory.Teardown();
@@ -1250,13 +1239,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task ClearSignAndDoNotVerifyArmoredStringAsync_CreateClearSignedStringAndDoNotVerify(KeyType keyType)
+        public void ClearSignAndDoNotVerifyArmoredString_CreateClearSignedStringAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey, testFactory2.PrivateKey, testFactory2.Password);
@@ -1265,10 +1254,10 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string clearSignedContent = await pgpEncrypt.ClearSignArmoredStringAsync(testFactory.Content);
+            string clearSignedContent = pgpEncrypt.ClearSignArmoredString(testFactory.Content);
 
             // Assert
-            Assert.False(await pgpDecrypt.VerifyClearArmoredStringAsync(clearSignedContent));
+            Assert.False(pgpDecrypt.VerifyClearArmoredString(clearSignedContent));
 
             // Teardown
             testFactory.Teardown();
@@ -1279,13 +1268,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptArmoredStringAsync_CreateEncryptedStringWithMultipleKeys(KeyType keyType)
+        public void EncryptArmoredString_CreateEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
 
             
             List<string> keys = new List<string>()
@@ -1298,7 +1287,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1312,16 +1301,16 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptArmoredStringAndSignAsync_CreateEncryptedAndSignedString(KeyType keyType)
+        public void EncryptArmoredStringAndSign_CreateEncryptedAndSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedAndSignedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
+            string encryptedAndSignedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1334,13 +1323,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task EncryptArmoredStringAndSignAsync_CreateEncryptedAndSignedStringWithMultipleKeys(KeyType keyType)
+        public void EncryptArmoredStringAndSign_CreateEncryptedAndSignedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated);
             
             List<string> keys = new List<string>()
             {
@@ -1352,7 +1341,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedAndSignedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
+            string encryptedAndSignedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1366,17 +1355,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAsync_DecryptEncryptedString(KeyType keyType)
+        public void DecryptArmoredString_DecryptEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
-            string decryptedContent = await pgp.DecryptArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1389,11 +1378,11 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public async Task DecryptArmoredStringAsync_DecryptEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void DecryptArmoredString_DecryptEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+            testFactory.Arrange(KeyType.Known, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys)
             {
@@ -1401,8 +1390,8 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
-            string decryptedContent = await pgp.DecryptArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1417,13 +1406,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAsync_DecryptEncryptedStringWithMultipleKeys(KeyType keyType)
+        public void DecryptArmoredString_DecryptEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<string> keys = new List<string>()
             {
@@ -1438,9 +1427,9 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string encryptedContent = await pgpEncrypt.EncryptArmoredStringAsync(testFactory.Content);
-            string decryptedContent1 = await pgpEncrypt.DecryptArmoredStringAsync(encryptedContent);
-            string decryptedContent2 = await pgpDecrypt.DecryptArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgpEncrypt.EncryptArmoredString(testFactory.Content);
+            string decryptedContent1 = pgpEncrypt.DecryptArmoredString(encryptedContent);
+            string decryptedContent2 = pgpDecrypt.DecryptArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1457,17 +1446,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAsync_DecryptSignedAndEncryptedString(KeyType keyType)
+        public void DecryptArmoredString_DecryptSignedAndEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            string decryptedContent = await pgp.DecryptArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
+            string decryptedContent = pgp.DecryptArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1482,13 +1471,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAsync_DecryptSignedAndEncryptedStringWithMultipleKeys(KeyType keyType)
+        public void DecryptArmoredString_DecryptSignedAndEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
 
             List<string> keys = new List<string>()
             {
@@ -1503,9 +1492,9 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string encryptedAndSignedContent = await pgpEncrypt.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            string decryptedContent1 = await pgpEncrypt.DecryptArmoredStringAsync(encryptedAndSignedContent);
-            string decryptedContent2 = await pgpDecrypt.DecryptArmoredStringAsync(encryptedAndSignedContent);
+            string encryptedAndSignedContent = pgpEncrypt.EncryptArmoredStringAndSign(testFactory.Content);
+            string decryptedContent1 = pgpEncrypt.DecryptArmoredString(encryptedAndSignedContent);
+            string decryptedContent2 = pgpDecrypt.DecryptArmoredString(encryptedAndSignedContent);
 
             // Assert
             Assert.NotNull(encryptedAndSignedContent);
@@ -1522,20 +1511,20 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAndVerifyAsync_DecryptUnsignedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptUnsignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
             string decryptedContent = null;
-            string encryptedContent = await pgp.EncryptArmoredStringAsync(testFactory.Content);
-            var ex = await Assert.ThrowsAsync<PgpException>(async () => decryptedContent = await pgp.DecryptArmoredStringAndVerifyAsync(encryptedContent));
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
+            var ex = Assert.Throws<PgpException>( () => decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent));
 
             // Assert
             Assert.Equal("File was not signed.", ex.Message);
@@ -1550,13 +1539,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAndVerifyAsync_DecryptWithWrongKey(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptWithWrongKey(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey, testFactory.PrivateKey, testFactory.Password);
 
@@ -1565,8 +1554,8 @@ namespace PgpCore.Tests
 
             // Act
             string decryptedContent = null;
-            string encryptedContent = await pgpEncrypt.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            var ex = await Assert.ThrowsAsync<PgpException>(async () => decryptedContent = await pgpDecrypt.DecryptArmoredStringAndVerifyAsync(encryptedContent));
+            string encryptedContent = pgpEncrypt.EncryptArmoredStringAndSign(testFactory.Content);
+            var ex = Assert.Throws<PgpException>( () => decryptedContent = pgpDecrypt.DecryptArmoredStringAndVerify(encryptedContent));
 
             // Assert
             Assert.Equal("Failed to verify file.", ex.Message);
@@ -1581,17 +1570,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAndVerifyAsync_DecryptSignedAndEncryptedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            string decryptedContent = await pgp.DecryptArmoredStringAndVerifyAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
+            string decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1606,11 +1595,11 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAndVerifyAsync_DecryptSignedAndEncryptedAndCompressedString(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedAndCompressedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys)
             {
@@ -1618,8 +1607,8 @@ namespace PgpCore.Tests
             };
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            string decryptedContent = await pgp.DecryptArmoredStringAndVerifyAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
+            string decryptedContent = pgp.DecryptArmoredStringAndVerify(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1634,13 +1623,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task DecryptArmoredStringAndVerifyAsync_DecryptSignedAndEncryptedStringDifferentKeys(KeyType keyType)
+        public void DecryptArmoredStringAndVerify_DecryptSignedAndEncryptedStringDifferentKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory2.PublicKey, testFactory.PrivateKey, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory2.PrivateKey, testFactory2.Password);
 
@@ -1648,8 +1637,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string encryptedContent = await pgpEncrypt.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            string decryptedContent = await pgpDecrypt.DecryptArmoredStringAndVerifyAsync(encryptedContent);
+            string encryptedContent = pgpEncrypt.EncryptArmoredStringAndSign(testFactory.Content);
+            string decryptedContent = pgpDecrypt.DecryptArmoredStringAndVerify(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1664,17 +1653,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifyEncryptedAndSignedString(KeyType keyType)
+        public void Verify_VerifyEncryptedAndSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = await pgp.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            bool verified = await pgp.VerifyArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgp.EncryptArmoredStringAndSign(testFactory.Content);
+            bool verified = pgp.VerifyArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1688,13 +1677,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifyEncryptedAndSignedString(KeyType keyType)
+        public void Verify_DoNotVerifyEncryptedAndSignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey, testFactory2.PrivateKey, testFactory2.Password);
 
@@ -1702,8 +1691,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string encryptedContent = await pgpEncrypt.EncryptArmoredStringAndSignAsync(testFactory.Content);
-            bool verified = await pgpDecrypt.VerifyArmoredStringAsync(encryptedContent);
+            string encryptedContent = pgpEncrypt.EncryptArmoredStringAndSign(testFactory.Content);
+            bool verified = pgpDecrypt.VerifyArmoredString(encryptedContent);
 
             // Assert
             Assert.NotNull(encryptedContent);
@@ -1717,17 +1706,17 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_VerifySignedString(KeyType keyType)
+        public void Verify_VerifySignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string signedContent = await pgp.SignArmoredStringAsync(testFactory.Content);
-            bool verified = await pgp.VerifyArmoredStringAsync(signedContent);
+            string signedContent = pgp.SignArmoredString(testFactory.Content);
+            bool verified = pgp.VerifyArmoredString(signedContent);
 
             // Assert
             Assert.NotNull(signedContent);
@@ -1741,13 +1730,13 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAsync_DoNotVerifySignedString(KeyType keyType)
+        public void Verify_DoNotVerifySignedString(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             TestFactory testFactory2 = new TestFactory();
-            await testFactory.ArrangeAsync(keyType, FileType.Known);
-            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey);
 
@@ -1755,8 +1744,8 @@ namespace PgpCore.Tests
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             // Act
-            string signedContent = await pgpEncrypt.SignArmoredStringAsync(testFactory.Content);
-            bool verified = await pgpDecrypt.VerifyArmoredStringAsync(signedContent);
+            string signedContent = pgpEncrypt.SignArmoredString(testFactory.Content);
+            bool verified = pgpDecrypt.VerifyArmoredString(signedContent);
 
             // Assert
             Assert.NotNull(signedContent);

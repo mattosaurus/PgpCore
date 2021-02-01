@@ -455,12 +455,13 @@ namespace PgpCore
             throw new ArgumentException("Can't find encryption key in key ring.");
         }
         
-        public static PgpPublicKey ReadPublicKey(string publicKeyFilePath)
+        public static PgpPublicKey ReadPublicKey(string publicKey)
         {
-            if(!File.Exists(publicKeyFilePath))
-                throw new FileNotFoundException(String.Format("File {0} was not found", publicKeyFilePath));
-            using (FileStream fs = new FileStream(publicKeyFilePath, FileMode.Open, FileAccess.Read))
-                return ReadPublicKey(fs);
+            
+            if(string.IsNullOrEmpty(publicKey))
+                throw new FileNotFoundException(String.Format("Public key was not provided"));
+
+                return ReadPublicKey(publicKey.GetStream());
         }
 
         public static PgpPublicKey ReadPublicKey(FileInfo publicKeyFile)
