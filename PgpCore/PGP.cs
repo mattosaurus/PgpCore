@@ -2940,6 +2940,7 @@ namespace PgpCore
         }
         #endregion VerifyClearArmoredString
         #endregion DecryptAndVerify
+
         #region GetRecipients
 
         /// <summary>
@@ -2991,7 +2992,22 @@ namespace PgpCore
             return enc.GetEncryptedDataObjects().OfType<PgpPublicKeyEncryptedData>().Select(k => k.KeyId);
         }
 
+        /// <summary>
+        /// PGP get a recipients keys id of an encrypted file.
+        /// </summary>
+        /// <param name="input">PGP encrypted string</param>
+        /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
+        public IEnumerable<long> GetArmoredStringRecipients(string input)
+        {
+            if (String.IsNullOrEmpty(input))
+                throw new ArgumentException("Input");
+
+            using (Stream inputStream = input.GetStream())
+                return GetStreamRecipients(inputStream);
+        }
+
         #endregion GetRecipients
+
         #region GenerateKey
 
         public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null, string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
