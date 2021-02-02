@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
@@ -687,6 +688,63 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetFileRecipient(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKeyFileInfo);
+            IEnumerable<long> recipients = pgp.GetFileRecipients(testFactory.EncryptedContentFilePath);
+
+            // Assert
+            Assert.Equal(pgpPublicKey.KeyId, recipients.FirstOrDefault());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetFileRecipients(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+
+            List<FileInfo> keys = new List<FileInfo>()
+            {
+                testFactory.PublicKeyFileInfo,
+                testFactory2.PublicKeyFileInfo
+            };
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(keys);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            List<PgpPublicKey> pgpPublicKeys = keys.Select(x => Utilities.ReadPublicKey(x)).ToList();
+            IEnumerable<long> recipients = pgp.GetFileRecipients(testFactory.EncryptedContentFilePath);
+
+            // Assert
+            Assert.All(recipients, recipient => Assert.Contains(pgpPublicKeys, x => recipient == x.KeyId));
+
+            // Teardown
+            testFactory.Teardown();
+        }
         #endregion File
 
         #region Stream
@@ -1121,6 +1179,75 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
             Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetStreamRecipient(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                pgp.EncryptStream(inputFileStream, outputFileStream);
+
+            PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKeyStream);
+            IEnumerable<long> recipients = pgp.GetStreamRecipients(testFactory.EncryptedContentStream);
+
+            // Assert
+            Assert.Equal(pgpPublicKey.KeyId, recipients.FirstOrDefault());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetStreamRecipients(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+
+            List<Stream> keys = new List<Stream>()
+            {
+                testFactory.PublicKeyStream,
+                testFactory2.PublicKeyStream
+            };
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(keys);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                pgp.EncryptStream(inputFileStream, outputFileStream);
+
+            keys = new List<Stream>()
+            {
+                testFactory.PublicKeyStream,
+                testFactory2.PublicKeyStream
+            };
+
+            List<PgpPublicKey> pgpPublicKeys = keys.Select(x => Utilities.ReadPublicKey(x)).ToList();
+            IEnumerable<long> recipients = pgp.GetStreamRecipients(testFactory.EncryptedContentStream);
+
+            // Assert
+            Assert.All(recipients, recipient => Assert.Contains(pgpPublicKeys, x => recipient == x.KeyId));
 
             // Teardown
             testFactory.Teardown();
@@ -1750,6 +1877,63 @@ namespace PgpCore.Tests
             // Assert
             Assert.NotNull(signedContent);
             Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetStringRecipient(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.ContentFilePath);
+            PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKey);
+            IEnumerable<long> recipients = pgp.GetArmoredStringRecipients(encryptedContent);
+
+            // Assert
+            Assert.Equal(pgpPublicKey.KeyId, recipients.FirstOrDefault());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Recipients_GetStringRecipients(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+
+            List<string> keys = new List<string>()
+            {
+                testFactory.PublicKey,
+                testFactory2.PublicKey
+            };
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(keys);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.ContentFilePath);
+            List<PgpPublicKey> pgpPublicKeys = keys.Select(x => Utilities.ReadPublicKey(x)).ToList();
+            IEnumerable<long> recipients = pgp.GetArmoredStringRecipients(encryptedContent);
+
+            // Assert
+            Assert.All(recipients, recipient => Assert.Contains(pgpPublicKeys, x => recipient == x.KeyId));
 
             // Teardown
             testFactory.Teardown();
