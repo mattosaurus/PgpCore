@@ -20,7 +20,7 @@ Add the following namespaces to use the library:
 using PgpCore;
 ```
 # Dependencies
-* Portable.BouncyCastle (>= 1.8.6.7)
+* Portable.BouncyCastle (>= 1.8.9)
 
 # Usage
 This is intended for usage in projects [targeting .NET Standard 2.0](https://dotnet.microsoft.com/platform/dotnet-standard#versions).
