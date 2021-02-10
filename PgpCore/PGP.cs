@@ -49,6 +49,34 @@ namespace PgpCore
 
         public PGP(IEncryptionKeys encryptionKeys) { EncryptionKeys = encryptionKeys; }
 
+        internal class PGPOutputContext
+        {
+            public Stream OutputStream { get; }
+            private bool ShouldVerify { get; }
+            private PgpEncryptedData PgpEncryptedData { get; }
+
+            public PGPOutputContext(Stream outputStream, bool shouldVerify, PgpPublicKeyEncryptedData pbe)
+            {
+                this.OutputStream = outputStream;
+                this.ShouldVerify = shouldVerify;
+                this.PgpEncryptedData = pbe;
+            }
+
+            public void CopyTo(Stream destStream)
+            {
+                this.OutputStream.CopyTo(destStream);
+                this.VerifyIntegrity();
+            }
+
+            public void VerifyIntegrity()
+            {
+                if (this.ShouldVerify && this.PgpEncryptedData.IsIntegrityProtected() && !this.PgpEncryptedData.Verify())
+                {
+                    throw new PgpException("Message failed integrity check.");
+                }
+            }
+        }
+
         #endregion Constructor
 
         #region Encrypt
@@ -2552,7 +2580,10 @@ namespace PgpCore
 
             using (Stream inputStream = File.OpenRead(inputFilePath))
             using (Stream outStream = File.Create(outputFilePath))
-                Decrypt(inputStream, outStream);
+            {
+                PGPOutputContext context = PGP.Decrypt(EncryptionKeys, inputStream);
+                context.CopyTo(outStream);
+            }
         }
 
         /// <summary>
@@ -2694,7 +2725,8 @@ namespace PgpCore
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
 
-            Decrypt(inputStream, outputStream);
+            PGPOutputContext context = PGP.Decrypt(EncryptionKeys, inputStream);
+            context.CopyTo(outputStream);
             return outputStream;
         }
 
@@ -4374,12 +4406,10 @@ namespace PgpCore
         /// <param name="inputStream">PGP encrypted data stream</param>
         /// <param name="outputStream">Output PGP decrypted stream</param>
         /// <returns></returns>
-        private void Decrypt(Stream inputStream, Stream outputStream)
+        internal static PGPOutputContext Decrypt(IEncryptionKeys encryptionKeys, Stream inputStream)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
-            if (outputStream == null)
-                throw new ArgumentException("OutputStream");
 
             PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
 
@@ -4409,7 +4439,7 @@ namespace PgpCore
             {
                 foreach (PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects())
                 {
-                    privateKey = EncryptionKeys.FindSecretKey(pked.KeyId);
+                    privateKey = encryptionKeys.FindSecretKey(pked.KeyId);
 
                     if (privateKey != null)
                     {
@@ -4453,14 +4483,16 @@ namespace PgpCore
                     PgpLiteralData Ld = null;
                     Ld = (PgpLiteralData)message;
                     Stream unc = Ld.GetInputStream();
-                    Streams.PipeAll(unc, outputStream);
+                    return new PGPOutputContext(unc, false, pbe);
+                    //Streams.PipeAll(unc, outputStream);
                 }
                 else
                 {
                     PgpLiteralData Ld = null;
                     Ld = (PgpLiteralData)message;
                     Stream unc = Ld.GetInputStream();
-                    Streams.PipeAll(unc, outputStream);
+                    return new PGPOutputContext(unc, false, pbe);
+                    //Streams.PipeAll(unc, outputStream);
                 }
             }
             else if (message is PgpLiteralData)
@@ -4469,15 +4501,16 @@ namespace PgpCore
                 string outFileName = ld.FileName;
 
                 Stream unc = ld.GetInputStream();
-                Streams.PipeAll(unc, outputStream);
+                return new PGPOutputContext(unc, true, pbe);
+                //Streams.PipeAll(unc, outputStream);
 
-                if (pbe.IsIntegrityProtected())
-                {
-                    if (!pbe.Verify())
-                    {
-                        throw new PgpException("Message failed integrity check.");
-                    }
-                }
+                //if (pbe.IsIntegrityProtected())
+                //{
+                //    if (!pbe.Verify())
+                //    {
+                //        throw new PgpException("Message failed integrity check.");
+                //    }
+                //}
             }
             else if (message is PgpOnePassSignatureList)
                 throw new PgpException("Encrypted message contains a signed message - not literal data.");
@@ -4794,7 +4827,7 @@ namespace PgpCore
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
-            return verified;
+            return await Task.FromResult(verified);
         }
 
         #endregion VerifyAsync
