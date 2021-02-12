@@ -30,45 +30,37 @@ This is intended for usage in projects [targeting .NET Standard 2.0](https://dot
 * [Generate Key](#generate-key)
   * [GenerateKey](#generatekey)
 * [Encrypt](#encrypt)
-  * [EncryptFile](#encryptfile)
   * [EncryptFileAsync](#encryptfileasync)
-  * [EncryptStream](#encryptstream)
   * [EncryptStreamAsync](#encryptstreamasync)
+  * [EncryptArmoredStringAsync](#encryptarmoredstringasync)
 * [Sign](#sign)
-  * [SignFile](#signfile)
   * [SignFileAsync](#signfileasync)
-  * [SignStream](#signstream)
   * [SignStreamAsync](#signstreamasync)
+  * [SignArmoredStringAsync](#signstreamasync)
 * [ClearSign](#clearsign)
-  * [ClearSignFile](#clearsignfile)
   * [ClearSignFileAsync](#clearsignfileasync)
-  * [ClearSignStream](#clearsignstream)
   * [ClearSignStreamAsync](#clearsignstreamasync)
+  * [ClearSignArmoredStringAsync](#clearsignarmoredstringasync)
 * [Encrypt and Sign](#encrypt-and-sign)
-  * [EncryptFileAndSign](#encryptfileandsign)
   * [EncryptFileAndSignAsync](#encryptfileandsignasync)
-  * [EncryptStreamAndSign](#encryptstreamandsign)
   * [EncryptStreamAndSignAsync](#encryptstreamandsignasync)
+  * [EncryptArmoredStringAndSignAsync](#encryptarmoredstringandsignasync)
 * [Decrypt](#decrypt)
-  * [DecryptFile](#decryptfile)
   * [DecryptFileAsync](#decryptfileasync)
-  * [DecryptStream](#decryptstream)
   * [DecryptStreamAsync](#decryptstreamasync)
+  * [DecryptArmoredStringAsync](#decryptarmoredstringasync)
 * [Verify](#verify)
-  * [VerifyFile](#verifyfile)
   * [VerifyFileAsync](#verifyfileasync)
-  * [VerifyStream](#verifystream)
   * [VerifyStreamAsync](#verifystreamasync)
+  * [VerifyArmoredStringAsync](#verifyarmoredstringasync)
 * [VerifyClear](#verify)
-  * [VerifyClearFile](#verifyclearfile)
   * [VerifyClearFileAsync](#verifyclearfileasync)
-  * [VerifyClearStream](#verifyclearstream)
   * [VerifyClearStreamAsync](#verifyclearstreamasync)
+  * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
 * [Decrypt and Verify](#decrypt-and-verify)
-  * [DecryptFileAndVerify](#decryptfileandverify)
   * [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
-  * [DecryptStreamAndVerify](#decryptstreamandverify)
   * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
+  * [DecryptArmoredStringAndVerifyAsync](#decryptarmoredstringandverifyasync)
 
 #### Generate Key
 Generate a new public and private key for the provided username and password.
@@ -83,130 +75,137 @@ using (PGP pgp = new PGP())
 }
 ```
 ### Encrypt
-Encrypt the provided file or stream using a public key.
+Encrypt the provided file, stream or string using a public key.
 
 [`gpg --output "C:\TEMP\Content\encrypted.pgp" --encrypt "C:\TEMP\Content\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
-#### EncryptFile
-```C#
-using (PGP pgp = new PGP())
-{
-	// Encrypt file
-	pgp.EncryptFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Keys\public.asc", true, true);
-}
-```
 #### EncryptFileAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Encrypt file
-	await pgp.EncryptFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\encrypted.pgp", @"C:\TEMP\Keys\public.asc", true, true);
-}
-```
-#### EncryptStream
-```C#
-using (PGP pgp = new PGP())
-{
-	// Encrypt stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
-	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
-		pgp.EncryptStream(inputFileStream, outputFileStream, publicKeyStream, true, true);
-}
+// Load keys
+FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+// Reference input/output files
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\content.txt");
+FileInfo encryptedFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
+
+// Encrypt
+PGP pgp = new PGP(encryptionKeys);
+await pgp.EncryptFileAsync(inputFile, encryptedFile);
 ```
 #### EncryptStreamAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Encrypt stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
-	using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
-		await pgp.EncryptStreamAsync(inputFileStream, outputFileStream, publicKeyStream, true, true);
-}
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(publicKeyStream);
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input/output files
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
+	// Encrypt
+	await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+```
+#### EncryptArmoredStringAsync
+```C#
+// Load keys
+string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+// Encrypt
+PGP pgp = new PGP(encryptionKeys);
+string encryptedContent = await pgp.EncryptArmoredStringAsync("String to encrypt");
 ```
 ### Sign
 Sign the provided file or stream using a private key.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --sign "C:\TEMP\Content\signed.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### SignFile
-```C#
-using (PGP pgp = new PGP())
-{
-	// Sign file
-	pgp.SignFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
-}
-```
 #### SignFileAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Sign file
-	await pgp.SignFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\signed.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
-}
-```
-#### SignStream
-```C#
-using (PGP pgp = new PGP())
-{
-	// Sign stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
-	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		pgp.SignFile(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
-}
+// Load keys
+FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
+
+// Reference input/output files
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\content.txt");
+FileInfo signedFile = new FileInfo(@"C:\TEMP\Content\signed.pgp");
+
+// Sign
+PGP pgp = new PGP(encryptionKeys);
+await pgp.SignFileAsync(inputFile, encryptedFile);
 ```
 #### SignStreamAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Sign stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
-	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		await pgp.SignFileAsync(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
-}
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(privateKeyStream, "password");
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input/output files
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
+	// Sign
+	await pgp.SignStreamAsync(inputFileStream, outputFileStream);
+```
+#### SignArmoredStringAsync
+```C#
+// Load keys
+string privateKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Sign
+PGP pgp = new PGP(encryptionKeys);
+string signedContent = await pgp.SignArmoredStringAsync("String to sign");
 ```
 ### Clear Sign
-Clear sign the provided file or stream using a private key so that it is still human readable.
+Clear sign the provided file, stream, or string using a private key so that it is still human readable.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --clearsign  "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### ClearSignFile
-```C#
-using (PGP pgp = new PGP())
-{
-	// Clear sign file
-	pgp.ClearSignFile(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\clearSigned.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
-}
-```
 #### ClearSignFileAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Clear sign file
-	await pgp.ClearSignFileAsync(@"C:\TEMP\Content\content.txt", @"C:\TEMP\Content\clearSigned.pgp", @"C:\TEMP\Keys\private.asc", "password", true, true);
-}
-```
-#### ClearSignStream
-```C#
-using (PGP pgp = new PGP())
-{
-	// Clear sign stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\clearSigned.pgp"))
-	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		pgp.ClearSignStream(inputFileStream, outputFileStream, privateKeyStream, "password");
-}
+// Load keys
+FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
+
+// Reference input/output files
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\content.txt");
+FileInfo signedFile = new FileInfo(@"C:\TEMP\Content\signed.pgp");
+
+// Sign
+PGP pgp = new PGP(encryptionKeys);
+await pgp.ClearSignFileAsync(inputFile, encryptedFile);
 ```
 #### ClearSignStreamAsync
 ```C#
-using (PGP pgp = new PGP())
-{
-	// Clear sign stream
-	using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
-	using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\clearSigned.pgp"))
-	using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-		await pgp.ClearSignFileAsync(inputFileStream, outputFileStream, privateKeyStream, "password", true, true);
-}
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(privateKeyStream, "password");
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input/output files
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
+using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
+	// Sign
+	await pgp.ClearSignStreamAsync(inputFileStream, outputFileStream);
+```
+#### ClearSignArmoredStringAsync
+```C#
+// Load keys
+string privateKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Sign
+PGP pgp = new PGP(encryptionKeys);
+string signedContent = await pgp.ClearSignArmoredStringAsync("String to sign");
 ```
 ### Encrypt and Sign
 Encrypt the provided file or stream using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
