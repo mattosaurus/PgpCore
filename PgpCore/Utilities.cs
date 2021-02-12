@@ -422,34 +422,35 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream"></param>
         /// <returns></returns>
-        public static PgpPublicKey ReadPublicKey(Stream inputStream)
+        public static PgpPublicKey ReadPublicKey(Stream publicKeyStream)
         {
-            inputStream = PgpUtilities.GetDecoderStream(inputStream);
-
-            PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(inputStream);
-
-            // we just loop through the collection till we find a key suitable for encryption, in the real
-            // world you would probably want to be a bit smarter about this.
-            // iterate through the key rings.
-            foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
+            using (Stream inputStream = PgpUtilities.GetDecoderStream(publicKeyStream))
             {
-                List<PgpPublicKey> keys = kRing.GetPublicKeys()
-                    .Cast<PgpPublicKey>()
-                    .Where(k => k.IsEncryptionKey).ToList();
+                PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(inputStream);
 
-                const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
-
-                foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && k.IsMasterKey))
+                // we just loop through the collection till we find a key suitable for encryption, in the real
+                // world you would probably want to be a bit smarter about this.
+                // iterate through the key rings.
+                foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
                 {
-                    foreach (PgpSignature s in key.GetSignatures())
-                    {
-                        if (s.HasSubpackets && s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
-                            return key;
-                    }
-                }
+                    List<PgpPublicKey> keys = kRing.GetPublicKeys()
+                        .Cast<PgpPublicKey>()
+                        .Where(k => k.IsEncryptionKey).ToList();
 
-                if (keys.Any())
-                    return keys.First();
+                    const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
+
+                    foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && k.IsMasterKey))
+                    {
+                        foreach (PgpSignature s in key.GetSignatures())
+                        {
+                            if (s.HasSubpackets && s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
+                                return key;
+                        }
+                    }
+
+                    if (keys.Any())
+                        return keys.First();
+                }
             }
 
             throw new ArgumentException("Can't find encryption key in key ring.");
