@@ -36,7 +36,7 @@ This is intended for usage in projects [targeting .NET Standard 2.0](https://dot
 * [Sign](#sign)
   * [SignFileAsync](#signfileasync)
   * [SignStreamAsync](#signstreamasync)
-  * [SignArmoredStringAsync](#signarmoredstringsync)
+  * [SignArmoredStringAsync](#signarmoredstringasync)
 * [ClearSign](#clearsign)
   * [ClearSignFileAsync](#clearsignfileasync)
   * [ClearSignStreamAsync](#clearsignstreamasync)
