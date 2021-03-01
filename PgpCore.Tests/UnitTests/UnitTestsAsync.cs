@@ -472,6 +472,40 @@ namespace PgpCore.Tests
             testFactory.Teardown();
         }
 
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task DecryptFileAndVerifyAsync_DecryptCompressedUnsignedFile(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys)
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip
+            };
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            var ex = await Assert.ThrowsAsync<PgpException>(async () => await pgpDecrypt.DecryptFileAndVerifyAsync(testFactory.EncryptedContentFilePath,
+                testFactory.DecryptedContentFilePath));
+
+            // Assert
+            Assert.Equal("File was not signed.", ex.Message);
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+            Assert.Equal(string.Empty, testFactory.DecryptedContent.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
 
         [Theory]
         [InlineData(KeyType.Generated)]
