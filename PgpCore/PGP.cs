@@ -4584,10 +4584,7 @@ namespace PgpCore
                 }
                 else
                 {
-                    PgpLiteralData Ld = null;
-                    Ld = (PgpLiteralData)message;
-                    Stream unc = Ld.GetInputStream();
-                    await Streams.PipeAllAsync(unc, outputStream);
+                    throw new PgpException("File was not signed.");
                 }
             }
             else if (message is PgpLiteralData)
