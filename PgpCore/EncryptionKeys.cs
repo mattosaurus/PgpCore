@@ -15,14 +15,16 @@ namespace PgpCore
         public PgpPublicKey PublicKey => PublicKeys.FirstOrDefault();
         public IEnumerable<PgpPublicKey> PublicKeys { get; private set; }
         public PgpPrivateKey PrivateKey => _privateKey.Value;
-        public PgpSecretKey SecretKey { get; private set; }
-        public PgpSecretKeyRingBundle SecretKeys { get; private set; }
+        public PgpSecretKey SecretKey => _secretKey.Value;
+        public PgpSecretKeyRingBundle SecretKeys => _secretKeys.Value;
 
         #endregion Instance Members (Public)
 
         #region Instance Members (Private)
         private readonly string _passPhrase;
         private Lazy<PgpPrivateKey> _privateKey;
+        private Lazy<PgpSecretKey> _secretKey;
+        private Lazy<PgpSecretKeyRingBundle> _secretKeys;
 
         #endregion Instance Members (Private)
 
@@ -47,7 +49,18 @@ namespace PgpCore
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKey.GetStream()) };
-            SecretKey = ReadSecretKey(privateKey.GetStream());
+            
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKey.GetStream());
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKey.GetStream()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -79,7 +92,17 @@ namespace PgpCore
                 throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFile.FullName));
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFile) };
-            SecretKey = ReadSecretKey(privateKeyFile);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyFile);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyFile.OpenRead()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -110,7 +133,17 @@ namespace PgpCore
             }
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
-            SecretKey = ReadSecretKey(privateKey.GetStream());
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKey.GetStream());
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKey.GetStream()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -149,7 +182,17 @@ namespace PgpCore
             }
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
-            SecretKey = ReadSecretKey(privateKeyFile);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyFile);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyFile.OpenRead()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -165,7 +208,17 @@ namespace PgpCore
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
             PublicKeys = null;
-            SecretKey = ReadSecretKey(privateKey.GetStream());
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKey.GetStream());
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKey.GetStream()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -184,7 +237,17 @@ namespace PgpCore
                 throw new FileNotFoundException(String.Format("Private Key file [{0}] does not exist.", privateKeyFile.FullName));
 
             PublicKeys = null;
-            SecretKey = ReadSecretKey(privateKeyFile);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyFile);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyFile.OpenRead()))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -202,7 +265,17 @@ namespace PgpCore
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyStream) };
-            SecretKey = ReadSecretKey(privateKeyStream);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyStream);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -217,7 +290,17 @@ namespace PgpCore
             if (passPhrase == null)
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
-            SecretKey = ReadSecretKey(privateKeyStream);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyStream);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -241,7 +324,17 @@ namespace PgpCore
             }
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
-            SecretKey = ReadSecretKey(privateKeyStream);
+            _secretKey = new Lazy<PgpSecretKey>(() =>
+            {
+                return ReadSecretKey(privateKeyStream);
+            });
+            _secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+            {
+                using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
+                {
+                    return new PgpSecretKeyRingBundle(inputStream);
+                }
+            });
             _privateKey = new Lazy<PgpPrivateKey>(() =>
             {
                 return ReadPrivateKey(passPhrase);
@@ -364,39 +457,25 @@ namespace PgpCore
 
         private PgpSecretKey ReadSecretKey(string privateKeyPath)
         {
-            using (Stream sr = File.OpenRead(privateKeyPath))
-            using (Stream inputStream = PgpUtilities.GetDecoderStream(sr))
-            {
-                SecretKeys = new PgpSecretKeyRingBundle(inputStream);
-                PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
-                if (foundKey != null)
-                    return foundKey;
-            }
+            PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
+            if (foundKey != null)
+                return foundKey;
             throw new ArgumentException("Can't find signing key in key ring.");
         }
 
         private PgpSecretKey ReadSecretKey(FileInfo privateKeyFile)
         {
-            using (Stream sr = privateKeyFile.OpenRead())
-            using (Stream inputStream = PgpUtilities.GetDecoderStream(sr))
-            {
-                SecretKeys = new PgpSecretKeyRingBundle(inputStream);
-                PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
-                if (foundKey != null)
-                    return foundKey;
-            }
+            PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
+            if (foundKey != null)
+                return foundKey;
             throw new ArgumentException("Can't find signing key in key ring.");
         }
 
         private PgpSecretKey ReadSecretKey(Stream privateKeyStream)
         {
-            using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
-            {
-                SecretKeys = new PgpSecretKeyRingBundle(inputStream);
-                PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
-                if (foundKey != null)
-                    return foundKey;
-            }
+            PgpSecretKey foundKey = GetFirstSecretKey(SecretKeys);
+            if (foundKey != null)
+                return foundKey;
             throw new ArgumentException("Can't find signing key in key ring.");
         }
 
