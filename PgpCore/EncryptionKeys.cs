@@ -14,7 +14,7 @@ namespace PgpCore
         #region Instance Members (Public)
         public PgpPublicKey PublicKey => PublicKeys.FirstOrDefault();
         public IEnumerable<PgpPublicKey> PublicKeys { get; private set; }
-        public PgpPrivateKey PrivateKey { get; private set; }
+        public PgpPrivateKey PrivateKey => _privateKey.Value;
         public PgpSecretKey SecretKey { get; private set; }
         public PgpSecretKeyRingBundle SecretKeys { get; private set; }
 
@@ -22,6 +22,7 @@ namespace PgpCore
 
         #region Instance Members (Private)
         private readonly string _passPhrase;
+        private Lazy<PgpPrivateKey> _privateKey;
 
         #endregion Instance Members (Private)
 
@@ -47,7 +48,10 @@ namespace PgpCore
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKey.GetStream()) };
             SecretKey = ReadSecretKey(privateKey.GetStream());
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -76,7 +80,10 @@ namespace PgpCore
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyFile) };
             SecretKey = ReadSecretKey(privateKeyFile);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -104,7 +111,10 @@ namespace PgpCore
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             SecretKey = ReadSecretKey(privateKey.GetStream());
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -140,7 +150,10 @@ namespace PgpCore
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             SecretKey = ReadSecretKey(privateKeyFile);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -153,7 +166,10 @@ namespace PgpCore
 
             PublicKeys = null;
             SecretKey = ReadSecretKey(privateKey.GetStream());
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -169,7 +185,10 @@ namespace PgpCore
 
             PublicKeys = null;
             SecretKey = ReadSecretKey(privateKeyFile);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -184,7 +203,10 @@ namespace PgpCore
 
             PublicKeys = new List<PgpPublicKey>() { Utilities.ReadPublicKey(publicKeyStream) };
             SecretKey = ReadSecretKey(privateKeyStream);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -196,7 +218,10 @@ namespace PgpCore
                 throw new ArgumentNullException("Invalid Pass Phrase.");
 
             SecretKey = ReadSecretKey(privateKeyStream);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
@@ -217,7 +242,10 @@ namespace PgpCore
 
             PublicKeys = publicKeys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             SecretKey = ReadSecretKey(privateKeyStream);
-            PrivateKey = ReadPrivateKey(passPhrase);
+            _privateKey = new Lazy<PgpPrivateKey>(() =>
+            {
+                return ReadPrivateKey(passPhrase);
+            });
             _passPhrase = passPhrase;
         }
 
