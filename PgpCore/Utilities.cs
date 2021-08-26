@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PgpCore
@@ -455,14 +454,14 @@ namespace PgpCore
 
             throw new ArgumentException("Can't find encryption key in key ring.");
         }
-        
+
         public static PgpPublicKey ReadPublicKey(string publicKey)
         {
-            
-            if(string.IsNullOrEmpty(publicKey))
+
+            if (string.IsNullOrEmpty(publicKey))
                 throw new FileNotFoundException(String.Format("Public key was not provided"));
 
-                return ReadPublicKey(publicKey.GetStream());
+            return ReadPublicKey(publicKey.GetStream());
         }
 
         public static PgpPublicKey ReadPublicKey(FileInfo publicKeyFile)
@@ -642,6 +641,16 @@ namespace PgpCore
             return message;
         }
 
+        public static PgpObject SkipSignatureList(PgpObjectFactory compressedFactory)
+        {
+            var message = compressedFactory.NextPgpObject();
+            while (message is PgpOnePassSignatureList || message is PgpSignatureList)
+            {
+                message = compressedFactory.NextPgpObject();
+            }
+            return message;
+        }
+
         internal static PgpObject GetClearCompressedMessage(PgpPublicKeyEncryptedData publicKeyED, EncryptionKeys encryptionKeys)
         {
             PgpObjectFactory clearFactory = GetClearDataStream(encryptionKeys.PrivateKey, publicKeyED);
@@ -678,7 +687,7 @@ namespace PgpCore
             PgpObject pgpObject = factory.NextPgpObject();
 
             PgpEncryptedDataList encryptedDataList;
-            
+
             if (pgpObject is PgpEncryptedDataList)
             {
                 encryptedDataList = (PgpEncryptedDataList)pgpObject;
