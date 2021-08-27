@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.2.0</Version>
+    <Version>5.3.0</Version>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.2.0.0</FileVersion>
-    <PackageReleaseNotes>v5.2.0 - Make EncryptionKeys properties Lazy</PackageReleaseNotes>
+    <FileVersion>5.3.0.0</FileVersion>
+    <PackageReleaseNotes>v5.3.0 - Handle simple PgpSignature</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
