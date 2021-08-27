@@ -4308,17 +4308,11 @@ namespace PgpCore
                     plainFact = new PgpObjectFactory(clear);
                 }
 
-                message = plainFact.NextPgpObject();
-
-                if (message is PgpOnePassSignatureList)
-                {
-                    message = plainFact.NextPgpObject();
-                }
+                message = Utilities.SkipSignatureList(plainFact);
             }
 
-            if (message is PgpCompressedData)
+            if (message is PgpCompressedData cData)
             {
-                PgpCompressedData cData = (PgpCompressedData)message;
                 PgpObjectFactory of = null;
 
                 using (Stream compDataIn = cData.GetDataStream())
@@ -4326,28 +4320,16 @@ namespace PgpCore
                     of = new PgpObjectFactory(compDataIn);
                 }
 
-                message = of.NextPgpObject();
-                if (message is PgpOnePassSignatureList)
-                {
-                    message = of.NextPgpObject();
-                    PgpLiteralData Ld = null;
-                    Ld = (PgpLiteralData)message;
-                    Stream unc = Ld.GetInputStream();
-                    await Streams.PipeAllAsync(unc, outputStream);
-                }
-                else
-                {
-                    PgpLiteralData Ld = null;
-                    Ld = (PgpLiteralData)message;
-                    Stream unc = Ld.GetInputStream();
-                    await Streams.PipeAllAsync(unc, outputStream);
-                }
-            }
-            else if (message is PgpLiteralData)
-            {
-                PgpLiteralData ld = (PgpLiteralData)message;
-                string outFileName = ld.FileName;
+                message = Utilities.SkipSignatureList(of);
 
+                PgpLiteralData Ld = null;
+                Ld = (PgpLiteralData)message;
+                Stream unc = Ld.GetInputStream();
+                await Streams.PipeAllAsync(unc, outputStream);
+
+            }
+            else if (message is PgpLiteralData ld)
+            {
                 Stream unc = ld.GetInputStream();
                 await Streams.PipeAllAsync(unc, outputStream);
 
@@ -4428,12 +4410,8 @@ namespace PgpCore
                     plainFact = new PgpObjectFactory(clear);
                 }
 
-                message = plainFact.NextPgpObject();
+                message = Utilities.SkipSignatureList(plainFact);
 
-                if (message is PgpOnePassSignatureList)
-                {
-                    message = plainFact.NextPgpObject();
-                }
             }
 
             if (message is PgpCompressedData)
@@ -4549,6 +4527,16 @@ namespace PgpCore
                     PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
 
                     var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = plainFact.NextPgpObject();
+                }
+                else if (message is PgpSignatureList pgpSignatureList)
+                {
+                    var pgpSignature = pgpSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId);
                     if (verified == false)
                         throw new PgpException("Failed to verify file.");
 
@@ -4671,6 +4659,16 @@ namespace PgpCore
                     PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
 
                     var verified = EncryptionKeys.PublicKey.KeyId == pgpOnePassSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId);
+                    if (verified == false)
+                        throw new PgpException("Failed to verify file.");
+
+                    message = plainFact.NextPgpObject();
+                }
+                else if (message is PgpSignatureList pgpSignatureList)
+                {
+                    var pgpSignature = pgpSignatureList[0];
+
+                    var verified = EncryptionKeys.PublicKey.KeyId == pgpSignature.KeyId || EncryptionKeys.PublicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId);
                     if (verified == false)
                         throw new PgpException("Failed to verify file.");
 
@@ -5241,7 +5239,7 @@ namespace PgpCore
                 //                ,"BC"
                 );
 
-                secretKey.Encode(secretOut);
+            secretKey.Encode(secretOut);
 
             secretOut.Dispose();
 
