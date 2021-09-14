@@ -1,6 +1,6 @@
 # PgpCore
 
-[![CircleCI](https://circleci.com/gh/mattosaurus/pgpcore/tree/master.svg?style=svg)](<https://circleci.com/gh/mattosaurus/pgpcore/tree/master>)
+![.NET](https://github.com/mattosaurus/PgpCore/actions/workflows/dotnet.yml/badge.svg)
 
 A .NET Core class library for using PGP.
 
