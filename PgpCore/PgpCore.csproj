@@ -15,12 +15,19 @@
     <FileVersion>5.2.1.0</FileVersion>
     <PackageReleaseNotes>v5.2.1 - Fix closed stream issue</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>PgpCoreKey.pfx</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <ItemGroup>
