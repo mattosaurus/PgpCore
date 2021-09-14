@@ -4324,9 +4324,9 @@ namespace PgpCore
                 using (Stream compDataIn = cData.GetDataStream())
                 {
                     of = new PgpObjectFactory(compDataIn);
+                    message = of.NextPgpObject();
                 }
 
-                message = of.NextPgpObject();
                 if (message is PgpOnePassSignatureList)
                 {
                     message = of.NextPgpObject();
@@ -4444,9 +4444,9 @@ namespace PgpCore
                 using (Stream compDataIn = cData.GetDataStream())
                 {
                     of = new PgpObjectFactory(compDataIn);
+                    message = of.NextPgpObject();
                 }
-
-                message = of.NextPgpObject();
+                
                 if (message is PgpOnePassSignatureList)
                 {
                     message = of.NextPgpObject();
@@ -4565,9 +4565,9 @@ namespace PgpCore
                 using (Stream compDataIn = cData.GetDataStream())
                 {
                     of = new PgpObjectFactory(compDataIn);
+                    message = of.NextPgpObject();
                 }
 
-                message = of.NextPgpObject();
                 if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                 {
                     PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
@@ -4687,9 +4687,9 @@ namespace PgpCore
                 using (Stream compDataIn = cData.GetDataStream())
                 {
                     of = new PgpObjectFactory(compDataIn);
+                    message = of.NextPgpObject();
                 }
 
-                message = of.NextPgpObject();
                 if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                 {
                     PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
