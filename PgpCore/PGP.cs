@@ -4785,6 +4785,21 @@ namespace PgpCore
                     verified = false;
                 }
             }
+            else if (pgpObject is PgpSignatureList)
+            {
+                PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
+                PgpSignature pgpSignature = pgpSignatureList[0];
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
+            }
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
@@ -4839,6 +4854,21 @@ namespace PgpCore
 
                 // Verify against public key ID and that of any sub keys
                 if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
+            }
+            else if (pgpObject is PgpSignatureList)
+            {
+                PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
+                PgpSignature pgpSignature = pgpSignatureList[0];
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
                 {
                     verified = true;
                 }
