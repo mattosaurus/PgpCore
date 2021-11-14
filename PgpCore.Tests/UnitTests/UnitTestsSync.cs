@@ -170,6 +170,31 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            string fileContent = File.ReadAllText(testFactory.SignedContentFilePath);
+            fileContent = fileContent.Replace("fox", "rabbit");
+            File.WriteAllText(testFactory.SignedContentFilePath, fileContent);
+
+            // Assert
+            Assert.False(pgp.VerifyClearFile(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void EncryptFile_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange

@@ -180,6 +180,31 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndDoNotVerifyFileAsync_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            await pgp.ClearSignFileAsync(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            string fileContent = await File.ReadAllTextAsync(testFactory.SignedContentFilePath);
+            fileContent = fileContent.Replace("fox", "rabbit");
+            System.IO.File.WriteAllText(testFactory.SignedContentFilePath, fileContent);
+
+            // Assert
+            Assert.False(await pgp.VerifyClearFileAsync(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task EncryptFileAsync_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
