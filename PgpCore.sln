@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PgpCore", "PgpCore\PgpCore.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PgpCore.Tests", "PgpCore.Tests\PgpCore.Tests.csproj", "{9F70E456-1511-4466-B805-6D0AABC48AD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PgpCore.Test", "PgpCore.Test\PgpCore.Test.csproj", "{DB356D7C-0C5C-4E8C-8DE3-A4372AA61850}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
