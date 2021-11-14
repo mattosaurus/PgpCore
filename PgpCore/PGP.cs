@@ -3997,7 +3997,6 @@ namespace PgpCore
                         using (FileStream inputFileStream = inputFile.OpenRead())
                         {
                             await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
                         }
                     }
                 }
@@ -4014,7 +4013,6 @@ namespace PgpCore
                     using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                     {
                         await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
                     }
                 }
             }
@@ -4040,7 +4038,6 @@ namespace PgpCore
                         using (FileStream inputFileStream = inputFile.OpenRead())
                         {
                             WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
                         }
                     }
                 }
@@ -4057,7 +4054,6 @@ namespace PgpCore
                     using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                     {
                         WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
                     }
                 }
             }
@@ -4081,7 +4077,6 @@ namespace PgpCore
                     using (FileStream inputFileStream = inputFile.OpenRead())
                     {
                         await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
                     }
                 }
             }
@@ -4095,7 +4090,6 @@ namespace PgpCore
                 using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                 {
                     await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
                 }
             }
         }
@@ -4118,7 +4112,6 @@ namespace PgpCore
                     using (FileStream inputFileStream = inputFile.OpenRead())
                     {
                         WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
                     }
                 }
             }
@@ -4132,7 +4125,6 @@ namespace PgpCore
                 using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                 {
                     WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
                 }
             }
         }
@@ -5246,14 +5238,19 @@ namespace PgpCore
             if (publicOut == null)
                 throw new ArgumentException("publicOut");
 
+            ArmoredOutputStream secretOutArmored;
             if (armor)
             {
-                var secretOutArmored = new ArmoredOutputStream(secretOut);
+                secretOutArmored = new ArmoredOutputStream(secretOut);
                 if (!emitVersion)
                 {
                     secretOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
                 }
                 secretOut = secretOutArmored;
+            }
+            else
+            {
+                secretOutArmored = null;
             }
 
             PgpSecretKey secretKey = new PgpSecretKey(
@@ -5273,23 +5270,28 @@ namespace PgpCore
 
                 secretKey.Encode(secretOut);
 
-            secretOut.Dispose();
+            secretOutArmored?.Dispose();
 
+            ArmoredOutputStream publicOutArmored;
             if (armor)
             {
-                var publicOutArmored = new ArmoredOutputStream(publicOut);
+                publicOutArmored = new ArmoredOutputStream(publicOut);
                 if (!emitVersion)
                 {
                     publicOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
                 }
                 publicOut = publicOutArmored;
             }
+            else
+            {
+                publicOutArmored = null;
+            }
 
             PgpPublicKey key = secretKey.PublicKey;
 
             key.Encode(publicOut);
 
-            publicOut.Dispose();
+            publicOutArmored?.Dispose();
         }
 
         /*
