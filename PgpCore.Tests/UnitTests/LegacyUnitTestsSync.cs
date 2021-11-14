@@ -158,7 +158,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndVerifyFile_CreateClearSignedFileAndVerify(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFileAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -179,7 +179,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -203,7 +203,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
