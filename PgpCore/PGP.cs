@@ -3997,7 +3997,6 @@ namespace PgpCore
                         using (FileStream inputFileStream = inputFile.OpenRead())
                         {
                             await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
                         }
                     }
                 }
@@ -4014,7 +4013,6 @@ namespace PgpCore
                     using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                     {
                         await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
                     }
                 }
             }
@@ -4040,7 +4038,6 @@ namespace PgpCore
                         using (FileStream inputFileStream = inputFile.OpenRead())
                         {
                             WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                            inputFileStream.Dispose();
                         }
                     }
                 }
@@ -4057,7 +4054,6 @@ namespace PgpCore
                     using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                     {
                         WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                        inputStream.Dispose();
                     }
                 }
             }
@@ -4081,7 +4077,6 @@ namespace PgpCore
                     using (FileStream inputFileStream = inputFile.OpenRead())
                     {
                         await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
                     }
                 }
             }
@@ -4095,7 +4090,6 @@ namespace PgpCore
                 using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                 {
                     await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
                 }
             }
         }
@@ -4118,7 +4112,6 @@ namespace PgpCore
                     using (FileStream inputFileStream = inputFile.OpenRead())
                     {
                         WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
-                        inputFileStream.Dispose();
                     }
                 }
             }
@@ -4132,7 +4125,6 @@ namespace PgpCore
                 using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
                 {
                     WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
-                    inputStream.Dispose();
                 }
             }
         }
@@ -4824,6 +4816,21 @@ namespace PgpCore
                     verified = false;
                 }
             }
+            else if (pgpObject is PgpSignatureList)
+            {
+                PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
+                PgpSignature pgpSignature = pgpSignatureList[0];
+
+                // Verify against public key ID and that of any sub keys
+                if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
+                {
+                    verified = true;
+                }
+                else
+                {
+                    verified = false;
+                }
+            }
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
@@ -4970,60 +4977,60 @@ namespace PgpCore
                     verified = false;
                 }
             }
-            //else if (pgpObject is PgpSignatureList)
-            //{
-            //    PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
-            //    PgpSignature pgpSignature = pgpSignatureList[0];
-            //    PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
-            //    Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
+            else if (pgpObject is PgpSignatureList)
+            {
+               PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
+               PgpSignature pgpSignature = pgpSignatureList[0];
+               PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+               Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
-            //    // Verify against public key ID and that of any sub keys
-            //    if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
-            //    {
-            //        foreach (PgpSignature signature in publicKey.GetSignatures())
-            //        {
-            //            if (!verified)
-            //            {
-            //                pgpSignature.InitVerify(publicKey);
+               // Verify against public key ID and that of any sub keys
+               if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
+               {
+                   foreach (PgpSignature signature in publicKey.GetSignatures())
+                   {
+                       if (!verified)
+                       {
+                           pgpSignature.InitVerify(publicKey);
 
-            //                int ch;
-            //                while ((ch = pgpLiteralStream.ReadByte()) >= 0)
-            //                {
-            //                    pgpSignature.Update((byte)ch);
-            //                }
+                           int ch;
+                           while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                           {
+                               pgpSignature.Update((byte)ch);
+                           }
 
-            //                try
-            //                {
-            //                    PgpSignatureList pgpSignature = (PgpSignatureList)factory.NextPgpObject();
+                           try
+                           {
+                               PgpSignatureList pgpSignature = (PgpSignatureList)factory.NextPgpObject();
 
-            //                    for (int i = 0; i < pgpSignatureList.Count; i++)
-            //                    {
-            //                        PgpSignature pgpSignature = pgpSignatureList[i];
+                               for (int i = 0; i < pgpSignatureList.Count; i++)
+                               {
+                                   PgpSignature pgpSignature = pgpSignatureList[i];
 
-            //                        if (pgpOnePassSignature.Verify(pgpSignature))
-            //                        {
-            //                            verified = true;
-            //                            break;
-            //                        }
-            //                    }
-            //                }
-            //                catch
-            //                {
-            //                    verified = false;
-            //                    break;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                break;
-            //            }
-            //        }
-            //    }
-            //    else
-            //    {
-            //        verified = false;
-            //    }
-            //}
+                                   if (pgpOnePassSignature.Verify(pgpSignature))
+                                   {
+                                       verified = true;
+                                       break;
+                                   }
+                               }
+                           }
+                           catch
+                           {
+                               verified = false;
+                               break;
+                           }
+                       }
+                       else
+                       {
+                           break;
+                       }
+                   }
+               }
+               else
+               {
+                   verified = false;
+               }
+            }
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
@@ -5393,14 +5400,19 @@ namespace PgpCore
             if (publicOut == null)
                 throw new ArgumentException("publicOut");
 
+            ArmoredOutputStream secretOutArmored;
             if (armor)
             {
-                var secretOutArmored = new ArmoredOutputStream(secretOut);
+                secretOutArmored = new ArmoredOutputStream(secretOut);
                 if (!emitVersion)
                 {
                     secretOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
                 }
                 secretOut = secretOutArmored;
+            }
+            else
+            {
+                secretOutArmored = null;
             }
 
             PgpSecretKey secretKey = new PgpSecretKey(
@@ -5420,23 +5432,28 @@ namespace PgpCore
 
                 secretKey.Encode(secretOut);
 
-            secretOut.Dispose();
+            secretOutArmored?.Dispose();
 
+            ArmoredOutputStream publicOutArmored;
             if (armor)
             {
-                var publicOutArmored = new ArmoredOutputStream(publicOut);
+                publicOutArmored = new ArmoredOutputStream(publicOut);
                 if (!emitVersion)
                 {
                     publicOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
                 }
                 publicOut = publicOutArmored;
             }
+            else
+            {
+                publicOutArmored = null;
+            }
 
             PgpPublicKey key = secretKey.PublicKey;
 
             key.Encode(publicOut);
 
-            publicOut.Dispose();
+            publicOutArmored?.Dispose();
         }
 
         /*
