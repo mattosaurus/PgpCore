@@ -419,7 +419,7 @@ namespace PgpCore
         /// Opens a key ring file and returns first available sub-key suitable for encryption.
         /// If such sub-key is not found, return master key that can encrypt.
         /// </summary>
-        /// <param name="inputStream"></param>
+        /// <param name="inputStream">Input stream containing the public key contents</param>
         /// <returns></returns>
         public static PgpPublicKey ReadPublicKey(Stream publicKeyStream)
         {
@@ -455,6 +455,11 @@ namespace PgpCore
             throw new ArgumentException("Can't find encryption key in key ring.");
         }
 
+        /// <summary>
+        /// Parses a public key
+        /// </summary>
+        /// <param name="publicKey">The plain text value of the public key</param>
+        /// <returns></returns>
         public static PgpPublicKey ReadPublicKey(string publicKey)
         {
 
@@ -464,6 +469,11 @@ namespace PgpCore
             return ReadPublicKey(publicKey.GetStream());
         }
 
+        /// <summary>
+        /// Parses a public key
+        /// </summary>
+        /// <param name="publicKeyFile">The path to the public key file</param>
+        /// <returns></returns>
         public static PgpPublicKey ReadPublicKey(FileInfo publicKeyFile)
         {
             if (!publicKeyFile.Exists)
