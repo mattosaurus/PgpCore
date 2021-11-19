@@ -4820,11 +4820,31 @@ namespace PgpCore
             {
                 PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
                 PgpSignature pgpSignature = pgpSignatureList[0];
+                PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+                Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
                 // Verify against public key ID and that of any sub keys
                 if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
                 {
-                    verified = true;
+                    foreach (PgpSignature signature in publicKey.GetSignatures())
+                    {
+                        if (!verified)
+                        {
+                            pgpSignature.InitVerify(publicKey);
+
+                            int ch;
+                            while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                            {
+                                pgpSignature.Update((byte)ch);
+                            }
+
+                            verified = pgpSignature.Verify();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -4999,26 +5019,7 @@ namespace PgpCore
                                pgpSignature.Update((byte)ch);
                            }
 
-                           try
-                           {
-                               PgpSignatureList pgpSignature = (PgpSignatureList)factory.NextPgpObject();
-
-                               for (int i = 0; i < pgpSignatureList.Count; i++)
-                               {
-                                   PgpSignature pgpSignature = pgpSignatureList[i];
-
-                                   if (pgpOnePassSignature.Verify(pgpSignature))
-                                   {
-                                       verified = true;
-                                       break;
-                                   }
-                               }
-                           }
-                           catch
-                           {
-                               verified = false;
-                               break;
-                           }
+                            verified = pgpSignature.Verify();
                        }
                        else
                        {
