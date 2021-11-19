@@ -4761,16 +4761,55 @@ namespace PgpCore
                 {
                     verified = false;
                 }
+                //PgpEncryptedDataList encryptedDataList = (PgpEncryptedDataList)pgpObject;
+
+                //foreach (PgpPublicKeyEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
+                //{
+                //    encryptedData.GetDataStream(EncryptionKeys.PrivateKey);
+                //    if (encryptedData.Verify())
+                //    {
+                //        verified = true;
+                //        break;
+                //    }
+                //}
             }
             else if (pgpObject is PgpOnePassSignatureList)
             {
                 PgpOnePassSignatureList pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpObject;
                 PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+                Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
                 // Verify against public key ID and that of any sub keys
                 if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
                 {
-                    verified = true;
+                    pgpOnePassSignature.InitVerify(publicKey);
+
+                    int ch;
+                    while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                    {
+                        pgpOnePassSignature.Update((byte)ch);
+                    }
+
+                    try
+                    {
+                        PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+
+                        for (int i = 0; i < pgpSignatureList.Count; i++)
+                        {
+                            PgpSignature pgpSignature = pgpSignatureList[i];
+
+                            if (pgpOnePassSignature.Verify(pgpSignature))
+                            {
+                                verified = true;
+                                break;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        verified = false;
+                    }
                 }
                 else
                 {
@@ -4781,11 +4820,31 @@ namespace PgpCore
             {
                 PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
                 PgpSignature pgpSignature = pgpSignatureList[0];
+                PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+                Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
                 // Verify against public key ID and that of any sub keys
                 if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
                 {
-                    verified = true;
+                    foreach (PgpSignature signature in publicKey.GetSignatures())
+                    {
+                        if (!verified)
+                        {
+                            pgpSignature.InitVerify(publicKey);
+
+                            int ch;
+                            while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                            {
+                                pgpSignature.Update((byte)ch);
+                            }
+
+                            verified = pgpSignature.Verify();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -4812,12 +4871,55 @@ namespace PgpCore
 
             if (pgpObject is PgpCompressedData)
             {
-                PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
+                PgpCompressedData pgpCompressedData = (PgpCompressedData)pgpObject;
+                PgpObjectFactory pgpCompressedFactory = new PgpObjectFactory(pgpCompressedData.GetDataStream());
+
+                PgpOnePassSignatureList pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpCompressedFactory.NextPgpObject();
+                PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+                Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
                 // Verify against public key ID and that of any sub keys
-                if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
+                if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
                 {
-                    verified = true;
+                    foreach (PgpSignature signature in publicKey.GetSignatures())
+                    {
+                        if (!verified)
+                        {
+                            pgpOnePassSignature.InitVerify(publicKey);
+
+                            int ch;
+                            while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                            {
+                                pgpOnePassSignature.Update((byte)ch);
+                            }
+
+                            try
+                            {
+                                PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+
+                                for (int i = 0; i < pgpSignatureList.Count; i++)
+                                {
+                                    PgpSignature pgpSignature = pgpSignatureList[i];
+
+                                    if (pgpOnePassSignature.Verify(pgpSignature))
+                                    {
+                                        verified = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                verified = false;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -4838,16 +4940,57 @@ namespace PgpCore
                 {
                     verified = false;
                 }
+                //PgpEncryptedDataList encryptedDataList = (PgpEncryptedDataList)pgpObject;
+
+                //foreach (PgpPublicKeyEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
+                //{
+                //    using (encryptedData.GetDataStream(EncryptionKeys.PrivateKey))
+                //    {
+                //        if (encryptedData.Verify())
+                //        {
+                //            verified = true;
+                //            break;
+                //        }
+                //    }
+                //}
             }
             else if (pgpObject is PgpOnePassSignatureList)
             {
                 PgpOnePassSignatureList pgpOnePassSignatureList = (PgpOnePassSignatureList)pgpObject;
                 PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+                Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
                 // Verify against public key ID and that of any sub keys
                 if (publicKey.KeyId == pgpOnePassSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpOnePassSignature.KeyId))
                 {
-                    verified = true;
+                    pgpOnePassSignature.InitVerify(publicKey);
+
+                    int ch;
+                    while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                    {
+                        pgpOnePassSignature.Update((byte)ch);
+                    }
+
+                    try
+                    {
+                        PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+
+                        for (int i = 0; i < pgpSignatureList.Count; i++)
+                        {
+                            PgpSignature pgpSignature = pgpSignatureList[i];
+
+                            if (pgpOnePassSignature.Verify(pgpSignature))
+                            {
+                                verified = true;
+                                break;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        verified = false;
+                    }
                 }
                 else
                 {
@@ -4856,18 +4999,38 @@ namespace PgpCore
             }
             else if (pgpObject is PgpSignatureList)
             {
-                PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
-                PgpSignature pgpSignature = pgpSignatureList[0];
+               PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObject;
+               PgpSignature pgpSignature = pgpSignatureList[0];
+               PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
+               Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
-                // Verify against public key ID and that of any sub keys
-                if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
-                {
-                    verified = true;
-                }
-                else
-                {
-                    verified = false;
-                }
+               // Verify against public key ID and that of any sub keys
+               if (publicKey.KeyId == pgpSignature.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(pgpSignature.KeyId))
+               {
+                   foreach (PgpSignature signature in publicKey.GetSignatures())
+                   {
+                       if (!verified)
+                       {
+                           pgpSignature.InitVerify(publicKey);
+
+                           int ch;
+                           while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                           {
+                               pgpSignature.Update((byte)ch);
+                           }
+
+                            verified = pgpSignature.Verify();
+                       }
+                       else
+                       {
+                           break;
+                       }
+                   }
+               }
+               else
+               {
+                   verified = false;
+               }
             }
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");

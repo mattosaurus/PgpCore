@@ -158,7 +158,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndVerifyFile_CreateClearSignedFileAndVerify(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFileAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -179,7 +179,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        public void ClearSignFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -197,6 +197,31 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
             testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignFile_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
+            string fileContent = File.ReadAllText(testFactory.SignedContentFilePath);
+            fileContent = fileContent.Replace("fox", "rabbit");
+            File.WriteAllText(testFactory.SignedContentFilePath, fileContent);
+
+            // Assert
+            Assert.False(pgp.VerifyClearFile(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
+
+            // Teardown
+            testFactory.Teardown();
         }
 
         [Theory]
