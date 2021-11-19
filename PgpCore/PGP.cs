@@ -4898,18 +4898,6 @@ namespace PgpCore
                 {
                     verified = false;
                 }
-
-                //PgpPublicKeyEncryptedData publicKeyED = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
-
-                //// Verify against public key ID and that of any sub keys
-                //if (publicKey.KeyId == publicKeyED.KeyId || publicKey.GetKeySignatures().Cast<PgpSignature>().Select(x => x.KeyId).Contains(publicKeyED.KeyId))
-                //{
-                //    verified = true;
-                //}
-                //else
-                //{
-                //    verified = false;
-                //}
             }
             else if (pgpObject is PgpEncryptedDataList)
             {
