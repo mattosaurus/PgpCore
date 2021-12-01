@@ -495,6 +495,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -603,6 +605,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1224,6 +1228,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1308,6 +1314,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1805,6 +1813,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -1873,6 +1883,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (name == DefaultFileName && inputStream is FileStream)
             {
@@ -2250,6 +2262,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             await OutputClearSignedAsync(inputStream, outputStream);
         }
@@ -2295,6 +2309,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             OutputClearSigned(inputStream, outputStream);
         }
@@ -2645,6 +2661,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             await DecryptAsync(inputStream, outputStream);
             return outputStream;
@@ -2693,6 +2711,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             Decrypt(inputStream, outputStream);
             return outputStream;
@@ -3049,6 +3069,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("Encryption Key not found.");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             await DecryptAndVerifyAsync(inputStream, outputStream);
             return outputStream;
@@ -3098,6 +3120,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             DecryptAndVerify(inputStream, outputStream);
             return outputStream;
@@ -3412,6 +3436,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             return await VerifyAsync(inputStream);
         }
@@ -3451,6 +3477,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             return Verify(inputStream);
         }
@@ -3739,6 +3767,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             return await VerifyClearAsync(inputStream);
         }
@@ -3778,6 +3808,8 @@ namespace PgpCore
                 throw new ArgumentException("InputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentNullException("EncryptionKeys");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             return VerifyClear(inputStream);
         }
