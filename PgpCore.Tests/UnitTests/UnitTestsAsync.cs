@@ -2147,9 +2147,10 @@ namespace PgpCore.Tests
 
             // Act
             string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content);
+            bool verified = await pgp.VerifyClearArmoredStringAsync(clearSignedContent);
 
             // Assert
-            Assert.True(await pgp.VerifyClearArmoredStringAsync(clearSignedContent));
+            Assert.True(verified);
 
             // Teardown
             testFactory.Teardown();
@@ -2175,9 +2176,65 @@ namespace PgpCore.Tests
 
             // Act
             string clearSignedContent = await pgpEncrypt.ClearSignArmoredStringAsync(testFactory.Content);
+            bool verified = await pgpDecrypt.VerifyClearArmoredStringAsync(clearSignedContent);
 
             // Assert
-            Assert.False(await pgpDecrypt.VerifyClearArmoredStringAsync(clearSignedContent));
+            Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndVerifyArmoredStringAsync_CreateClearSignedStringAndVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content);
+            (bool verified, string message) = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent);
+
+            // Assert
+            Assert.True(verified);
+            Assert.Equal(testFactory.Content, message.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndDoNotVerifyArmoredStringAsync_CreateClearSignedStringAndDoNotVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            await testFactory2.ArrangeAsync(KeyType.Generated);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey, testFactory2.PrivateKey, testFactory2.Password);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string clearSignedContent = await pgpEncrypt.ClearSignArmoredStringAsync(testFactory.Content);
+            (bool verified, string message) = await pgpDecrypt.VerifyAndReadClearArmoredStringAsync(clearSignedContent);
+
+            // Assert
+            Assert.False(verified);
+            Assert.Equal(testFactory.Content, message.Trim());
 
             // Teardown
             testFactory.Teardown();
