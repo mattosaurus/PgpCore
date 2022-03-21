@@ -4447,10 +4447,8 @@ namespace PgpCore
 
                 PgpObjectFactory plainFact = null;
 
-                using (Stream clear = pbe.GetDataStream(privateKey))
-                {
-                    plainFact = new PgpObjectFactory(clear);
-                }
+                Stream clear = pbe.GetDataStream(privateKey);
+                plainFact = new PgpObjectFactory(clear);
 
                 message = plainFact.NextPgpObject();
 
@@ -4465,11 +4463,9 @@ namespace PgpCore
                 PgpCompressedData cData = (PgpCompressedData)message;
                 PgpObjectFactory of = null;
 
-                using (Stream compDataIn = cData.GetDataStream())
-                {
-                    of = new PgpObjectFactory(compDataIn);
-                    message = of.NextPgpObject();
-                }
+                Stream compDataIn = cData.GetDataStream();
+                of = new PgpObjectFactory(compDataIn);
+                message = of.NextPgpObject();
                 
                 if (message is PgpOnePassSignatureList)
                 {
@@ -4561,10 +4557,8 @@ namespace PgpCore
 
                 PgpObjectFactory plainFact = null;
 
-                using (Stream clear = pbe.GetDataStream(privateKey))
-                {
-                    plainFact = new PgpObjectFactory(clear);
-                }
+                Stream clear = pbe.GetDataStream(privateKey);
+                plainFact = new PgpObjectFactory(clear);
 
                 message = plainFact.NextPgpObject();
 
@@ -4586,11 +4580,9 @@ namespace PgpCore
             {
                 PgpObjectFactory of = null;
 
-                using (Stream compDataIn = cData.GetDataStream())
-                {
-                    of = new PgpObjectFactory(compDataIn);
-                    message = of.NextPgpObject();
-                }
+                Stream compDataIn = cData.GetDataStream();
+                of = new PgpObjectFactory(compDataIn);
+                message = of.NextPgpObject();
 
                 if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                 {
@@ -4683,10 +4675,8 @@ namespace PgpCore
 
                 PgpObjectFactory plainFact = null;
 
-                using (Stream clear = pbe.GetDataStream(privateKey))
-                {
-                    plainFact = new PgpObjectFactory(clear);
-                }
+                Stream clear = pbe.GetDataStream(privateKey);
+                plainFact = new PgpObjectFactory(clear);
 
                 message = plainFact.NextPgpObject();
 
@@ -4708,11 +4698,9 @@ namespace PgpCore
             {
                 PgpObjectFactory of = null;
 
-                using (Stream compDataIn = cData.GetDataStream())
-                {
-                    of = new PgpObjectFactory(compDataIn);
-                    message = of.NextPgpObject();
-                }
+                Stream compDataIn = cData.GetDataStream();
+                of = new PgpObjectFactory(compDataIn);
+                message = of.NextPgpObject();
 
                 if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                 {
