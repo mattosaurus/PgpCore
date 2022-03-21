@@ -176,6 +176,10 @@ namespace PgpCore.Tests
                     streamWriter.WriteLine(Constants.CONTENT);
                 }
             }
+            else if (fileType == FileType.GeneratedMedium)
+            {
+                CreateRandomFile(ContentFilePath, 300);
+            }
             else if (fileType == FileType.GeneratedLarge)
             {
                 CreateRandomFile(ContentFilePath, 5000);
@@ -193,6 +197,10 @@ namespace PgpCore.Tests
                 {
                     await streamWriter.WriteLineAsync(Constants.CONTENT);
                 }
+            }
+            else if (fileType == FileType.GeneratedMedium)
+            {
+                await CreateRandomFileAsync(ContentFilePath, 300);
             }
             else if (fileType == FileType.GeneratedLarge)
             {
@@ -318,6 +326,7 @@ namespace PgpCore.Tests
 
     public enum FileType
     {
+        GeneratedMedium,
         GeneratedLarge,
         Known
     }

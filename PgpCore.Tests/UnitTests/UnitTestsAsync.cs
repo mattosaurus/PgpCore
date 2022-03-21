@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -388,6 +389,38 @@ namespace PgpCore.Tests
         //    // Teardown
         //    testFactory.Teardown();
         //}
+
+        [Theory]
+        [InlineData(KeyType.Generated, FileType.GeneratedMedium)]
+        public async Task Decrypt300MbFileAsync_DecryptEncryptedFileWithMemoryUsageLessThan50Mb(KeyType keyType, FileType fileType)
+        {
+            // Arrange
+            long memoryCap = 100 * 1024 * 1024;
+            long startPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, fileType);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            long encryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            long decryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+            Assert.True((encryptPeakWorkingSet - startPeakWorkingSet) < memoryCap, "Encryption used more memory than expected");
+            Assert.True((decryptPeakWorkingSet - encryptPeakWorkingSet) < memoryCap, "Decryption used more memory than expected");
+
+            // Teardown
+            testFactory.Teardown();
+        }
 
         [Theory]
         [InlineData(KeyType.Generated)]
