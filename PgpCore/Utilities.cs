@@ -438,7 +438,7 @@ namespace PgpCore
 
                     const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
 
-                    foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4 && k.IsMasterKey))
+                    foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4))
                     {
                         foreach (PgpSignature s in key.GetSignatures())
                         {
