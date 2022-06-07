@@ -745,10 +745,11 @@ namespace PgpCore.Tests
             string[] fileLines = File.ReadAllLines(testFactory.EncryptedContentFilePath);
             fileLines[3] = fileLines[3].Substring(0, fileLines[3].Length - 1 - 1) + "x";
             File.WriteAllLines(testFactory.EncryptedContentFilePath, fileLines);
-            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath);
+            Action action = () => pgp.VerifyFile(testFactory.EncryptedContentFilePath);
 
             // Assert
-            Assert.False(verified);
+            var ex = Assert.Throws<IOException>(action);
+            Assert.Equal("invalid armor", ex.Message);
 
             // Teardown
             testFactory.Teardown();

@@ -269,7 +269,7 @@ namespace PgpCore.Tests
 
             byte[] data = new byte[blockSize];
 
-            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
+            using (RandomNumberGenerator crypto = RandomNumberGenerator.Create())
             {
                 using (FileStream stream = File.OpenWrite(filePath))
                 {
@@ -290,7 +290,7 @@ namespace PgpCore.Tests
 
             byte[] data = new byte[blockSize];
 
-            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
+            using (RandomNumberGenerator crypto = RandomNumberGenerator.Create())
             {
                 using (FileStream stream = File.OpenWrite(filePath))
                 {
