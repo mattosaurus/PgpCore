@@ -786,7 +786,15 @@ namespace PgpCore.Tests
             await pgp.SignFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
             string[] fileLines = await File.ReadAllLinesAsync(testFactory.EncryptedContentFilePath);
             fileLines[3] = fileLines[3].Substring(0, fileLines[3].Length - 1 - 1) + "x";
-            await File.WriteAllLinesAsync(testFactory.EncryptedContentFilePath, fileLines);
+
+            using (StreamWriter streamWriter = new StreamWriter(testFactory.EncryptedContentFilePath))
+            {
+                foreach (string line in fileLines)
+                {
+                    streamWriter.WriteLine(line);
+                }
+            }
+
             Func<Task<bool>> action = async () => await pgp.VerifyFileAsync(testFactory.EncryptedContentFilePath);
 
             // Assert
