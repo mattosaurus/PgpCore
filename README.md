@@ -25,6 +25,9 @@ using PgpCore;
 # Usage
 This is intended for usage in projects [targeting .NET Standard 2.0](https://dotnet.microsoft.com/platform/dotnet-standard#versions).
 
+# Azure Function Example
+If you want a (basic) example of how you can use an Azure Function to encrypt/decrypt from Azure Blob Storage I've created a sample project [here](https://github.com/mattosaurus/PgpEncrypt).
+
 ## Methods
 
 * [Generate Key](#generate-key)

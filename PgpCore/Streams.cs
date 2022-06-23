@@ -1,19 +1,12 @@
 ﻿using Org.BouncyCastle.Utilities.IO;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PgpCore
 {
-    public sealed class Streams
+    public static class Streams
     {
         private const int BufferSize = 512;
-
-        private Streams()
-        {
-        }
 
         public static void Drain(Stream inStr)
         {
@@ -87,7 +80,7 @@ namespace PgpCore
             int numRead;
             while ((numRead = inStr.Read(bs, 0, bs.Length)) > 0)
             {
-                if ((limit - total) < numRead)
+                if (limit - total < numRead)
                     throw new StreamOverflowException("Data Overflow");
                 total += numRead;
                 outStr.Write(bs, 0, numRead);
@@ -158,7 +151,7 @@ namespace PgpCore
             int numRead;
             while ((numRead = await inStr.ReadAsync(bs, 0, bs.Length)) > 0)
             {
-                if ((limit - total) < numRead)
+                if (limit - total < numRead)
                     throw new StreamOverflowException("Data Overflow");
                 total += numRead;
                 await outStr.WriteAsync(bs, 0, numRead);

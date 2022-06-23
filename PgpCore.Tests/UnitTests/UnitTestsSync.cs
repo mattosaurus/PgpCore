@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -330,25 +331,57 @@ namespace PgpCore.Tests
             testFactory.Teardown();
         }
 
-        ////[Theory]
-        ////[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
-        ////public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
-        ////{
-        ////    // Arrange
-        ////    Arrange(keyType, fileType);
-        ////    PGP pgp = new PGP(encryptionKeys);
+        //[Theory]
+        //[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
+        //public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
+        //{
+        //    // Arrange
+        //    Arrange(keyType, fileType);
+        //    PGP pgp = new PGP(encryptionKeys);
 
-        ////    // Act
-        ////    pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
-        ////    pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+        //    // Act
+        //    pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
+        //    pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
 
-        ////    // Assert
-        ////    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-        ////    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+        //    // Assert
+        //    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
+        //    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
 
-        ////    // Teardown
-        ////    Teardown();
-        ////}
+        //    // Teardown
+        //    Teardown();
+        //}
+
+        [Theory]
+        [InlineData(KeyType.Generated, FileType.GeneratedMedium)]
+        public void Decrypt300MbFile_DecryptEncryptedFileWithMemoryUsageLessThan50Mb(KeyType keyType, FileType fileType)
+        {
+            // Arrange
+            long memoryCap = 50 * 1024 * 1024;
+            long startPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, fileType);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+            
+            // Act
+            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            long encryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            long decryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+            Assert.True((encryptPeakWorkingSet - startPeakWorkingSet) < memoryCap, "Encryption used more memory than expected");
+            Assert.True((decryptPeakWorkingSet - encryptPeakWorkingSet) < memoryCap, "Decryption used more memory than expected");
+
+            // Teardown
+            testFactory.Teardown();
+        }
 
         [Theory]
         [InlineData(KeyType.Generated)]
@@ -712,10 +745,11 @@ namespace PgpCore.Tests
             string[] fileLines = File.ReadAllLines(testFactory.EncryptedContentFilePath);
             fileLines[3] = fileLines[3].Substring(0, fileLines[3].Length - 1 - 1) + "x";
             File.WriteAllLines(testFactory.EncryptedContentFilePath, fileLines);
-            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath);
+            Action action = () => pgp.VerifyFile(testFactory.EncryptedContentFilePath);
 
             // Assert
-            Assert.False(verified);
+            var ex = Assert.Throws<IOException>(action);
+            Assert.Equal("invalid armor", ex.Message);
 
             // Teardown
             testFactory.Teardown();

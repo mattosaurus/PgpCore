@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -17,9 +18,12 @@ namespace PgpCore.Tests
             public static bool Exists(string path) => System.IO.File.Exists(path);
 #if NETFRAMEWORK
             public static Task<string> ReadAllTextAsync(string path) => Task.FromResult(System.IO.File.ReadAllText(path));
+            public static Task WriteAllLinesAsync(string path, string[] lines) => Task.Run(() => System.IO.File.WriteAllLines(path, lines));
 #else
             public static Task<string> ReadAllTextAsync(string path) => System.IO.File.ReadAllTextAsync(path);
+            public static Task WriteAllLinesAsync(string path, string[] lines) => Task.FromResult(System.IO.File.WriteAllLinesAsync(path, lines));
 #endif
+            public static Task<string[]> ReadAllLinesAsync(string path) => Task.FromResult(System.IO.File.ReadAllLines(path));
         }
 
         [Fact]
@@ -362,25 +366,64 @@ namespace PgpCore.Tests
             testFactory.Teardown();
         }
 
-        ////[Theory]
-        ////[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
-        ////public async Task DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
-        ////{
-        ////    // Arrange
-        ////    Arrange(keyType, fileType);
-        ////    PGP pgp = new PGP(encryptionKeys);
+        //[Theory]
+        //[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
+        //public async Task DecryptLargeFileAsync_DecryptEncryptedFile(KeyType keyType, FileType fileType)
+        //{
+        //    // Arrange
+        //    TestFactory testFactory = new TestFactory();
+        //    await testFactory.ArrangeAsync(keyType, fileType);
+        //    EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+        //    EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+        //    PGP pgpEncrypt = new PGP(encryptionKeys);
+        //    PGP pgpDecrypt = new PGP(decryptionKeys);
 
-        ////    // Act
-        ////    pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
-        ////    pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+        //    // Act
+        //    await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+        //    await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
 
-        ////    // Assert
-        ////    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-        ////    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+        //    // Assert
+        //    Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+        //    Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+        //    // Out of memory exception if try and compare two giant strings
+        //    // Have to assume file is correct if exists.
+        //    Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
 
-        ////    // Teardown
-        ////    Teardown();
-        ////}
+        //    // Teardown
+        //    testFactory.Teardown();
+        //}
+
+        [Theory]
+        [InlineData(KeyType.Generated, FileType.GeneratedMedium)]
+        public async Task Decrypt300MbFileAsync_DecryptEncryptedFileWithMemoryUsageLessThan50Mb(KeyType keyType, FileType fileType)
+        {
+            // Arrange
+            long memoryCap = 100 * 1024 * 1024;
+            long startPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, fileType);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            long encryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+            await pgpDecrypt.DecryptFileAsync(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
+            long decryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+            Assert.True((encryptPeakWorkingSet - startPeakWorkingSet) < memoryCap, "Encryption used more memory than expected");
+            Assert.True((decryptPeakWorkingSet - encryptPeakWorkingSet) < memoryCap, "Decryption used more memory than expected");
+
+            // Teardown
+            testFactory.Teardown();
+        }
 
         [Theory]
         [InlineData(KeyType.Generated)]
@@ -722,6 +765,41 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
             Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task VerifyAsync_DoNotVerifySignedFileWithBadContent(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            await pgp.SignFileAsync(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
+            string[] fileLines = await File.ReadAllLinesAsync(testFactory.EncryptedContentFilePath);
+            fileLines[3] = fileLines[3].Substring(0, fileLines[3].Length - 1 - 1) + "x";
+
+            using (StreamWriter streamWriter = new StreamWriter(testFactory.EncryptedContentFilePath))
+            {
+                foreach (string line in fileLines)
+                {
+                    streamWriter.WriteLine(line);
+                }
+            }
+
+            Func<Task<bool>> action = async () => await pgp.VerifyFileAsync(testFactory.EncryptedContentFilePath);
+
+            // Assert
+            var ex = await Assert.ThrowsAsync<IOException>(action);
+            Assert.Equal("invalid armor", ex.Message);
 
             // Teardown
             testFactory.Teardown();
