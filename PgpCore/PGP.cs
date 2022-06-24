@@ -27,10 +27,10 @@ namespace PgpCore
 		public string ClearText { get; private set; }
 
 		public VerificationResult(bool isVerified, string clearText)
-        {
+		{
 			IsVerified = isVerified;
 			ClearText = clearText;
-        }
+		}
 	}
 
 	public class PGP : IPGPEncrypt, IPGPEncryptAsync, IPGPSign, IPGPSignAsync
