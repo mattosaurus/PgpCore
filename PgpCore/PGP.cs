@@ -21,6 +21,18 @@ namespace PgpCore
 		UTF8
 	}
 
+	public struct VerificationResult
+	{
+		public bool IsVerified { get; private set; }
+		public string ClearText { get; private set; }
+
+		public VerificationResult(bool isVerified, string clearText)
+        {
+			IsVerified = isVerified;
+			ClearText = clearText;
+        }
+	}
+
 	public class PGP : IPGPEncrypt, IPGPEncryptAsync, IPGPSign, IPGPSignAsync
 	{
 		public static PGP Instance => _instance ?? (_instance = new PGP());
@@ -4088,13 +4100,14 @@ namespace PgpCore
 		}
 
 		#endregion VerifyClearArmoredString
+
         #region VerifyAndReadClearArmoredStringAsync
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="publicKey">PGP public key</param>
-        public async Task<(bool, string)> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
         {
             if (publicKey == null)
                 throw new ArgumentNullException("publicKey");
@@ -4109,7 +4122,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<(bool, string)> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -4120,7 +4133,7 @@ namespace PgpCore
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        public async Task<(bool, string)> VerifyAndReadClearArmoredStringAsync(string input)
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
         {
             if (input == null)
                 throw new ArgumentNullException("input");
@@ -4134,47 +4147,45 @@ namespace PgpCore
                 using (StreamReader reader = new StreamReader(outputStream))
                 {
                     string message = reader.ReadToEnd();
-                    return (verified, message);
+                    return new VerificationResult(verified, message);
                 }
             }
         }
         #endregion VerifyAndReadClearArmoredStringAsync
+
         #region VerifyAndReadClearArmoredString
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="message">On return, contains the clear text.</param>
         /// <param name="publicKey">PGP public key</param>
-        public bool VerifyAndReadClearArmoredString(string input, out string message, string publicKey)
+        public VerificationResult VerifyAndReadClearArmoredString(string input, string publicKey)
         {
             if (publicKey == null)
                 throw new ArgumentNullException("publicKey");
 
             EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
-            return VerifyAndReadClearArmoredString(input, out message);
+            return VerifyAndReadClearArmoredString(input);
         }
 
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="message">On return, contains the clear text.</param>
         /// <param name="encryptionKeys">Encryption keys</param>
-        public bool VerifyAndReadClearArmoredString(string input, out string message, IEncryptionKeys encryptionKeys)
+        public VerificationResult VerifyAndReadClearArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
-            return VerifyAndReadClearArmoredString(input, out message);
+            return VerifyAndReadClearArmoredString(input);
         }
 
         /// <summary>
         /// PGP verify a given clear signed string.
         /// </summary>
         /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="message">On return, contains the clear text.</param>
-        public bool VerifyAndReadClearArmoredString(string input, out string message)
+        public VerificationResult VerifyAndReadClearArmoredString(string input)
         {
             if (input == null)
                 throw new ArgumentNullException("input");
@@ -4187,12 +4198,13 @@ namespace PgpCore
                 outputStream.Position = 0;
                 using (StreamReader reader = new StreamReader(outputStream))
                 {
-                    message = reader.ReadToEnd();
-                    return verified;
+                    string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
                 }
             }
         }
         #endregion VerifyAndReadClearArmoredString
+
 		#endregion DecryptAndVerify
 
 		#region GetRecipients

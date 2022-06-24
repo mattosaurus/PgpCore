@@ -1232,11 +1232,11 @@ namespace PgpCore.Tests
 
             // Act
             string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content, privateKey, testFactory.Password);
-            (bool verified, string message) = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
+            VerificationResult result = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
 
             // Assert
-            Assert.True(verified);
-            Assert.Equal(testFactory.Content, message?.Trim());
+            Assert.True(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
 
             // Teardown
             testFactory.Teardown();
@@ -1260,11 +1260,11 @@ namespace PgpCore.Tests
 
             // Act
             string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content, privateKey, testFactory.Password);
-            (bool verified, string message) = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
+            VerificationResult result = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
 
             // Assert
-            Assert.False(verified);
-            Assert.Equal(testFactory.Content, message?.Trim());
+            Assert.False(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
 
             // Teardown
             testFactory.Teardown();
