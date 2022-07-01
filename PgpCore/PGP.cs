@@ -4101,13 +4101,219 @@ namespace PgpCore
 
 		#endregion VerifyClearArmoredString
 
-        #region VerifyAndReadClearArmoredStringAsync
-        /// <summary>
-        /// PGP verify a given clear signed string.
-        /// </summary>
-        /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="publicKey">PGP public key</param>
-        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
+		#region VerifyAndReadClearFileAsync
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile, FileInfo publicKeyFile)
+		{
+			EncryptionKeys = new EncryptionKeys(publicKeyFile);
+
+			return await VerifyAndReadClearFileAsync(inputFile);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile, IEncryptionKeys encryptionKeys)
+		{
+			EncryptionKeys = encryptionKeys;
+
+			return await VerifyAndReadClearFileAsync(inputFile);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile)
+		{
+			if (inputFile == null)
+				throw new ArgumentException("InputFile");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+
+			using (Stream inputStream = inputFile.OpenRead())
+			using (Stream outputStream = new MemoryStream())
+			{
+				bool verified = await VerifyClearAsync(inputStream, outputStream);
+
+				outputStream.Position = 0;
+				using (StreamReader reader = new StreamReader(outputStream))
+				{
+					string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
+				}
+			}
+		}
+		#endregion VerifyAndReadClearFileAsync
+
+		#region VerifyAndReadClearFile
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		public VerificationResult VerifyAndReadClearFile(FileInfo inputFile, FileInfo publicKeyFile)
+		{
+			EncryptionKeys = new EncryptionKeys(publicKeyFile);
+
+			return VerifyAndReadClearFile(inputFile);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		public VerificationResult VerifyAndReadClearFile(FileInfo inputFile, IEncryptionKeys encryptionKeys)
+		{
+			EncryptionKeys = encryptionKeys;
+
+			return VerifyAndReadClearFile(inputFile);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		public VerificationResult VerifyAndReadClearFile(FileInfo inputFile)
+		{
+			if (inputFile == null)
+				throw new ArgumentException("InputFile");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+
+			using (Stream inputStream = inputFile.OpenRead())
+			using (Stream outputStream = new MemoryStream())
+			{
+				bool verified = VerifyClear(inputStream, outputStream);
+
+				outputStream.Position = 0;
+				using (StreamReader reader = new StreamReader(outputStream))
+				{
+					string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
+				}
+			}
+		}
+		#endregion VerifyAndReadClearFile
+
+		#region VerifyAndReadClearStreamAsync
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream, Stream publicKeyStream)
+		{
+			EncryptionKeys = new EncryptionKeys(publicKeyStream);
+
+			return await VerifyAndReadClearStreamAsync(inputStream);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
+		{
+			EncryptionKeys = encryptionKeys;
+
+			return await VerifyAndReadClearStreamAsync(inputStream);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream)
+		{
+			if (inputStream == null)
+				throw new ArgumentException("InputStream");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+			if (inputStream.Position != 0)
+				throw new ArgumentException("inputStream should be at start of stream");
+
+			using (Stream outputStream = new MemoryStream())
+			{
+				bool verified = await VerifyClearAsync(inputStream, outputStream);
+
+				outputStream.Position = 0;
+				using (StreamReader reader = new StreamReader(outputStream))
+				{
+					string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
+				}
+			}
+		}
+		#endregion VerifyAndReadClearStreamAsync
+
+		#region VerifyAndReadClearStream
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		public VerificationResult VerifyAndReadClearStream(Stream inputStream, Stream publicKeyStream)
+		{
+			EncryptionKeys = new EncryptionKeys(publicKeyStream);
+
+			return VerifyAndReadClearStream(inputStream);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		public VerificationResult VerifyAndReadClearStream(Stream inputStream, IEncryptionKeys encryptionKeys)
+		{
+			EncryptionKeys = encryptionKeys;
+
+			return VerifyAndReadClearStream(inputStream);
+		}
+
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		public VerificationResult VerifyAndReadClearStream(Stream inputStream)
+		{
+			if (inputStream == null)
+				throw new ArgumentException("InputStream");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+			if (inputStream.Position != 0)
+				throw new ArgumentException("inputStream should be at start of stream");
+
+			using (Stream outputStream = new MemoryStream())
+			{
+				bool verified = VerifyClear(inputStream, outputStream);
+
+				outputStream.Position = 0;
+				using (StreamReader reader = new StreamReader(outputStream))
+				{
+					string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
+				}
+			}
+		}
+		#endregion VerifyAndReadClearStream
+
+		#region VerifyAndReadClearArmoredStringAsync
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
         {
             if (publicKey == null)
                 throw new ArgumentNullException("publicKey");
