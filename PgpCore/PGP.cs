@@ -80,6 +80,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			string inputFilePath,
 			string outputFilePath,
@@ -101,6 +102,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			string inputFilePath,
 			string outputFilePath,
@@ -122,6 +124,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			string inputFilePath,
 			string outputFilePath,
@@ -142,6 +145,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			string inputFilePath,
 			string outputFilePath,
@@ -172,6 +176,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -193,6 +198,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -214,6 +220,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAsync(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -268,6 +275,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			string inputFilePath,
 			string outputFilePath,
@@ -289,6 +297,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			string inputFilePath,
 			string outputFilePath,
@@ -310,6 +319,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			string inputFilePath,
 			string outputFilePath,
@@ -330,6 +340,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			string inputFilePath,
 			string outputFilePath,
@@ -360,6 +371,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -381,6 +393,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -402,6 +415,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFile(
 			FileInfo inputFile,
 			FileInfo outputFile,
@@ -456,6 +470,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAsync(
 			Stream inputStream,
 			Stream outputStream,
@@ -477,6 +492,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream,
 			IEnumerable<Stream> publicKeyStreams, bool armor = true, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
@@ -494,6 +510,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -571,6 +588,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStream(
 			Stream inputStream,
 			Stream outputStream,
@@ -592,6 +610,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStream(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
 			bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -608,6 +627,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -684,6 +704,7 @@ namespace PgpCore
 		/// <param name="publicKey">PGP public key</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAsync(
 			string input,
 			string publicKey,
@@ -708,6 +729,7 @@ namespace PgpCore
 		/// <param name="publicKeys">IEnumerable of PGP public keys</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAsync(string input, IEnumerable<string> publicKeys,
 			bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -730,6 +752,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAsync(string input, IEncryptionKeys encryptionKeys,
 			bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -773,6 +796,7 @@ namespace PgpCore
 		/// <param name="publicKey">PGP public key</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string EncryptArmoredString(
 			string input,
 			string publicKey,
@@ -797,6 +821,7 @@ namespace PgpCore
 		/// <param name="publicKeys">IEnumerable of PGP public keys</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string EncryptArmoredString(string input, IEnumerable<string> publicKeys, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
 		{
@@ -818,6 +843,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
 		/// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string EncryptArmoredString(string input, IEncryptionKeys encryptionKeys, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
 		{
@@ -867,6 +893,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, string publicKeyFilePath,
 			string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -885,6 +912,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath,
 			IEnumerable<string> publicKeyFilePaths,
 			string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
@@ -902,6 +930,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath,
 			IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -916,6 +945,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(string inputFilePath, string outputFilePath, bool armor = true,
 			bool withIntegrityCheck = true)
 		{
@@ -954,6 +984,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile, FileInfo publicKeyFile,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -971,6 +1002,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile,
 			IEnumerable<FileInfo> publicKeyFiles,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
@@ -987,6 +1019,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile,
 			IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1042,6 +1075,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(string inputFilePath, string outputFilePath, string publicKeyFilePath,
 			string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1060,6 +1094,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(string inputFilePath, string outputFilePath,
 			IEnumerable<string> publicKeyFilePaths,
 			string privateKeyFilePath, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
@@ -1077,6 +1112,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
 			bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1091,6 +1127,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP encrypted and signed file path</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(string inputFilePath, string outputFilePath, bool armor = true,
 			bool withIntegrityCheck = true)
 		{
@@ -1128,6 +1165,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, FileInfo publicKeyFile,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1145,6 +1183,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, IEnumerable<FileInfo> publicKeyFiles,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1160,6 +1199,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys,
 			bool armor = true, bool withIntegrityCheck = true)
 		{
@@ -1216,6 +1256,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, Stream publicKeyStream,
 			Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
@@ -1235,6 +1276,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream,
 			IEnumerable<Stream> publicKeyStreams,
 			Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true,
@@ -1253,6 +1295,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream,
 			IEncryptionKeys encryptionKeys, bool armor = true, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
@@ -1313,6 +1356,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSign(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, Stream publicKeyStream,
 			Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
@@ -1332,6 +1376,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSign(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, IEnumerable<Stream> publicKeyStreams,
 			Stream privateKeyStream, string passPhrase, bool armor = true, bool withIntegrityCheck = true,
 			string name = DefaultFileName)
@@ -1349,6 +1394,7 @@ namespace PgpCore
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptStreamAndSign(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor = true, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1406,6 +1452,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAndSignAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAndSignAsync(string input, string publicKey,
 			string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1430,6 +1477,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAndSignAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAndSignAsync(string input, List<string> publicKeys,
 			string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1452,6 +1500,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAndSignAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> EncryptArmoredStringAndSignAsync(string input, IEncryptionKeys encryptionKeys,
 			bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1497,6 +1546,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAndSign(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string EncryptArmoredStringAndSign(string input, string publicKey,
 			string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1520,6 +1570,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
 		/// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use EncryptArmoredStringAndSign(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string EncryptArmoredStringAndSign(string input, List<string> publicKeys,
 			string privateKey, string passPhrase, bool withIntegrityCheck = true, string name = DefaultFileName)
 		{
@@ -1562,6 +1613,7 @@ namespace PgpCore
 		#region SignFileAsync
 
 		// We do not implement signing with integrity check or name. (implemented for encryption)
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
 			bool armor,
 			bool withIntegrityCheck, string name)
@@ -1577,6 +1629,7 @@ namespace PgpCore
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(string inputFilePath, string outputFilePath,
 			string privateKeyFilePath, string passPhrase, bool armor = true)
 		{
@@ -1591,6 +1644,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
 			bool armor = true)
 		{
@@ -1604,6 +1658,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(string inputFilePath, string outputFilePath,
 			bool armor = true)
 		{
@@ -1639,6 +1694,7 @@ namespace PgpCore
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true)
 		{
@@ -1653,6 +1709,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys,
 			bool armor = true)
 		{
@@ -1706,6 +1763,7 @@ namespace PgpCore
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(FileInfo inputFile, FileInfo outputFile,
 			FileInfo privateKeyFile, string passPhrase, bool armor = true)
 		{
@@ -1720,6 +1778,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys,
 			bool armor = true)
 		{
@@ -1768,8 +1827,9 @@ namespace PgpCore
 		#endregion SignFileAsync
 
 		#region SignFile
-		
+
 		// We do not implement signing with integrity check or name. (implemented for encryption)
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(string inputFilePath, string outputFilePath, string privateKeyFilePath, string passPhrase,
 			bool armor,
 			bool withIntegrityCheck, string name)
@@ -1777,6 +1837,7 @@ namespace PgpCore
 			SignFile(inputFilePath, outputFilePath, privateKeyFilePath, passPhrase, armor);
 		}
 
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys, bool armor,
 			bool withIntegrityCheck, string name)
 		{
@@ -1791,6 +1852,7 @@ namespace PgpCore
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(string inputFilePath, string outputFilePath,
 			string privateKeyFilePath, string passPhrase, bool armor = true)
 		{
@@ -1805,6 +1867,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys,
 			bool armor = true)
 		{
@@ -1818,6 +1881,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignFile(string inputFilePath, string outputFilePath,
 			bool armor = true)
 		{
@@ -1850,12 +1914,14 @@ namespace PgpCore
 		#region SignStreamAsync
 
 		// We do not implement signing with integrity check or name. (implemented for encryption)
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor, bool withIntegrityCheck,
 			string name)
 		{
 			await SignStreamAsync(inputStream, outputStream, armor);
 		}
 
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignStreamAsync(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor,
 			bool withIntegrityCheck, string name)
@@ -1863,6 +1929,7 @@ namespace PgpCore
 			await SignStreamAsync(inputStream, outputStream, encryptionKeys, armor);
 		}
 
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream,
 			string passPhrase, bool armor,
 			bool withIntegrityCheck, string name)
@@ -1879,6 +1946,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignStreamAsync(Stream inputStream, Stream outputStream,
 			Stream privateKeyStream, string passPhrase, bool armor = true,
 			string name = DefaultFileName)
@@ -1895,6 +1963,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task SignStreamAsync(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor = true, string name = DefaultFileName)
 		{
@@ -1941,8 +2010,9 @@ namespace PgpCore
 		#endregion SignStreamAsync
 
 		#region SignStream
-		
+
 		// We do not implement signing with integrity check or name. (implemented for encryption)
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase,
 			bool armor,
 			bool withIntegrityCheck, string name)
@@ -1950,6 +2020,7 @@ namespace PgpCore
 			SignStream(inputStream, outputStream, privateKeyStream, passPhrase, armor);
 		}
 
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys, bool armor,
 			bool withIntegrityCheck, string name)
 		{
@@ -1971,6 +2042,7 @@ namespace PgpCore
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignStream(Stream inputStream, Stream outputStream,
 			Stream privateKeyStream, string passPhrase, bool armor = true,
 			string name = DefaultFileName)
@@ -1987,6 +2059,7 @@ namespace PgpCore
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void SignStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys,
 			bool armor = true, string name = DefaultFileName)
 		{
@@ -2041,6 +2114,7 @@ namespace PgpCore
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> SignArmoredStringAsync(string input, string privateKey, string passPhrase,
 			string name = DefaultFileName)
 		{
@@ -2061,6 +2135,7 @@ namespace PgpCore
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> SignArmoredStringAsync(string input, IEncryptionKeys encryptionKeys,
 			string name = DefaultFileName)
 		{
@@ -2103,6 +2178,7 @@ namespace PgpCore
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string SignArmoredString(string input, string privateKey, string passPhrase,
 			string name = DefaultFileName)
 		{
@@ -2123,6 +2199,7 @@ namespace PgpCore
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
 		/// <param name="name">Name of signed file in message, defaults to the input file name</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use SignArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string SignArmoredString(string input, IEncryptionKeys encryptionKeys, string name = DefaultFileName)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2169,6 +2246,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath,
 			string passPhrase)
 		{
@@ -2182,6 +2260,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignFileAsync(string inputFilePath, string outputFilePath,
 			IEncryptionKeys encryptionKeys)
 		{
@@ -2194,6 +2273,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignFileAsync(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -2219,6 +2299,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, FileInfo privateKeyFile,
 			string passPhrase)
 		{
@@ -2232,6 +2313,7 @@ namespace PgpCore
 		/// <param name="inputFile">Plain data file to be signed</param>
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2272,6 +2354,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignFile(string inputFilePath, string outputFilePath, string privateKeyFilePath,
 			string passPhrase)
 		{
@@ -2285,6 +2368,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2296,6 +2380,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be signed</param>
 		/// <param name="outputFilePath">Output PGP signed file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignFile(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -2321,6 +2406,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignFile(FileInfo inputFile, FileInfo outputFile, FileInfo privateKeyFile, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKeyFile, passPhrase);
@@ -2333,6 +2419,7 @@ namespace PgpCore
 		/// <param name="inputFile">Plain data file to be signed</param>
 		/// <param name="outputFile">Output PGP signed file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignFile(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2373,6 +2460,7 @@ namespace PgpCore
 		/// <param name="outputStream">Output PGP signed stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream,
 			string passPhrase)
 		{
@@ -2386,6 +2474,7 @@ namespace PgpCore
 		/// <param name="inputStream">Plain data stream to be signed</param>
 		/// <param name="outputStream">Output PGP signed stream</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2422,6 +2511,7 @@ namespace PgpCore
 		/// <param name="outputStream">Output PGP signed stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKeyStream, passPhrase);
@@ -2434,6 +2524,7 @@ namespace PgpCore
 		/// <param name="inputStream">Plain data stream to be signed</param>
 		/// <param name="outputStream">Output PGP signed stream</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public void ClearSignStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2469,6 +2560,7 @@ namespace PgpCore
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> ClearSignArmoredStringAsync(string input, string privateKey, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
@@ -2487,6 +2579,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> ClearSignArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2525,6 +2618,7 @@ namespace PgpCore
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string ClearSignArmoredString(string input, string privateKey, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
@@ -2543,6 +2637,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be signed</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use ClearSignArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string ClearSignArmoredString(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2586,6 +2681,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, string privateKeyFilePath,
 			string passPhrase)
 		{
@@ -2599,6 +2695,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">PGP encrypted data file path</param>
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAsync(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2610,6 +2707,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">PGP encrypted data file path</param>
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAsync(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -2634,6 +2732,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP decrypted file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAsync(FileInfo inputFile, FileInfo outputFile, FileInfo privateKeyFile,
 			string passPhrase)
 		{
@@ -2647,6 +2746,7 @@ namespace PgpCore
 		/// <param name="inputFile">PGP encrypted data file</param>
 		/// <param name="outputFile">Output PGP decrypted file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAsync(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2686,6 +2786,7 @@ namespace PgpCore
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFile(string inputFilePath, string outputFilePath, string privateKeyFilePath,
 			string passPhrase)
 		{
@@ -2699,6 +2800,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">PGP encrypted data file path</param>
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFile(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2710,6 +2812,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">PGP encrypted data file path</param>
 		/// <param name="outputFilePath">Output PGP decrypted file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFile(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -2734,6 +2837,7 @@ namespace PgpCore
 		/// <param name="outputFile">Output PGP decrypted file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFile(FileInfo inputFile, FileInfo outputFile, FileInfo privateKeyFile, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKeyFile, passPhrase);
@@ -2746,6 +2850,7 @@ namespace PgpCore
 		/// <param name="inputFile">PGP encrypted data file</param>
 		/// <param name="outputFile">Output PGP decrypted file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFile(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFile(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2785,6 +2890,7 @@ namespace PgpCore
 		/// <param name="outputStream">Output PGP decrypted stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<Stream> DecryptStreamAsync(Stream inputStream, Stream outputStream, Stream privateKeyStream,
 			string passPhrase)
 		{
@@ -2799,6 +2905,7 @@ namespace PgpCore
 		/// <param name="inputStream">PGP encrypted data stream</param>
 		/// <param name="outputStream">Output PGP decrypted stream</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<Stream> DecryptStreamAsync(Stream inputStream, Stream outputStream,
 			IEncryptionKeys encryptionKeys)
 		{
@@ -2838,6 +2945,7 @@ namespace PgpCore
 		/// <param name="outputStream">Output PGP decrypted stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public Stream DecryptStream(Stream inputStream, Stream outputStream, Stream privateKeyStream, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKeyStream, passPhrase);
@@ -2851,6 +2959,7 @@ namespace PgpCore
 		/// <param name="inputStream">PGP encrypted data stream</param>
 		/// <param name="outputStream">Output PGP decrypted stream</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStream(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public Stream DecryptStream(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2888,6 +2997,7 @@ namespace PgpCore
 		/// <param name="input">PGP encrypted data stream</param>
 		/// <param name="privateKey">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> DecryptArmoredStringAsync(string input, string privateKey, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(await privateKey.GetStreamAsync(), passPhrase);
@@ -2906,6 +3016,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">PGP encrypted string</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> DecryptArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -2944,6 +3055,7 @@ namespace PgpCore
 		/// <param name="input">PGP encrypted data stream</param>
 		/// <param name="privateKey">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string DecryptArmoredString(string input, string privateKey, string passPhrase)
 		{
 			EncryptionKeys = new EncryptionKeys(privateKey.GetStream(), passPhrase);
@@ -2962,6 +3074,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">PGP encrypted string</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string DecryptArmoredString(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3006,6 +3119,7 @@ namespace PgpCore
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath,
 			string publicKeyFilePath, string privateKeyFilePath, string passPhrase)
 		{
@@ -3020,6 +3134,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
 		/// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath,
 			IEncryptionKeys encryptionKeys)
 		{
@@ -3032,6 +3147,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
 		/// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAndVerifyAsync(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3057,6 +3173,7 @@ namespace PgpCore
 		/// <param name="publicKeyFile">PGP public key file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile, FileInfo publicKeyFile,
 			FileInfo privateKeyFile, string passPhrase)
 		{
@@ -3070,6 +3187,7 @@ namespace PgpCore
 		/// <param name="inputFile">PGP encrypted data file to be decrypted and verified</param>
 		/// <param name="outputFile">Output PGP decrypted and verified file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile,
 			IEncryptionKeys encryptionKeys)
 		{
@@ -3111,6 +3229,7 @@ namespace PgpCore
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
 		/// <param name="privateKeyFilePath">PGP secret key file path</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, string publicKeyFilePath,
 			string privateKeyFilePath, string passPhrase)
 		{
@@ -3125,6 +3244,7 @@ namespace PgpCore
 		/// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
 		/// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFileAndVerify(string inputFilePath, string outputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3136,6 +3256,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">PGP encrypted data file path to be decrypted and verified</param>
 		/// <param name="outputFilePath">Output PGP decrypted and verified file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFileAndVerify(string inputFilePath, string outputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3161,6 +3282,7 @@ namespace PgpCore
 		/// <param name="publicKeyFile">PGP public key file</param>
 		/// <param name="privateKeyFile">PGP secret key file</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile, FileInfo publicKeyFile,
 			FileInfo privateKeyFile, string passPhrase)
 		{
@@ -3174,6 +3296,7 @@ namespace PgpCore
 		/// <param name="inputFile">PGP encrypted data file to be decrypted and verified</param>
 		/// <param name="outputFile">Output PGP decrypted and verified file</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public void DecryptFileAndVerify(FileInfo inputFile, FileInfo outputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3214,6 +3337,7 @@ namespace PgpCore
 		/// <param name="publicKeyStream">PGP public key stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<Stream> DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream,
 			Stream publicKeyStream, Stream privateKeyStream, string passPhrase)
 		{
@@ -3228,6 +3352,7 @@ namespace PgpCore
 		/// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
 		/// <param name="outputStream">Output PGP decrypted and verified stream</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<Stream> DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream,
 			IEncryptionKeys encryptionKeys)
 		{
@@ -3268,6 +3393,7 @@ namespace PgpCore
 		/// <param name="publicKeyStream">PGP public key stream</param>
 		/// <param name="privateKeyStream">PGP secret key stream</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAndVerify(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public Stream DecryptStreamAndVerify(Stream inputStream, Stream outputStream, Stream publicKeyStream,
 			Stream privateKeyStream, string passPhrase)
 		{
@@ -3282,6 +3408,7 @@ namespace PgpCore
 		/// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
 		/// <param name="outputStream">Output PGP decrypted and verified stream</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptStreamAndVerify(Stream inputStream, Stream outputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public Stream DecryptStreamAndVerify(Stream inputStream, Stream outputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3320,6 +3447,7 @@ namespace PgpCore
 		/// <param name="publicKey">PGP public key</param>
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAndVerifyAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> DecryptArmoredStringAndVerifyAsync(string input, string publicKey, string privateKey,
 			string passPhrase)
 		{
@@ -3340,6 +3468,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">PGP encrypted string to be decrypted and verified</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAndVerifyAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<string> DecryptArmoredStringAndVerifyAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3379,6 +3508,7 @@ namespace PgpCore
 		/// <param name="publicKey">PGP public key</param>
 		/// <param name="privateKey">PGP secret key</param>
 		/// <param name="passPhrase">PGP secret key password</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAndVerify(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string DecryptArmoredStringAndVerify(string input, string publicKey, string privateKey,
 			string passPhrase)
 		{
@@ -3398,6 +3528,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">PGP encrypted string to be decrypted and verified</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public key, private key and passphrase</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use DecryptArmoredStringAndVerify(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public string DecryptArmoredStringAndVerify(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3435,6 +3566,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyFileAsync(string inputFilePath, string publicKeyFilePath)
 		{
 			EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
@@ -3446,6 +3578,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyFileAsync(string inputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3456,6 +3589,7 @@ namespace PgpCore
 		/// PGP verify a given file.
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyFileAsync(string inputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3475,6 +3609,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="publicKeyFile">PGP public key file</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyFileAsync(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -3486,6 +3621,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyFileAsync(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3519,6 +3655,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyFile(string inputFilePath, string publicKeyFilePath)
 		{
 			EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
@@ -3530,6 +3667,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyFile(string inputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3540,6 +3678,7 @@ namespace PgpCore
 		/// PGP verify a given file.
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyFile(string inputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3559,6 +3698,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="publicKeyFile">PGP public key file</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyFile(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -3570,6 +3710,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="encryptionKeys">IEncryptionKeys object containing public keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyFile(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3603,6 +3744,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
 		/// <param name="publicKeyStream">PGP public key stream</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyStreamAsync(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -3614,6 +3756,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3645,6 +3788,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
 		/// <param name="publicKeyStream">PGP public key stream</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -3656,6 +3800,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyStream(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3687,6 +3832,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be verified</param>
 		/// <param name="publicKey">PGP public key stream</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyArmoredStringAsync(string input, string publicKey)
 		{
 			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
@@ -3702,6 +3848,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3733,6 +3880,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyArmoredString(string input, string publicKey)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
@@ -3748,6 +3896,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Plain string to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyArmoredString(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3779,6 +3928,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearFileAsync(string inputFilePath, string publicKeyFilePath)
 		{
 			EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
@@ -3790,6 +3940,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearFileAsync(string inputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3800,6 +3951,7 @@ namespace PgpCore
 		/// PGP verify a given clear signed file.
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearFileAsync(string inputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3816,6 +3968,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="publicKeyFile">PGP public key file</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearFileAsync(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -3827,6 +3980,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearFileAsync(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3857,6 +4011,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="publicKeyFilePath">PGP public key file path</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearFile(string inputFilePath, string publicKeyFilePath)
 		{
 			EncryptionKeys = new EncryptionKeys(new FileInfo(publicKeyFilePath));
@@ -3868,6 +4023,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearFile(string inputFilePath, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3878,6 +4034,7 @@ namespace PgpCore
 		/// PGP verify a given clear signed file.
 		/// </summary>
 		/// <param name="inputFilePath">Plain data file path to be verified</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearFile(string inputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
@@ -3897,6 +4054,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="publicKeyFile">PGP public key file</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearFile(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -3908,6 +4066,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearFile(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3938,6 +4097,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Clear signed data stream to be verified</param>
 		/// <param name="publicKeyStream">PGP public key stream</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearStreamAsync(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -3949,6 +4109,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Clear signed data stream to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -3980,6 +4141,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Clear signed stream to be verified</param>
 		/// <param name="publicKeyStream">PGP public key stream</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearStream(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -3991,6 +4153,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="inputStream">Clear signed stream to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearStream(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4022,6 +4185,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearArmoredStringAsync(string input, string publicKey)
 		{
 			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
@@ -4038,6 +4202,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4068,6 +4233,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearArmoredString(string input, string publicKey)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
@@ -4081,6 +4247,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public bool VerifyClearArmoredString(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4107,6 +4274,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed file to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -4119,6 +4287,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed file to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearFileAsync(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4158,6 +4327,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed file to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearFile(FileInfo inputFile, FileInfo publicKeyFile)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyFile);
@@ -4170,6 +4340,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed file to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearFile(FileInfo inputFile) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearFile(FileInfo inputFile, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4209,6 +4380,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed stream to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -4221,6 +4393,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed stream to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearStreamAsync(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4261,6 +4434,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed stream to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearStream(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
@@ -4273,6 +4447,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearStream(Stream inputStream) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearStream(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
@@ -4313,6 +4488,7 @@ namespace PgpCore
 		/// </summary>
 		/// <param name="input">Clear signed string to be verified</param>
 		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
         {
             if (publicKey == null)
@@ -4323,12 +4499,13 @@ namespace PgpCore
             return await VerifyAndReadClearArmoredStringAsync(input);
         }
 
-        /// <summary>
-        /// PGP verify a given clear signed string.
-        /// </summary>
-        /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="encryptionKeys">Encryption keys</param>
-        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
+		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
@@ -4357,15 +4534,16 @@ namespace PgpCore
                 }
             }
         }
-        #endregion VerifyAndReadClearArmoredStringAsync
+		#endregion VerifyAndReadClearArmoredStringAsync
 
-        #region VerifyAndReadClearArmoredString
-        /// <summary>
-        /// PGP verify a given clear signed string.
-        /// </summary>
-        /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="publicKey">PGP public key</param>
-        public VerificationResult VerifyAndReadClearArmoredString(string input, string publicKey)
+		#region VerifyAndReadClearArmoredString
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		/// <param name="publicKey">PGP public key</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
+		public VerificationResult VerifyAndReadClearArmoredString(string input, string publicKey)
         {
             if (publicKey == null)
                 throw new ArgumentNullException("publicKey");
@@ -4375,12 +4553,13 @@ namespace PgpCore
             return VerifyAndReadClearArmoredString(input);
         }
 
-        /// <summary>
-        /// PGP verify a given clear signed string.
-        /// </summary>
-        /// <param name="input">Clear signed string to be verified</param>
-        /// <param name="encryptionKeys">Encryption keys</param>
-        public VerificationResult VerifyAndReadClearArmoredString(string input, IEncryptionKeys encryptionKeys)
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		/// <param name="encryptionKeys">Encryption keys</param>
+		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
+		public VerificationResult VerifyAndReadClearArmoredString(string input, IEncryptionKeys encryptionKeys)
         {
             EncryptionKeys = encryptionKeys;
 
