@@ -1308,6 +1308,60 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndVerifyArmoredString_CreateClearSignedStringAndVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string publicKey = System.IO.File.ReadAllText(testFactory.PublicKeyFilePath);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content, privateKey, testFactory.Password);
+            VerificationResult result = pgp.VerifyAndReadClearArmoredString(clearSignedContent, publicKey);
+
+            // Assert
+            Assert.True(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
+            
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignAndDoNotVerifyArmoredString_CreateClearSignedStringAndDoNotVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            string privateKey = System.IO.File.ReadAllText(testFactory.PrivateKeyFilePath);
+            testFactory2.Arrange(KeyType.Generated);
+            string publicKey = System.IO.File.ReadAllText(testFactory2.PublicKeyFilePath);
+
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = pgp.ClearSignArmoredString(testFactory.Content, privateKey, testFactory.Password);
+            VerificationResult result = pgp.VerifyAndReadClearArmoredString(clearSignedContent, publicKey);
+
+            // Assert
+            Assert.False(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void EncryptArmor_CreateEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange

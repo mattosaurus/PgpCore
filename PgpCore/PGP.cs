@@ -21,6 +21,18 @@ namespace PgpCore
 		UTF8
 	}
 
+	public struct VerificationResult
+	{
+		public bool IsVerified { get; private set; }
+		public string ClearText { get; private set; }
+
+		public VerificationResult(bool isVerified, string clearText)
+		{
+			IsVerified = isVerified;
+			ClearText = clearText;
+		}
+	}
+
 	public class PGP : IPGPEncrypt, IPGPEncryptAsync, IPGPSign, IPGPSignAsync
 	{
 		public static PGP Instance => _instance ?? (_instance = new PGP());
@@ -3680,11 +3692,10 @@ namespace PgpCore
 			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
 			using (Stream inputStream = await input.GetStreamAsync())
-				// using (Stream outputStream = new MemoryStream())
-				// {
-				return await VerifyStreamAsync(inputStream);
-			// }
-		}
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
 
 		/// <summary>
 		/// PGP verify a given string.
@@ -3696,10 +3707,9 @@ namespace PgpCore
 			EncryptionKeys = encryptionKeys;
 
 			using (Stream inputStream = await input.GetStreamAsync())
-				// using (Stream outputStream = new MemoryStream())
-				// {
+		   {
 				return await VerifyStreamAsync(inputStream);
-			// }
+		   }
 		}
 
 		/// <summary>
@@ -3709,10 +3719,9 @@ namespace PgpCore
 		public async Task<bool> VerifyArmoredStringAsync(string input)
 		{
 			using (Stream inputStream = await input.GetStreamAsync())
-				// using (Stream outputStream = new MemoryStream())
-				// {
+			{
 				return await VerifyStreamAsync(inputStream);
-			// }
+			}
 		}
 
 		#endregion VerifyArmoredStringAsync
@@ -3729,10 +3738,9 @@ namespace PgpCore
 			EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
 			using (Stream inputStream = input.GetStream())
-				// using (Stream outputStream = new MemoryStream())
-				// {
+			{
 				return VerifyStream(inputStream);
-			// }
+			}
 		}
 
 		/// <summary>
@@ -3745,10 +3753,9 @@ namespace PgpCore
 			EncryptionKeys = encryptionKeys;
 
 			using (Stream inputStream = input.GetStream())
-				// using (Stream outputStream = new MemoryStream())
-				// {
+			{
 				return VerifyStream(inputStream);
-			// }
+			}
 		}
 
 		/// <summary>
@@ -3758,10 +3765,9 @@ namespace PgpCore
 		public bool VerifyArmoredString(string input)
 		{
 			using (Stream inputStream = input.GetStream())
-				// using (Stream outputStream = new MemoryStream())
-				// {
+			{
 				return VerifyStream(inputStream);
-			// }
+			}
 		}
 
 		#endregion VerifyArmoredString
@@ -4094,6 +4100,110 @@ namespace PgpCore
 		}
 
 		#endregion VerifyClearArmoredString
+
+        #region VerifyAndReadClearArmoredStringAsync
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
+        {
+            if (publicKey == null)
+                throw new ArgumentNullException("publicKey");
+
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
+
+            return await VerifyAndReadClearArmoredStringAsync(input);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            return await VerifyAndReadClearArmoredStringAsync(input);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
+        {
+            if (input == null)
+                throw new ArgumentNullException("input");
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                bool verified = await VerifyClearAsync(inputStream, outputStream);
+
+                outputStream.Position = 0;
+                using (StreamReader reader = new StreamReader(outputStream))
+                {
+                    string message = reader.ReadToEnd();
+                    return new VerificationResult(verified, message);
+                }
+            }
+        }
+        #endregion VerifyAndReadClearArmoredStringAsync
+
+        #region VerifyAndReadClearArmoredString
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        public VerificationResult VerifyAndReadClearArmoredString(string input, string publicKey)
+        {
+            if (publicKey == null)
+                throw new ArgumentNullException("publicKey");
+
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
+
+            return VerifyAndReadClearArmoredString(input);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        public VerificationResult VerifyAndReadClearArmoredString(string input, IEncryptionKeys encryptionKeys)
+        {
+            EncryptionKeys = encryptionKeys;
+
+            return VerifyAndReadClearArmoredString(input);
+        }
+
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public VerificationResult VerifyAndReadClearArmoredString(string input)
+        {
+            if (input == null)
+                throw new ArgumentNullException("input");
+
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                bool verified = VerifyClear(inputStream, outputStream);
+
+                outputStream.Position = 0;
+                using (StreamReader reader = new StreamReader(outputStream))
+                {
+                    string message = reader.ReadToEnd();
+					return new VerificationResult(verified, message);
+                }
+            }
+        }
+        #endregion VerifyAndReadClearArmoredString
 
 		#endregion DecryptAndVerify
 
@@ -5218,7 +5328,7 @@ namespace PgpCore
 		#region VerifyClearAsync
 
 		// https://github.com/bcgit/bc-csharp/blob/master/crypto/test/src/openpgp/examples/ClearSignedFileProcessor.cs
-		private async Task<bool> VerifyClearAsync(Stream inputStream)
+        private async Task<bool> VerifyClearAsync(Stream inputStream, Stream outputStream=null)
 		{
 			bool verified;
 
@@ -5278,6 +5388,13 @@ namespace PgpCore
 
 					verified = pgpSignature.Verify();
 				}
+
+                // Copy the message to the outputStream, if supplied
+                if (outputStream != null)
+                {
+                    outStream.Position = 0;
+                    await outStream.CopyToAsync(outputStream);
+                }
 			}
 
 			return verified;
@@ -5288,7 +5405,7 @@ namespace PgpCore
 		#region VerifyClear
 
 		// https://github.com/bcgit/bc-csharp/blob/master/crypto/test/src/openpgp/examples/ClearSignedFileProcessor.cs
-		private bool VerifyClear(Stream inputStream)
+        private bool VerifyClear(Stream inputStream, Stream outputStream=null)
 		{
 			bool verified;
 
@@ -5348,6 +5465,13 @@ namespace PgpCore
 					}
 
 					verified = pgpSignature.Verify();
+
+                    // Copy the message to the outputStream, if supplied
+                    if (outputStream != null)
+                    {
+                        outStream.Position = 0;
+                        outStream.CopyTo(outputStream);
+                    }
 				}
 			}
 

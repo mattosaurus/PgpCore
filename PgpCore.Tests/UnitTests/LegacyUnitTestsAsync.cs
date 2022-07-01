@@ -1221,6 +1221,60 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndVerifyArmoredStringAsync_CreateClearSignedStringAndVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            string publicKey = testFactory.PublicKey;
+            string privateKey = testFactory.PrivateKey;
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content, privateKey, testFactory.Password);
+            VerificationResult result = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
+
+            // Assert
+            Assert.True(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task ClearSignAndDoNotVerifyArmoredStringAsync_CreateClearSignedStringAndDoNotVerifyAndRead(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            string privateKey = testFactory.PrivateKey;
+            await testFactory2.ArrangeAsync(KeyType.Generated);
+            string publicKey = testFactory2.PublicKey;
+
+            PGP pgp = new PGP();
+
+            // Act
+            string clearSignedContent = await pgp.ClearSignArmoredStringAsync(testFactory.Content, privateKey, testFactory.Password);
+            VerificationResult result = await pgp.VerifyAndReadClearArmoredStringAsync(clearSignedContent, publicKey);
+
+            // Assert
+            Assert.False(result.IsVerified);
+            Assert.Equal(testFactory.Content, result.ClearText.TrimEnd());
+
+            // Teardown
+            testFactory.Teardown();
+            testFactory2.Teardown();
+        }
+        
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task EncryptArmoredStringAsync_CreateEncryptedStringWithMultipleKeys(KeyType keyType)
         {
             // Arrange
