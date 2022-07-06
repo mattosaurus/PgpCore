@@ -575,9 +575,17 @@ namespace PgpCore
 			PgpPublicKey[] keys = publicKeys.GetPublicKeys().Cast<PgpPublicKey>().ToArray();
 			// Is encryption key and has the two encryption key flags
 			PgpPublicKey[] encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 4).ToArray();
+
+			// If no suitable encryption keys are found, get master key with encryption capability
 			if (!encryptKeys
-				    .Any()) // Failsafe: if no suitable encryption keys are found, get master key with encryption capability
+				    .Any())
 				encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 3).ToArray();
+
+			// Otherwise get any keys with encryption capability
+			if (!encryptKeys
+					.Any())
+				encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 2).ToArray();
+
 			PgpPublicKey encryptionKey = encryptKeys.OrderByDescending(GetEncryptionScore).FirstOrDefault();
 			if (encryptionKey == null)
 				throw new ArgumentException("No encryption keys in keyring");
