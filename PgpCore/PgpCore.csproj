@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.6.0</Version>
+    <Version>5.7.0.0</Version>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.6.0</FileVersion>
-    <PackageReleaseNotes>v5.6.0 - Sub-key refactor</PackageReleaseNotes>
+    <FileVersion>5.7.0</FileVersion>
+    <PackageReleaseNotes>v5.7.0 - Fix to allow encryption by non-master keys</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
