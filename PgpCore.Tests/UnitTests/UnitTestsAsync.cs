@@ -799,7 +799,6 @@ namespace PgpCore.Tests
 
             // Assert
             var ex = await Assert.ThrowsAsync<IOException>(action);
-            Assert.Equal("invalid armor", ex.Message);
 
             // Teardown
             testFactory.Teardown();

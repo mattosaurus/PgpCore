@@ -5480,7 +5480,6 @@ namespace PgpCore
 				PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
 				Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
-
 				// Verify against public key ID and that of any sub keys
 				var keyIdToVerify = pgpOnePassSignature.KeyId;
 				if (Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
@@ -5494,24 +5493,17 @@ namespace PgpCore
 						pgpOnePassSignature.Update((byte)ch);
 					}
 
-					try
-					{
-						PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+					PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
-						for (int i = 0; i < pgpSignatureList.Count; i++)
+					for (int i = 0; i < pgpSignatureList.Count; i++)
+					{
+						PgpSignature pgpSignature = pgpSignatureList[i];
+
+						if (pgpOnePassSignature.Verify(pgpSignature))
 						{
-							PgpSignature pgpSignature = pgpSignatureList[i];
-
-							if (pgpOnePassSignature.Verify(pgpSignature))
-							{
-								verified = true;
-								break;
-							}
+							verified = true;
+							break;
 						}
-					}
-					catch
-					{
-						verified = false;
 					}
 				}
 			}
@@ -5591,25 +5583,17 @@ namespace PgpCore
 							pgpOnePassSignature.Update((byte)ch);
 						}
 
-						try
-						{
-							PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+						PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
-							for (int i = 0; i < pgpSignatureList.Count; i++)
+						for (int i = 0; i < pgpSignatureList.Count; i++)
+						{
+							PgpSignature pgpSignature = pgpSignatureList[i];
+
+							if (pgpOnePassSignature.Verify(pgpSignature))
 							{
-								PgpSignature pgpSignature = pgpSignatureList[i];
-
-								if (pgpOnePassSignature.Verify(pgpSignature))
-								{
-									verified = true;
-									break;
-								}
+								verified = true;
+								break;
 							}
-						}
-						catch
-						{
-							verified = false;
-							break;
 						}
 					}
 					else
@@ -5650,24 +5634,17 @@ namespace PgpCore
 						pgpOnePassSignature.Update((byte)ch);
 					}
 
-					try
-					{
-						PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
+					PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
-						for (int i = 0; i < pgpSignatureList.Count; i++)
+					for (int i = 0; i < pgpSignatureList.Count; i++)
+					{
+						PgpSignature pgpSignature = pgpSignatureList[i];
+
+						if (pgpOnePassSignature.Verify(pgpSignature))
 						{
-							PgpSignature pgpSignature = pgpSignatureList[i];
-
-							if (pgpOnePassSignature.Verify(pgpSignature))
-							{
-								verified = true;
-								break;
-							}
+							verified = true;
+							break;
 						}
-					}
-					catch
-					{
-						verified = false;
 					}
 				}
 			}
