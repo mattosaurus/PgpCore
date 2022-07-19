@@ -7,11 +7,8 @@ A .NET Core class library for using PGP.
 This is based on <a href="https://github.com/Cinchoo/ChoPGP" alt="ChoPGP">ChoPGP</a> but updated to .NET Standard and to add in a missing utilities class.
 
 # Installation
-To use PgpCore in your C# project, you can either download the PgpCore C# .NET libraries directly from the Github repository or, if you have the NuGet package manager installed, you can grab them automatically.
+To use PgpCore in your C# project download it from [NuGet](https://www.nuget.org/packages/PgpCore).
 
-```
-PM> Install-Package PgpCore
-```
 Once you have the PgpCore libraries properly referenced in your project, you can include calls to them in your code.
 
 Add the following namespaces to use the library:
