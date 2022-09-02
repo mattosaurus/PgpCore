@@ -611,6 +611,19 @@ namespace PgpCore
 		}
 
 		/// <summary>
+		/// Finds and returns the master key
+		/// </summary>
+		/// <param name="publicKeys"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentException"></exception>
+		public static PgpPublicKey FindMasterKey(PgpPublicKeyRing publicKeys)
+		{
+			PgpPublicKey[] keys = publicKeys.GetPublicKeys().Cast<PgpPublicKey>().ToArray();
+
+			return keys.Single(x => x.IsMasterKey);
+		}
+
+		/// <summary>
 		/// Checks if the key with the given id is present in the collection of public keys, and if it is, return it.
 		/// </summary>
 		/// <param name="keyId"></param>

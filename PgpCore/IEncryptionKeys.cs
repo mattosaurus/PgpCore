@@ -15,6 +15,7 @@ namespace PgpCore
         IEnumerable<PgpPublicKey> VerificationKeys { get; }
         PgpPrivateKey SigningPrivateKey { get; }
         PgpSecretKey SigningSecretKey { get; }
+        PgpPublicKey MasterKey { get; }
         PgpPublicKey PublicKey { get; }
         IEnumerable<PgpPublicKey> PublicKeys { get; }
         PgpPrivateKey PrivateKey { get; }

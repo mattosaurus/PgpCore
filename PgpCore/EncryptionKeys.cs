@@ -15,6 +15,7 @@ namespace PgpCore
 		public PgpPrivateKey SigningPrivateKey => _signingPrivateKey.Value;
 		public PgpSecretKey SigningSecretKey => _signingSecretKey.Value;
 		public IEnumerable<PgpPublicKey> PublicKeys => EncryptKeys;
+		public PgpPublicKey MasterKey => _masterKey.Value;
 		public PgpPublicKey PublicKey => EncryptKeys.FirstOrDefault();
 		public PgpPrivateKey PrivateKey => SigningPrivateKey;
 		public PgpSecretKey SecretKey => SigningSecretKey;
@@ -28,6 +29,7 @@ namespace PgpCore
 
 		private Lazy<IEnumerable<PgpPublicKey>> _encryptKeys;
 		private Lazy<IEnumerable<PgpPublicKey>> _verificationKeys;
+		private Lazy<PgpPublicKey> _masterKey;
 		private Lazy<PgpPrivateKey> _signingPrivateKey;
 		private Lazy<PgpSecretKey> _signingSecretKey;
 		private Lazy<PgpSecretKeyRingBundle> _secretKeys;
@@ -384,12 +386,15 @@ namespace PgpCore
 		{
 			if (publicKeyRings == null)
 			{
+				_masterKey = new Lazy<PgpPublicKey>(() => null);
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => null);
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => null);
 			}
 			else
 			{
 				// Need to consume the stream into a list before it is closed (can happen because of lazy instantiation).
+				_masterKey = new Lazy<PgpPublicKey>(() =>
+					Utilities.FindMasterKey(publicKeyRings.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
 					publicKeyRings.Select(Utilities.FindBestEncryptionKey).ToArray());
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
