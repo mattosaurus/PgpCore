@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.8.0.0</Version>
+    <Version>5.8.1.0</Version>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.8.0</FileVersion>
-    <PackageReleaseNotes>v5.8.0 - Expose master key</PackageReleaseNotes>
+    <FileVersion>5.8.1</FileVersion>
+    <PackageReleaseNotes>v5.8.1 - Update stream disposal</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
