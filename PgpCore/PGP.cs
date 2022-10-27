@@ -5039,7 +5039,7 @@ namespace PgpCore
 					PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
 					message = objectFactory.NextPgpObject();
 
-					if (message is PgpOnePassSignatureList)
+					if (message is PgpOnePassSignatureList || message is PgpSignatureList)
 					{
 						message = objectFactory.NextPgpObject();
 						var literalData = (PgpLiteralData)message;
@@ -5147,7 +5147,7 @@ namespace PgpCore
 					PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
 					message = objectFactory.NextPgpObject();
 
-					if (message is PgpOnePassSignatureList)
+					if (message is PgpOnePassSignatureList || message is PgpSignatureList)
 					{
 						message = objectFactory.NextPgpObject();
 						PgpLiteralData literalData = (PgpLiteralData)message;
