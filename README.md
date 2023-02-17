@@ -62,6 +62,13 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
   * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
   * [DecryptArmoredStringAndVerifyAsync](#decryptarmoredstringandverifyasync)
 
+## Settings
+* [Compression Algorithm](#compressionalgorithm)
+* [Symmetric Key Algorithm](#symmetrickeyalgorithm)
+* [Pgp Signature Type](#pgpsignaturetype)
+* [Public Key Algorithm](#publickeyalgorithm)
+* [File Type](#filetype)
+* [Hash Algorithm Tag](#hashalgorithmtag)
 #### Generate Key
 Generate a new public and private key for the provided username and password.
 
@@ -431,3 +438,73 @@ PGP pgp = new PGP(encryptionKeys);
 // Decrypt and Verify
 string encryptedSignedContent = await pgp.DecryptArmoredStringAndVerifyAsync("String to decrypt and verify");
 ```
+## Settings
+The PGP object contains a variety of settings properties that can be used to determine how files are encrypted.
+### CompressionAlgorithm
+The compression algorithim to be used on the message. This is applied prior to encryption, either to the message or the signed message.
+- Uncompressed - **Default**
+- Zip
+- ZLib
+- BZip2
+### SymmetricKeyAlgorithm
+The private key encryption algorithim.
+- Null
+- Idea
+- TripleDes - **Default**
+- Cast5
+- Blowfish
+- Safer
+- Des
+- Aes128
+- Aes192
+- Aes256
+- Twofish
+- Camellia128
+- Camellia192
+- Camellia256
+### PgpSignatureType
+The type of signature to be used for file signing.
+- BinaryDocument
+- CanonicalTextDocument
+- StandAlone
+- DefaultCertification - **Default**
+- NoCertification
+- CasualCertification
+- PositiveCertification
+- SubkeyBinding
+- PrimaryKeyBinding
+- DirectKey
+- KeyRevocation
+- SubkeyRevocation
+- CertificationRevocation
+- Timestamp
+### PublicKeyAlgorithm
+The public key encryption algorithim.
+- RsaGeneral - **Default**
+- RsaEncrypt
+- RsaSign
+- ElGamalEncrypt
+- Dsa
+- ECDH
+- ECDsa
+- ElGamalGeneral
+- DiffieHellman
+- EdDsa
+### FileType
+Encoding to be used for the output file.
+- Binary - **Default**
+- Text
+- UTF8
+### HashAlgorithmTag
+The hash algorithim to be used by the signature.
+- MD5
+- Sha1 - **Default**
+- RipeMD160
+- DoubleSha
+- MD2
+- Tiger192
+- Haval5pass160
+- Sha256
+- Sha384
+- Sha512
+- Sha224
