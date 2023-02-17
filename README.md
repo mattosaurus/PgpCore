@@ -208,6 +208,8 @@ string signedContent = await pgp.ClearSignArmoredStringAsync("String to sign");
 ### Encrypt and Sign
 Encrypt the provided file, stream or string using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
 
+Although this method is called `EncryptAndSign` the signature will actually be included within the encrypted message rather than being appended to the encrypted message. This ensures that the original message was composed by the holder of the private key.
+
 [`gpg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
 #### EncryptFileAndSignAsync
 ```C#
