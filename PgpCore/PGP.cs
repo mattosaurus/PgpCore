@@ -40,6 +40,8 @@ namespace PgpCore
 
 		private const int BufferSize = 0x10000;
 		private const string DefaultFileName = "name";
+		
+		public bool UseOldFormat { get; set; } = false;
 
 		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Uncompressed;
 
@@ -561,11 +563,11 @@ namespace PgpCore
 			if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
 			{
 				PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-				await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, name);
+				await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, name, UseOldFormat);
 				comData.Close();
 			}
 			else
-				await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, name);
+				await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, name, UseOldFormat);
 
 			@out.Close();
 
@@ -679,11 +681,11 @@ namespace PgpCore
 			if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
 			{
 				PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-				Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, name);
+				Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, name, UseOldFormat);
 				comData.Close();
 			}
 			else
-				Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name);
+				Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name, UseOldFormat);
 
 			@out.Close();
 

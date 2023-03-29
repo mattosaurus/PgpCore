@@ -315,9 +315,10 @@ namespace PgpCore
 		public static async Task WriteFileToLiteralDataAsync(
 			Stream output,
 			char fileType,
-			FileInfo file)
+			FileInfo file,
+			bool useOldFormat = false)
 		{
-			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(useOldFormat);
 			Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime);
 			await PipeFileContentsAsync(file, pOut, 4096);
 			lData.Close();
@@ -327,9 +328,10 @@ namespace PgpCore
 		public static void WriteFileToLiteralData(
 			Stream output,
 			char fileType,
-			FileInfo file)
+			FileInfo file,
+			bool useOldFormat = false)
 		{
-			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(useOldFormat);
 			Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime);
 			PipeFileContents(file, pOut, 4096);
 			lData.Close();
@@ -365,9 +367,10 @@ namespace PgpCore
 			Stream output,
 			char fileType,
 			Stream input,
-			string name)
+			string name,
+			bool useOldFormat = false)
 		{
-			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(useOldFormat);
 			Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now);
 			await PipeStreamContentsAsync(input, pOut, 4096);
 			lData.Close();
@@ -377,9 +380,10 @@ namespace PgpCore
 			Stream output,
 			char fileType,
 			Stream input,
-			string name)
+			string name,
+			bool useOldFormat = false)
 		{
-			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(useOldFormat);
 			Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now);
 			PipeStreamContents(input, pOut, 4096);
 			lData.Close();
