@@ -1,14 +1,7 @@
-name: .NET
-
+name: Build
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+  workflow_call
 jobs:
-  analyze:
-    uses: ./.github/workflows/sonarqube.yml
   build:
     runs-on: windows-latest
 
@@ -27,5 +20,3 @@ jobs:
         certutil -decode certificate\certificate.txt certificate\certificate.pfx
     - name: Build
       run: dotnet build --no-restore --configuration Debug
-    - name: Test
-      run: dotnet test --no-build --verbosity normal

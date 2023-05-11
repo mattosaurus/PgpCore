@@ -1,0 +1,15 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+  test:
+    uses: ./.github/workflows/test.yml
+  analyze:
+    uses: ./.github/workflows/analyze.yml

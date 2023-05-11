@@ -1,0 +1,10 @@
+name: Test
+on:
+  workflow_call
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
