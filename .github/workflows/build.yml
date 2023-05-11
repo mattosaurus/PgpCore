@@ -20,3 +20,5 @@ jobs:
         certutil -decode certificate\certificate.txt certificate\certificate.pfx
     - name: Build
       run: dotnet build --no-restore --configuration Debug
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
