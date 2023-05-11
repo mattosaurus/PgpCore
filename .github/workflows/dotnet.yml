@@ -8,7 +8,7 @@ on:
 
 jobs:
   scan:
-    uses: ./.github/workflows/sonarcloud.yaml
+    uses: ./.github/workflows/sonarcloud.yml
   build:
 
     runs-on: windows-latest
