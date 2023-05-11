@@ -1,9 +1,8 @@
-name: SonarCloud
+name: SonarQube
 on:
   workflow_call
 jobs:
-  scan:
-    name: Build and analyze
+  analyze:
     runs-on: windows-latest
     steps:
       - name: Set up JDK 11
