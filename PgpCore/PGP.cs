@@ -4734,7 +4734,7 @@ namespace PgpCore
                 null,
                 new SecureRandom());
 
-            var secretKeyRing = keyRingGen.GenerateSecretKeyRing();
+            PgpSecretKeyRing secretKeyRing = keyRingGen.GenerateSecretKeyRing();
 
             ExportKeyPair(privateKeyStream, publicKeyStream, secretKeyRing.GetSecretKey(), armor, emitVersion);
         }
