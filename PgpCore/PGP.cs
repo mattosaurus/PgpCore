@@ -4724,7 +4724,7 @@ namespace PgpCore
             signHashGen.SetFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
 
             PgpKeyRingGenerator keyRingGen = new PgpKeyRingGenerator(
-                PgpSignatureType,
+                PgpSignature.DefaultCertification,
                 masterKey,
                 username,
                 SymmetricKeyAlgorithm,
