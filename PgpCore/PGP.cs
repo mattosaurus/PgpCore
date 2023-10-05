@@ -4680,7 +4680,7 @@ namespace PgpCore
 
             using (Stream pubs = File.Open(publicKeyFilePath, FileMode.Create))
             using (Stream pris = File.Open(privateKeyFilePath, FileMode.Create))
-                GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion, 
+                GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion,
                     preferredCompressionAlgorithms: preferredCompressionAlgorithms,
                     preferredHashAlgorithmTags: preferredHashAlgorithmTags,
                     preferredSymetricKeyAlgorithms: preferredSymetricKeyAlgorithms);
@@ -4691,24 +4691,44 @@ namespace PgpCore
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
             SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
         {
-            preferredCompressionAlgorithms = preferredCompressionAlgorithms ?? new[]
-            {
-                CompressionAlgorithmTag.Zip,
-                CompressionAlgorithmTag.Uncompressed,
-            };
-
-            preferredHashAlgorithmTags = preferredHashAlgorithmTags ?? new[]
-            {
-                HashAlgorithmTag == HashAlgorithmTag.Sha1 ? HashAlgorithmTag : HashAlgorithmTag, HashAlgorithmTag.Sha1,
-            };
-
-            preferredSymetricKeyAlgorithms = preferredSymetricKeyAlgorithms ?? new[]
-            {
-                SymmetricKeyAlgorithm == SymmetricKeyAlgorithmTag.TripleDes ? SymmetricKeyAlgorithmTag.TripleDes : SymmetricKeyAlgorithm, SymmetricKeyAlgorithmTag.TripleDes
-            };
-
             username = username ?? string.Empty;
             password = password ?? string.Empty;
+
+            preferredCompressionAlgorithms = preferredCompressionAlgorithms ??
+                ((CompressionAlgorithm != CompressionAlgorithmTag.Zip && CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed) ?
+                new[]
+                {
+                    CompressionAlgorithm,
+                    CompressionAlgorithmTag.Zip,
+                    CompressionAlgorithmTag.Uncompressed,
+                } :
+                new[]
+                {
+                    CompressionAlgorithmTag.Zip,
+                    CompressionAlgorithmTag.Uncompressed,
+                });
+
+            preferredHashAlgorithmTags = preferredHashAlgorithmTags ??
+                (HashAlgorithmTag == HashAlgorithmTag.Sha1 ?
+                new[]
+                {
+                    HashAlgorithmTag
+                } :
+                new[]
+                {
+                    HashAlgorithmTag, HashAlgorithmTag.Sha1
+                });
+
+            preferredSymetricKeyAlgorithms = preferredSymetricKeyAlgorithms ??
+                (SymmetricKeyAlgorithm == SymmetricKeyAlgorithmTag.TripleDes ?
+                new[]
+                {
+                    SymmetricKeyAlgorithm
+                } :
+                new[]
+                {
+                    SymmetricKeyAlgorithm, SymmetricKeyAlgorithmTag.TripleDes
+                });
 
             IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
 
@@ -6088,7 +6108,7 @@ namespace PgpCore
             Stream secretOut,
             Stream publicOut,
             PgpSecretKey secretKey,
-            bool armor, 
+            bool armor,
             bool emitVersion)
         {
             if (secretOut == null)
