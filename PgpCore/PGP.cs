@@ -4688,7 +4688,7 @@ namespace PgpCore
 
         public void GenerateKey(Stream publicKeyStream, Stream privateKeyStream, string username = null,
             string password = null, int strength = 1024, int certainty = 8, bool armor = true, bool emitVersion = true,
-            CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+            long keyExpirationInSeconds = 0, long signatureExpirationInSeconds = 0, CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
             SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
         {
             username = username ?? string.Empty;
@@ -4742,6 +4742,8 @@ namespace PgpCore
             signHashGen.SetPreferredHashAlgorithms(false, Array.ConvertAll(preferredHashAlgorithmTags, item => (int)item));
             signHashGen.SetPreferredSymmetricAlgorithms(false, Array.ConvertAll(preferredSymetricKeyAlgorithms, item => (int)item));
             signHashGen.SetFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
+            signHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
+            signHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);
 
             PgpKeyRingGenerator keyRingGen = new PgpKeyRingGenerator(
                 PgpSignatureType,
