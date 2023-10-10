@@ -3601,7 +3601,10 @@ namespace PgpCore
 				throw new FileNotFoundException($"Encrypted File [{inputFilePath}] not found.");
 
 			using (Stream inputStream = File.OpenRead(inputFilePath))
-				return await VerifyAsync(inputStream);
+			{
+                VerificationResult verificationResult = await VerifyAsync(inputStream);
+                return verificationResult.IsVerified;
+            }
 		}
 
 		/// <summary>
@@ -3643,8 +3646,11 @@ namespace PgpCore
 				throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
 			using (Stream inputStream = inputFile.OpenRead())
-				return await VerifyAsync(inputStream);
-		}
+            {
+                VerificationResult verificationResult = await VerifyAsync(inputStream);
+                return verificationResult.IsVerified;
+            }
+        }
 
 		#endregion VerifyFileAsync
 
@@ -3690,7 +3696,7 @@ namespace PgpCore
 				throw new FileNotFoundException($"Encrypted File [{inputFilePath}] not found.");
 
 			using (Stream inputStream = File.OpenRead(inputFilePath))
-				return Verify(inputStream);
+				return Verify(inputStream).IsVerified;
 		}
 
 		/// <summary>
@@ -3732,7 +3738,7 @@ namespace PgpCore
 				throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
 			using (Stream inputStream = inputFile.OpenRead())
-				return Verify(inputStream);
+				return Verify(inputStream).IsVerified;
 		}
 
 		#endregion VerifyFile
@@ -3776,7 +3782,8 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-			return await VerifyAsync(inputStream);
+            VerificationResult verificationResult = await VerifyAsync(inputStream);
+            return verificationResult.IsVerified;
 		}
 
 		#endregion VerifyStreamAsync
@@ -3792,7 +3799,7 @@ namespace PgpCore
 		public bool VerifyStream(Stream inputStream, Stream publicKeyStream)
 		{
 			EncryptionKeys = new EncryptionKeys(publicKeyStream);
-			return Verify(inputStream);
+			return Verify(inputStream).IsVerified;
 		}
 
 		/// <summary>
@@ -3804,7 +3811,7 @@ namespace PgpCore
 		public bool VerifyStream(Stream inputStream, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
-			return Verify(inputStream);
+			return Verify(inputStream).IsVerified;
 		}
 
 		/// <summary>
@@ -3820,7 +3827,7 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-			return Verify(inputStream);
+			return Verify(inputStream).IsVerified;
 		}
 
 		#endregion VerifyStream
@@ -4589,6 +4596,114 @@ namespace PgpCore
             }
         }
         #endregion VerifyAndReadClearArmoredString
+
+        #region VerifyAndReadSignedFileAsync
+        /// <summary>
+        /// PGP verify a given clear signed file.
+        /// </summary>
+        /// <param name="input">Clear signed file to be verified</param>
+        public async Task<VerificationResult> VerifyAndReadSignedFileAsync(FileInfo inputFile)
+        {
+            if (inputFile == null)
+                throw new ArgumentException("InputFile");
+            if (EncryptionKeys == null)
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+
+            using (Stream inputStream = inputFile.OpenRead())
+            {
+                return await VerifyAsync(inputStream);
+            }
+        }
+		#endregion VerifyAndReadSignedFileAsync
+
+		#region VerifyAndReadSignedFile
+		/// <summary>
+		/// PGP verify a given clear signed file.
+		/// </summary>
+		/// <param name="input">Clear signed file to be verified</param>
+		public VerificationResult VerifyAndReadSignedFile(FileInfo inputFile)
+		{
+			if (inputFile == null)
+				throw new ArgumentException("InputFile");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+
+			using (Stream inputStream = inputFile.OpenRead())
+			{
+				return Verify(inputStream);
+			}
+		}
+		#endregion VerifyAndReadSignedFile
+
+		#region VerifyAndReadSignedStreamAsync
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		public async Task<VerificationResult> VerifyAndReadSignedStreamAsync(Stream inputStream)
+		{
+			if (inputStream == null)
+				throw new ArgumentException("InputStream");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+			if (inputStream.Position != 0)
+				throw new ArgumentException("inputStream should be at start of stream");
+
+            return await VerifyAsync(inputStream);
+        }
+		#endregion VerifyAndReadSignedStreamAsync
+
+		#region VerifyAndReadSignedStream
+		/// <summary>
+		/// PGP verify a given clear signed stream.
+		/// </summary>
+		/// <param name="input">Clear signed stream to be verified</param>
+		public VerificationResult VerifyAndReadSignedStream(Stream inputStream)
+		{
+			if (inputStream == null)
+				throw new ArgumentException("InputStream");
+			if (EncryptionKeys == null)
+				throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
+			if (inputStream.Position != 0)
+				throw new ArgumentException("inputStream should be at start of stream");
+
+            return Verify(inputStream);
+        }
+		#endregion VerifyAndReadSignedStream
+
+		#region VerifyAndReadSignedArmoredStringAsync
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input)
+		{
+			if (input == null)
+				throw new ArgumentNullException("input");
+
+			using (Stream inputStream = await input.GetStreamAsync())
+			{
+                return await VerifyAsync(inputStream);
+            }
+		}
+		#endregion VerifyAndReadSignedArmoredStringAsync
+
+		#region VerifyAndReadSignedArmoredString
+		/// <summary>
+		/// PGP verify a given clear signed string.
+		/// </summary>
+		/// <param name="input">Clear signed string to be verified</param>
+		public VerificationResult VerifyAndReadSignedArmoredString(string input)
+		{
+			if (input == null)
+				throw new ArgumentNullException("input");
+
+            using (Stream inputStream = input.GetStream())
+            {
+                return Verify(inputStream);
+            }
+        }
+		#endregion VerifyAndReadSignedArmoredString
 
 		#endregion DecryptAndVerify
 
@@ -5461,9 +5576,10 @@ namespace PgpCore
 
 		#region VerifyAsync
 
-		private Task<bool> VerifyAsync(Stream inputStream)
+		private Task<VerificationResult> VerifyAsync(Stream inputStream)
 		{
 			bool verified = false;
+			StringBuilder contentStringBuilder = new StringBuilder();
 
 			Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
 			PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
@@ -5504,7 +5620,8 @@ namespace PgpCore
 					while ((ch = pgpLiteralStream.ReadByte()) >= 0)
 					{
 						pgpOnePassSignature.Update((byte)ch);
-					}
+                        contentStringBuilder.Append((char)ch);
+                    }
 
 					PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
@@ -5540,7 +5657,8 @@ namespace PgpCore
 							while ((ch = pgpLiteralStream.ReadByte()) >= 0)
 							{
 								pgpSignature.Update((byte)ch);
-							}
+                                contentStringBuilder.Append((char)ch);
+                            }
 
 							verified = pgpSignature.Verify();
 						}
@@ -5554,18 +5672,19 @@ namespace PgpCore
 			else
 				throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
-			return Task.FromResult(verified);
+			return Task.FromResult(new VerificationResult(verified, contentStringBuilder.ToString()));
 		}
 
 		#endregion VerifyAsync
 
 		#region Verify
 
-		private bool Verify(Stream inputStream)
+		private VerificationResult Verify(Stream inputStream)
 		{
 			bool verified = false;
+            StringBuilder contentStringBuilder = new StringBuilder();
 
-			ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream);
+            ArmoredInputStream encodedFile = new ArmoredInputStream(inputStream);
 			PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
 			PgpObject pgpObject = factory.NextPgpObject();
 
@@ -5583,7 +5702,7 @@ namespace PgpCore
 
 				// Verify against public key ID and that of any sub keys
 				if (!Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
-					    out PgpPublicKey publicKey)) return false;
+					    out PgpPublicKey publicKey)) return new VerificationResult(false, string.Empty);
 				foreach (PgpSignature _ in publicKey.GetSignatures())
 				{
 					if (!verified)
@@ -5645,7 +5764,8 @@ namespace PgpCore
 					while ((ch = pgpLiteralStream.ReadByte()) >= 0)
 					{
 						pgpOnePassSignature.Update((byte)ch);
-					}
+                        contentStringBuilder.Append((char)ch);
+                    }
 
 					PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
@@ -5681,7 +5801,8 @@ namespace PgpCore
 							while ((ch = pgpLiteralStream.ReadByte()) >= 0)
 							{
 								pgpSignature.Update((byte)ch);
-							}
+                                contentStringBuilder.Append((char)ch);
+                            }
 
 							verified = pgpSignature.Verify();
 						}
@@ -5695,7 +5816,7 @@ namespace PgpCore
 			else
 				throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
-			return verified;
+			return new VerificationResult(verified, contentStringBuilder.ToString());
 		}
 
 		#endregion Verify
