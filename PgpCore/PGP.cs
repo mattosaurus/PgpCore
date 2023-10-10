@@ -1737,10 +1737,10 @@ namespace PgpCore
 			if (!inputFile.Exists)
 				throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            //if (name == DefaultFileName)
-            //			{
-            //				name = inputFile.Name;
-            //			}
+			//if (name == DefaultFileName)
+//			{
+//				name = inputFile.Name;
+//			}
 
             using (Stream outputStream = outputFile.OpenWrite())
 			{
