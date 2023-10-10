@@ -57,6 +57,10 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
   * [VerifyClearFileAsync](#verifyclearfileasync)
   * [VerifyClearStreamAsync](#verifyclearstreamasync)
   * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
+* [Verify and Read Clear](#verify)
+  * [VerifyAndReadClearFileAsync](#verifyandreadclearfilessync)
+  * [VerifyAndReadClearStreamAsync](#verifyandreadclearstreamasync)
+  * [VerifyAndReadClearArmoredStringAsync](#verifyandreadcleararmoredstringasync)
 * [Decrypt and Verify](#decrypt-and-verify)
   * [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
   * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
@@ -169,7 +173,7 @@ PGP pgp = new PGP(encryptionKeys);
 string signedContent = await pgp.SignArmoredStringAsync("String to sign");
 ```
 ### Clear Sign
-Clear sign the provided file, stream, or string using a private key so that it is still human readable.
+Clear sign the provided file, stream, or string using a private key so that it is still human readable. A common use of digital signatures is to sign usenet postings or email messages. In such situations it is undesirable to compress the document while signing it. This is because the signature would then depend on the compression algorithm used. This is problematic when different people use different compression algorithms. To overcome this problem, the OpenPGP digital signature format has a special type of signature that is not computed on the message itself. Instead, the signature is computed on a "cleartext" version of the message - a version that is exactly the same as the original message except that it is not compressed and certain types of information (such as the end of line markers) are not included. This cleartext version is then compressed and the signature is appended to the compressed cleartext to produce the final message.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --clearsign  "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
 #### ClearSignFileAsync
@@ -390,6 +394,54 @@ PGP pgp = new PGP(encryptionKeys);
 
 // Verify
 bool verified = await pgp.VerifyClearArmoredStringAsync("String to verify");
+```
+### Verify and Read Clear
+Verify that the clear signed file or stream was signed by the matching private key of the counterparty. This method returns a `VerificationResult` object that contains a boolean indicating if the message was verified or not along with the message content.
+
+#### VerifyClearFileAsync
+```C#
+// Load keys
+FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+// Reference input
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\signedContent.pgp");
+
+// Verify and read
+PGP pgp = new PGP(encryptionKeys);
+VerificationResult verificationResult = await pgp.VerifyAndReadClearFileAsync(inputFile);
+bool verified = verificationResult.IsVerified;
+string content = verificationResult.Content;
+```
+#### VerifyAndReadClearStreamAsync
+```C#
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(publicKeyStream);
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input file
+bool verified;
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
+	// Verify and read
+	VerificationResult verificationResult = await pgp.VerifyAndReadClearStreamAsync(inputFileStream);
+	bool verified = verificationResult.IsVerified;
+	string content = verificationResult.Content;
+```
+#### VerifyAndReadClearArmoredStringAsync
+```C#
+// Load keys
+string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Verify and read
+VerificationResult verificationResult = await pgp.VerifyAndReadClearArmoredStringAsync("String to verify");
+bool verified = verificationResult.IsVerified;
+string content = verificationResult.Content;
 ```
 ### Decrypt and Verify
 Decrypt and then verify the provided encrypted and signed file, stream or string. Usually your counterparty will encrypt with your public key and sign with their private key so you can decrypt with your private key and verify with their public key.
