@@ -398,7 +398,7 @@ bool verified = await pgp.VerifyClearArmoredStringAsync("String to verify");
 ### Verify and Read Clear
 Verify that the clear signed file or stream was signed by the matching private key of the counterparty. This method returns a `VerificationResult` object that contains a boolean indicating if the message was verified or not along with the message content.
 
-#### VerifyClearFileAsync
+#### VerifyAndReadClearFileAsync
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
