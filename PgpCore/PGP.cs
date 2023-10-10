@@ -5027,7 +5027,7 @@ namespace PgpCore
 
 					message = plainFact.NextPgpObject();
 
-					if (message is PgpOnePassSignatureList)
+					if (message is PgpOnePassSignatureList || message is PgpSignatureList)
 					{
 						message = plainFact.NextPgpObject();
 					}
@@ -5135,7 +5135,7 @@ namespace PgpCore
 
 					message = plainFact.NextPgpObject();
 
-					if (message is PgpOnePassSignatureList)
+					if (message is PgpOnePassSignatureList || message is PgpSignatureList)
 					{
 						message = plainFact.NextPgpObject();
 					}
@@ -5242,6 +5242,18 @@ namespace PgpCore
 					{
 						PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
 						var keyIdToVerify = pgpOnePassSignature.KeyId;
+
+						var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
+							out PgpPublicKey _);
+						if (verified == false)
+							throw new PgpException("Failed to verify file.");
+
+						message = plainFact.NextPgpObject();
+					}
+					else if (message is PgpSignatureList pgpSignatureList)
+					{
+						PgpSignature pgpSignature = pgpSignatureList[0];
+						var keyIdToVerify = pgpSignature.KeyId;
 
 						var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
 							out PgpPublicKey _);
@@ -5368,6 +5380,18 @@ namespace PgpCore
 					{
 						PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
 						var keyIdToVerify = pgpOnePassSignature.KeyId;
+
+						var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
+							out PgpPublicKey _);
+						if (verified == false)
+							throw new PgpException("Failed to verify file.");
+
+						message = plainFact.NextPgpObject();
+					}
+					else if (message is PgpSignatureList pgpSignatureList)
+					{
+						PgpSignature pgpSignature = pgpSignatureList[0];
+						var keyIdToVerify = pgpSignature.KeyId;
 
 						var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
 							out PgpPublicKey _);
