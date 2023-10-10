@@ -4660,14 +4660,18 @@ namespace PgpCore
 		#region GenerateKey
 
 		public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null,
-			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
+			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true,
+			CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+			SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
 		{
 			await Task.Run(() => GenerateKey(publicKeyFilePath, privateKeyFilePath, username, password, strength,
-				certainty, emitVersion));
+				certainty, emitVersion, preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymetricKeyAlgorithms));
 		}
 
 		public void GenerateKey(string publicKeyFilePath, string privateKeyFilePath, string username = null,
-			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
+			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true,
+			CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+			SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
 		{
 			if (string.IsNullOrEmpty(publicKeyFilePath))
 				throw new ArgumentException("PublicKeyFilePath");
@@ -4676,21 +4680,85 @@ namespace PgpCore
 
 			using (Stream pubs = File.Open(publicKeyFilePath, FileMode.Create))
 			using (Stream pris = File.Open(privateKeyFilePath, FileMode.Create))
-				GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion);
+				GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion,
+					preferredCompressionAlgorithms: preferredCompressionAlgorithms,
+					preferredHashAlgorithmTags: preferredHashAlgorithmTags,
+					preferredSymetricKeyAlgorithms: preferredSymetricKeyAlgorithms);
 		}
 
 		public void GenerateKey(Stream publicKeyStream, Stream privateKeyStream, string username = null,
-			string password = null, int strength = 1024, int certainty = 8, bool armor = true, bool emitVersion = true)
+			string password = null, int strength = 1024, int certainty = 8, bool armor = true, bool emitVersion = true,
+			long keyExpirationInSeconds = 0, long signatureExpirationInSeconds = 0, CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+			SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
 		{
 			username = username ?? string.Empty;
 			password = password ?? string.Empty;
 
-			IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
-			kpg.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(0x13), new SecureRandom(), strength, certainty));
-			AsymmetricCipherKeyPair kp = kpg.GenerateKeyPair();
+			preferredCompressionAlgorithms = preferredCompressionAlgorithms ??
+				((CompressionAlgorithm != CompressionAlgorithmTag.Zip && CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed) ?
+				new[]
+				{
+					CompressionAlgorithm,
+					CompressionAlgorithmTag.Zip,
+					CompressionAlgorithmTag.Uncompressed,
+				} :
+				new[]
+				{
+					CompressionAlgorithmTag.Zip,
+					CompressionAlgorithmTag.Uncompressed,
+				});
 
-			ExportKeyPair(privateKeyStream, publicKeyStream, kp.Public, kp.Private, username, password.ToCharArray(),
-				armor, emitVersion);
+			preferredHashAlgorithmTags = preferredHashAlgorithmTags ??
+				(HashAlgorithmTag == HashAlgorithmTag.Sha1 ?
+				new[]
+				{
+					HashAlgorithmTag
+				} :
+				new[]
+				{
+					HashAlgorithmTag, HashAlgorithmTag.Sha1
+				});
+
+			preferredSymetricKeyAlgorithms = preferredSymetricKeyAlgorithms ??
+				(SymmetricKeyAlgorithm == SymmetricKeyAlgorithmTag.TripleDes ?
+				new[]
+				{
+					SymmetricKeyAlgorithm
+				} :
+				new[]
+				{
+					SymmetricKeyAlgorithm, SymmetricKeyAlgorithmTag.TripleDes
+				});
+
+			IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
+
+			kpg.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(0x13), new SecureRandom(), strength, certainty));
+
+			PgpKeyPair masterKey = new PgpKeyPair(PublicKeyAlgorithm, kpg.GenerateKeyPair(), DateTime.UtcNow);
+
+			PgpSignatureSubpacketGenerator signHashGen = new PgpSignatureSubpacketGenerator();
+			signHashGen.SetKeyFlags(false, PgpKeyFlags.CanCertify | PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage | PgpKeyFlags.CanSign);
+			signHashGen.SetPreferredCompressionAlgorithms(false, Array.ConvertAll(preferredCompressionAlgorithms, item => (int)item));
+			signHashGen.SetPreferredHashAlgorithms(false, Array.ConvertAll(preferredHashAlgorithmTags, item => (int)item));
+			signHashGen.SetPreferredSymmetricAlgorithms(false, Array.ConvertAll(preferredSymetricKeyAlgorithms, item => (int)item));
+			signHashGen.SetFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
+			signHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
+			signHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);
+
+			PgpKeyRingGenerator keyRingGen = new PgpKeyRingGenerator(
+				PgpSignatureType,
+				masterKey,
+				username,
+				SymmetricKeyAlgorithm,
+				password.ToCharArray(),
+				true,
+				signHashGen.Generate(),
+				null,
+				new SecureRandom());
+
+			PgpSecretKeyRing secretKeyRing = keyRingGen.GenerateSecretKeyRing();
+
+			ExportKeyPair(privateKeyStream, publicKeyStream, secretKeyRing.GetSecretKey(), armor, emitVersion);
 		}
 
 		#endregion GenerateKey
@@ -6041,11 +6109,9 @@ namespace PgpCore
 		private void ExportKeyPair(
 			Stream secretOut,
 			Stream publicOut,
-			AsymmetricKeyParameter publicKey,
-			AsymmetricKeyParameter privateKey,
-			string identity,
-			char[] passPhrase,
-			bool armor, bool emitVersion)
+			PgpSecretKey secretKey,
+			bool armor,
+			bool emitVersion)
 		{
 			if (secretOut == null)
 				throw new ArgumentException("secretOut");
@@ -6067,20 +6133,6 @@ namespace PgpCore
 			{
 				secretOutArmored = null;
 			}
-
-			PgpSecretKey secretKey = new PgpSecretKey(
-				PgpSignatureType,
-				PublicKeyAlgorithm,
-				publicKey,
-				privateKey,
-				DateTime.UtcNow,
-				identity,
-				SymmetricKeyAlgorithm,
-				passPhrase,
-				null,
-				null,
-				new SecureRandom()
-			);
 
 			secretKey.Encode(secretOut);
 
