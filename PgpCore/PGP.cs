@@ -1737,12 +1737,12 @@ namespace PgpCore
 			if (!inputFile.Exists)
 				throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-//			if (name == DefaultFileName)
-//						{
-//							name = inputFile.Name;
-//						}
+            //if (name == DefaultFileName)
+            //			{
+            //				name = inputFile.Name;
+            //			}
 
-			using (Stream outputStream = outputFile.OpenWrite())
+            using (Stream outputStream = outputFile.OpenWrite())
 			{
 				if (armor)
 				{
@@ -1806,12 +1806,12 @@ namespace PgpCore
 			if (!inputFile.Exists)
 				throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-//			if (name == DefaultFileName)
-//						{
-//							name = inputFile.Name;
-//						}
+            //if (name == DefaultFileName)
+            //			{
+            //				name = inputFile.Name;
+            //			}
 
-			using (Stream outputStream = outputFile.OpenWrite())
+            using (Stream outputStream = outputFile.OpenWrite())
 			{
 				if (armor)
 				{
@@ -3824,17 +3824,17 @@ namespace PgpCore
 			return Verify(inputStream);
 		}
 
-		#endregion VerifyStream
+        #endregion VerifyStream
 
-		#region VerifyArmoredStringAsync
+        #region VerifyArmoredStringAsync
 
-		/// <summary>
-		/// PGP verify a given string.
-		/// </summary>
-		/// <param name="input">Plain string to be verified</param>
-		/// <param name="publicKey">PGP public key stream</param>
-		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
-		public async Task<bool> VerifyArmoredStringAsync(string input, string publicKey)
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        [Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
+        public async Task<bool> VerifyArmoredStringAsync(string input, string publicKey)
 		{
 			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
@@ -3860,11 +3860,11 @@ namespace PgpCore
             }
         }
 
-		/// <summary>
-		/// PGP verify a given string.
-		/// </summary>
-		/// <param name="input">Plain string to be verified</param>
-		public async Task<bool> VerifyArmoredStringAsync(string input)
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        public async Task<bool> VerifyArmoredStringAsync(string input)
 		{
 			using (Stream inputStream = await input.GetStreamAsync())
 			{
@@ -5462,7 +5462,7 @@ namespace PgpCore
 						PgpSignature pgpSignature = pgpSignatureList[0];
 						var keyIdToVerify = pgpSignature.KeyId;
 
-						var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
+                        var verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
 							out PgpPublicKey _);
 						if (verified == false)
 							throw new PgpException("Failed to verify file.");
@@ -5554,7 +5554,6 @@ namespace PgpCore
 				// If we encounter an encrypted packet, verify with the encryption keys used instead
 				// TODO does this even make sense? maybe throw exception instead, or try to decrypt first
 				verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.EncryptKeys, out PgpPublicKey _);
-
 			}
 			else if (pgpObject is PgpOnePassSignatureList onePassSignatureList)
 			{
