@@ -4662,10 +4662,12 @@ namespace PgpCore
 		#region GenerateKey
 
 		public async Task GenerateKeyAsync(string publicKeyFilePath, string privateKeyFilePath, string username = null,
-			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true)
+			string password = null, int strength = 1024, int certainty = 8, bool emitVersion = true,
+			CompressionAlgorithmTag[] preferredCompressionAlgorithms = null, HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+			SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
 		{
 			await Task.Run(() => GenerateKey(publicKeyFilePath, privateKeyFilePath, username, password, strength,
-				certainty, emitVersion));
+				certainty, emitVersion, preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymetricKeyAlgorithms));
 		}
 
 		public void GenerateKey(string publicKeyFilePath, string privateKeyFilePath, string username = null,
