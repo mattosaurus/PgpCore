@@ -6,7 +6,6 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1738,10 +1737,10 @@ namespace PgpCore
 			if (!inputFile.Exists)
 				throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-			//if (name == DefaultFileName)
-			//			{
-			//				name = inputFile.Name;
-			//			}
+//			if (name == DefaultFileName)
+//						{
+//							name = inputFile.Name;
+//						}
 
 			using (Stream outputStream = outputFile.OpenWrite())
 			{
@@ -1807,10 +1806,10 @@ namespace PgpCore
 			if (!inputFile.Exists)
 				throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-			//if (name == DefaultFileName)
-			//			{
-			//				name = inputFile.Name;
-			//			}
+//			if (name == DefaultFileName)
+//						{
+//							name = inputFile.Name;
+//						}
 
 			using (Stream outputStream = outputFile.OpenWrite())
 			{
@@ -3840,26 +3839,26 @@ namespace PgpCore
 			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
 			using (Stream inputStream = await input.GetStreamAsync())
-			{
-				return await VerifyStreamAsync(inputStream);
-			}
-		}
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
 
-		/// <summary>
-		/// PGP verify a given string.
-		/// </summary>
-		/// <param name="input">Plain string to be verified</param>
-		/// <param name="encryptionKeys">Encryption keys</param>
-		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
+        /// <summary>
+        /// PGP verify a given string.
+        /// </summary>
+        /// <param name="input">Plain string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        [Obsolete("This method is obsolete and will be removed in a future release. Use VerifyArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<bool> VerifyArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
 		{
 			EncryptionKeys = encryptionKeys;
 
 			using (Stream inputStream = await input.GetStreamAsync())
-			{
-				return await VerifyStreamAsync(inputStream);
-			}
-		}
+            {
+                return await VerifyStreamAsync(inputStream);
+            }
+        }
 
 		/// <summary>
 		/// PGP verify a given string.
@@ -4492,116 +4491,116 @@ namespace PgpCore
 		/// <param name="publicKey">PGP public key</param>
 		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, string publicKey)
-		{
-			if (publicKey == null)
-				throw new ArgumentNullException("publicKey");
+        {
+            if (publicKey == null)
+                throw new ArgumentNullException("publicKey");
 
-			EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
+            EncryptionKeys = new EncryptionKeys(await publicKey.GetStreamAsync());
 
-			return await VerifyAndReadClearArmoredStringAsync(input);
-		}
+            return await VerifyAndReadClearArmoredStringAsync(input);
+        }
 
-		/// <summary>
-		/// PGP verify a given clear signed string.
-		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		/// <param name="encryptionKeys">Encryption keys</param>
-		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        [Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredStringAsync(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input, IEncryptionKeys encryptionKeys)
-		{
-			EncryptionKeys = encryptionKeys;
+        {
+            EncryptionKeys = encryptionKeys;
 
-			return await VerifyAndReadClearArmoredStringAsync(input);
-		}
+            return await VerifyAndReadClearArmoredStringAsync(input);
+        }
 
-		/// <summary>
-		/// PGP verify a given clear signed string.
-		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
-		{
-			if (input == null)
-				throw new ArgumentNullException("input");
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
+        {
+            if (input == null)
+                throw new ArgumentNullException("input");
 
-			using (Stream inputStream = await input.GetStreamAsync())
-			using (Stream outputStream = new MemoryStream())
-			{
-				bool verified = await VerifyClearAsync(inputStream, outputStream);
+            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream outputStream = new MemoryStream())
+            {
+                bool verified = await VerifyClearAsync(inputStream, outputStream);
 
-				outputStream.Position = 0;
-				using (StreamReader reader = new StreamReader(outputStream))
-				{
-					string message = reader.ReadToEnd();
-					return new VerificationResult(verified, message);
-				}
-			}
-		}
-		#endregion VerifyAndReadClearArmoredStringAsync
+                outputStream.Position = 0;
+                using (StreamReader reader = new StreamReader(outputStream))
+                {
+                    string message = reader.ReadToEnd();
+                    return new VerificationResult(verified, message);
+                }
+            }
+        }
+        #endregion VerifyAndReadClearArmoredStringAsync
 
-		#region VerifyAndReadClearArmoredString
-		/// <summary>
-		/// PGP verify a given clear signed string.
-		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		/// <param name="publicKey">PGP public key</param>
-		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
+        #region VerifyAndReadClearArmoredString
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="publicKey">PGP public key</param>
+        [Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearArmoredString(string input, string publicKey)
-		{
-			if (publicKey == null)
-				throw new ArgumentNullException("publicKey");
+        {
+            if (publicKey == null)
+                throw new ArgumentNullException("publicKey");
 
-			EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
+            EncryptionKeys = new EncryptionKeys(publicKey.GetStream());
 
-			return VerifyAndReadClearArmoredString(input);
-		}
+            return VerifyAndReadClearArmoredString(input);
+        }
 
-		/// <summary>
-		/// PGP verify a given clear signed string.
-		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		/// <param name="encryptionKeys">Encryption keys</param>
-		[Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        /// <param name="encryptionKeys">Encryption keys</param>
+        [Obsolete("This method is obsolete and will be removed in a future release. Use VerifyAndReadClearArmoredString(string input) instead and supply the keys to the PGP object via it's constructor.")]
 		public VerificationResult VerifyAndReadClearArmoredString(string input, IEncryptionKeys encryptionKeys)
-		{
-			EncryptionKeys = encryptionKeys;
+        {
+            EncryptionKeys = encryptionKeys;
 
-			return VerifyAndReadClearArmoredString(input);
-		}
+            return VerifyAndReadClearArmoredString(input);
+        }
 
-		/// <summary>
-		/// PGP verify a given clear signed string.
-		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		public VerificationResult VerifyAndReadClearArmoredString(string input)
-		{
-			if (input == null)
-				throw new ArgumentNullException("input");
+        /// <summary>
+        /// PGP verify a given clear signed string.
+        /// </summary>
+        /// <param name="input">Clear signed string to be verified</param>
+        public VerificationResult VerifyAndReadClearArmoredString(string input)
+        {
+            if (input == null)
+                throw new ArgumentNullException("input");
 
-			using (Stream inputStream = input.GetStream())
-			using (Stream outputStream = new MemoryStream())
-			{
-				bool verified = VerifyClear(inputStream, outputStream);
+            using (Stream inputStream = input.GetStream())
+            using (Stream outputStream = new MemoryStream())
+            {
+                bool verified = VerifyClear(inputStream, outputStream);
 
-				outputStream.Position = 0;
-				using (StreamReader reader = new StreamReader(outputStream))
-				{
-					string message = reader.ReadToEnd();
-					return new VerificationResult(verified, message);
-				}
-			}
-		}
-		#endregion VerifyAndReadClearArmoredString
+                outputStream.Position = 0;
+                using (StreamReader reader = new StreamReader(outputStream))
+                {
+                    string message = reader.ReadToEnd();
+                    return new VerificationResult(verified, message);
+                }
+            }
+        }
+        #endregion VerifyAndReadClearArmoredString
 
-		#endregion DecryptAndVerify
+        #endregion DecryptAndVerify
 
-		#region GetRecipients
+        #region GetRecipients
 
-		/// <summary>
-		/// PGP get a recipients keys id of an encrypted file.
-		/// </summary>
-		/// <param name="inputFilePath">PGP encrypted data file path</param>
-		/// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
-		public IEnumerable<long> GetFileRecipients(string inputFilePath)
+        /// <summary>
+        /// PGP get a recipients keys id of an encrypted file.
+        /// </summary>
+        /// <param name="inputFilePath">PGP encrypted data file path</param>
+        /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
+        public IEnumerable<long> GetFileRecipients(string inputFilePath)
 		{
 			if (string.IsNullOrEmpty(inputFilePath))
 				throw new ArgumentException("InputFilePath");
@@ -5338,40 +5337,40 @@ namespace PgpCore
 
 				if (message is PgpCompressedData cData)
 				{
-					Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
-					PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
-					message = objectFactory.NextPgpObject();
+                    Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
+                    PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
+                    message = objectFactory.NextPgpObject();
 
-					long? keyIdToVerify = null;
+                    long? keyIdToVerify = null;
 
-					if (message is PgpSignatureList pgpSignatureList)
-					{
-						keyIdToVerify = pgpSignatureList[0].KeyId;
-					}
-					else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-					{
-						PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
-						keyIdToVerify = pgpOnePassSignature.KeyId;
-					}
+                    if (message is PgpSignatureList pgpSignatureList)
+                    {
+                        keyIdToVerify = pgpSignatureList[0].KeyId;
+                    }
+                    else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                    {
+                        PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                        keyIdToVerify = pgpOnePassSignature.KeyId;
+                    }
 
-					if (keyIdToVerify.HasValue)
-					{
-						var verified = Utilities.FindPublicKey(keyIdToVerify.Value, EncryptionKeys.VerificationKeys,
-							out PgpPublicKey _);
-						if (verified == false)
-							throw new PgpException("Failed to verify file.");
+                    if (keyIdToVerify.HasValue)
+                    {
+                        var verified = Utilities.FindPublicKey(keyIdToVerify.Value, EncryptionKeys.VerificationKeys,
+                            out PgpPublicKey _);
+                        if (verified == false)
+                            throw new PgpException("Failed to verify file.");
 
-						message = objectFactory.NextPgpObject();
-						var literalData = (PgpLiteralData)message;
-						Stream unc = literalData.GetInputStream();
-						await Streams.PipeAllAsync(unc, outputStream);
-					}
-					else
-					{
-						throw new PgpException("File was not signed.");
-					}
-				}
-				else if (message is PgpLiteralData literalData)
+                        message = objectFactory.NextPgpObject();
+                        var literalData = (PgpLiteralData)message;
+                        Stream unc = literalData.GetInputStream();
+                        await Streams.PipeAllAsync(unc, outputStream);
+                    }
+                    else
+                    {
+                        throw new PgpException("File was not signed.");
+                    }
+                }
+                else if (message is PgpLiteralData literalData)
 				{
 					Stream unc = literalData.GetInputStream();
 					await Streams.PipeAllAsync(unc, outputStream);
@@ -5476,40 +5475,40 @@ namespace PgpCore
 
 				if (message is PgpCompressedData cData)
 				{
-					Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
-					PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
-					message = objectFactory.NextPgpObject();
+                    Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
+                    PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
+                    message = objectFactory.NextPgpObject();
 
-					long? keyIdToVerify = null;
+                    long? keyIdToVerify = null;
 
-					if (message is PgpSignatureList pgpSignatureList)
-					{
-						keyIdToVerify = pgpSignatureList[0].KeyId;
-					}
-					else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-					{
-						PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
-						keyIdToVerify = pgpOnePassSignature.KeyId;
-					}
+                    if (message is PgpSignatureList pgpSignatureList)
+                    {
+                        keyIdToVerify = pgpSignatureList[0].KeyId;
+                    }
+                    else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
+                    {
+                        PgpOnePassSignature pgpOnePassSignature = pgpOnePassSignatureList[0];
+                        keyIdToVerify = pgpOnePassSignature.KeyId;
+                    }
 
-					if (keyIdToVerify.HasValue)
-					{
-						var verified = Utilities.FindPublicKey(keyIdToVerify.Value, EncryptionKeys.VerificationKeys,
-							out PgpPublicKey _);
-						if (verified == false)
-							throw new PgpException("Failed to verify file.");
+                    if (keyIdToVerify.HasValue)
+                    {
+                        var verified = Utilities.FindPublicKey(keyIdToVerify.Value, EncryptionKeys.VerificationKeys,
+                            out PgpPublicKey _);
+                        if (verified == false)
+                            throw new PgpException("Failed to verify file.");
 
-						message = objectFactory.NextPgpObject();
-						var literalData = (PgpLiteralData)message;
-						Stream unc = literalData.GetInputStream();
-						Streams.PipeAll(unc, outputStream);
-					}
-					else
-					{
-						throw new PgpException("File was not signed.");
-					}
-				}
-				else if (message is PgpLiteralData literalData)
+                        message = objectFactory.NextPgpObject();
+                        var literalData = (PgpLiteralData)message;
+                        Stream unc = literalData.GetInputStream();
+                        Streams.PipeAll(unc, outputStream);
+                    }
+                    else
+                    {
+                        throw new PgpException("File was not signed.");
+                    }
+                }
+                else if (message is PgpLiteralData literalData)
 				{
 					Stream unc = literalData.GetInputStream();
 					Streams.PipeAll(unc, outputStream);
