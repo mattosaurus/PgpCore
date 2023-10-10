@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.10.0.0</Version>
+    <Version>5.11.0.0</Version>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.10.0</FileVersion>
-    <PackageReleaseNotes>v5.10.0 - Update bouncy castle</PackageReleaseNotes>
+    <FileVersion>5.11.0</FileVersion>
+    <PackageReleaseNotes>v5.11.0 - Add message is PgpSignatureList on Decrypt and DecryptAndVerify</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
