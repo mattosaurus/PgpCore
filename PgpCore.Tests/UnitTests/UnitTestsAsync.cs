@@ -2784,6 +2784,31 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task VerifyAndReadAsync_VerifySignedStringAndReturnContents(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            string signedContent = await pgp.SignArmoredStringAsync(testFactory.Content);
+            VerificationResult verificationResult = await pgp.VerifyAndReadSignedArmoredStringAsync(signedContent);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.True(verificationResult.IsVerified);
+            Assert.Equal(testFactory.Content, verificationResult.ClearText.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task VerifyAsync_DoNotVerifySignedString(KeyType keyType)
         {
             // Arrange
@@ -2804,6 +2829,36 @@ namespace PgpCore.Tests
             // Assert
             Assert.NotNull(signedContent);
             Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task VerifyAndReadAsync_DoNotVerifySignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string signedContent = await pgpEncrypt.SignArmoredStringAsync(testFactory.Content);
+            VerificationResult verificationResult = await pgpDecrypt.VerifyAndReadSignedArmoredStringAsync(signedContent);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.False(verificationResult.IsVerified);
+            Assert.Equal(string.Empty, verificationResult.ClearText.Trim());
 
             // Teardown
             testFactory.Teardown();

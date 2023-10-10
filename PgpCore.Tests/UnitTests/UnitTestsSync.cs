@@ -2689,6 +2689,31 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void VerifyAndRead_VerifySignedStringAndReturnContents(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            string signedContent = pgp.SignArmoredString(testFactory.Content);
+            VerificationResult verificationResult = pgp.VerifyAndReadSignedArmoredString(signedContent);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.True(verificationResult.IsVerified);
+            Assert.Equal(testFactory.Content, verificationResult.ClearText.Trim());
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void Verify_DoNotVerifySignedString(KeyType keyType)
         {
             // Arrange
@@ -2709,6 +2734,36 @@ namespace PgpCore.Tests
             // Assert
             Assert.NotNull(signedContent);
             Assert.False(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void VerifyAndRead_DoNotVerifySignedString(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            TestFactory testFactory2 = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            testFactory2.Arrange(KeyType.Generated, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKey);
+
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string signedContent = pgpEncrypt.SignArmoredString(testFactory.Content);
+            VerificationResult verificationResult = pgpDecrypt.VerifyAndReadSignedArmoredString(signedContent);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.False(verificationResult.IsVerified);
+            Assert.Equal(string.Empty, verificationResult.ClearText.Trim());
 
             // Teardown
             testFactory.Teardown();
