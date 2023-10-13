@@ -3636,7 +3636,8 @@ namespace PgpCore
 		/// PGP verify a given file.
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
-		public async Task<bool> VerifyFileAsync(FileInfo inputFile)
+		/// <param name="throwIfEncrypted">Throw if inputFile contains encrypted data. Otherwise, verify encryption key.</param>
+		public async Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false)
 		{
 			if (inputFile == null)
 				throw new ArgumentException("InputFile");
@@ -3648,7 +3649,7 @@ namespace PgpCore
 
 			using (Stream inputStream = inputFile.OpenRead())
             {
-                VerificationResult verificationResult = await VerifyAsync(inputStream);
+                VerificationResult verificationResult = await VerifyAsync(inputStream, throwIfEncrypted);
                 return verificationResult.IsVerified;
             }
         }
@@ -3728,7 +3729,8 @@ namespace PgpCore
 		/// PGP verify a given file.
 		/// </summary>
 		/// <param name="inputFile">Plain data file to be verified</param>
-		public bool VerifyFile(FileInfo inputFile)
+		/// <param name="throwIfEncrypted">Throw if file contains encrypted data. Otherwise, verify encryption key.</param>
+		public bool VerifyFile(FileInfo inputFile, bool throwIfEncrypted = false)
 		{
 			if (inputFile == null)
 				throw new ArgumentException("InputFile");
@@ -3739,7 +3741,7 @@ namespace PgpCore
 				throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
 			using (Stream inputStream = inputFile.OpenRead())
-				return Verify(inputStream).IsVerified;
+				return Verify(inputStream, throwIfEncrypted).IsVerified;
 		}
 
 		#endregion VerifyFile
@@ -3774,7 +3776,8 @@ namespace PgpCore
 		/// PGP verify a given stream.
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
-		public async Task<bool> VerifyStreamAsync(Stream inputStream)
+		/// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+		public async Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			if (inputStream == null)
 				throw new ArgumentException("InputStream");
@@ -3783,7 +3786,7 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-            VerificationResult verificationResult = await VerifyAsync(inputStream);
+            VerificationResult verificationResult = await VerifyAsync(inputStream, throwIfEncrypted);
             return verificationResult.IsVerified;
 		}
 
@@ -3819,7 +3822,8 @@ namespace PgpCore
 		/// PGP verify a given stream.
 		/// </summary>
 		/// <param name="inputStream">Plain data stream to be verified</param>
-		public bool VerifyStream(Stream inputStream)
+		/// <param name="throwIfEncrypted">Throws if the input stream is encrypted data. Otherwise, verifies the encryption key.</param>
+		public bool VerifyStream(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			if (inputStream == null)
 				throw new ArgumentException("InputStream");
@@ -3828,7 +3832,7 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-			return Verify(inputStream).IsVerified;
+			return Verify(inputStream, throwIfEncrypted).IsVerified;
 		}
 
 		#endregion VerifyStream
@@ -4599,11 +4603,13 @@ namespace PgpCore
         #endregion VerifyAndReadClearArmoredString
 
         #region VerifyAndReadSignedFileAsync
+
         /// <summary>
-        /// PGP verify a given clear signed file.
+        /// PGP verify a given signed file.
         /// </summary>
-        /// <param name="input">Clear signed file to be verified</param>
-        public async Task<VerificationResult> VerifyAndReadSignedFileAsync(FileInfo inputFile)
+        /// <param name="inputFile">Signed file to be verified</param>
+        /// <param name="throwIfEncrypted">Throw if inputFile contains encrypted data. Otherwise, verify encryption key.</param>
+        public async Task<VerificationResult> VerifyAndReadSignedFileAsync(FileInfo inputFile, bool throwIfEncrypted = false)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -4612,17 +4618,19 @@ namespace PgpCore
 
             using (Stream inputStream = inputFile.OpenRead())
             {
-                return await VerifyAsync(inputStream);
+                return await VerifyAsync(inputStream, throwIfEncrypted);
             }
         }
 		#endregion VerifyAndReadSignedFileAsync
 
 		#region VerifyAndReadSignedFile
+
 		/// <summary>
-		/// PGP verify a given clear signed file.
+		/// PGP verify a given signed file.
 		/// </summary>
-		/// <param name="input">Clear signed file to be verified</param>
-		public VerificationResult VerifyAndReadSignedFile(FileInfo inputFile)
+		/// <param name="inputFile">Signed file to be verified</param>
+		/// <param name="throwIfEncrypted">Throw if inputFile contains encrypted data. Otherwise, verify encryption key.</param>
+		public VerificationResult VerifyAndReadSignedFile(FileInfo inputFile, bool throwIfEncrypted = false)
 		{
 			if (inputFile == null)
 				throw new ArgumentException("InputFile");
@@ -4631,17 +4639,19 @@ namespace PgpCore
 
 			using (Stream inputStream = inputFile.OpenRead())
 			{
-				return Verify(inputStream);
+				return Verify(inputStream, throwIfEncrypted);
 			}
 		}
 		#endregion VerifyAndReadSignedFile
 
 		#region VerifyAndReadSignedStreamAsync
+
 		/// <summary>
-		/// PGP verify a given clear signed stream.
+		/// PGP verify a given signed stream.
 		/// </summary>
-		/// <param name="input">Clear signed stream to be verified</param>
-		public async Task<VerificationResult> VerifyAndReadSignedStreamAsync(Stream inputStream)
+		/// <param name="inputStream">Signed stream to be verified</param>
+		/// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+		public async Task<VerificationResult> VerifyAndReadSignedStreamAsync(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			if (inputStream == null)
 				throw new ArgumentException("InputStream");
@@ -4650,16 +4660,18 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-            return await VerifyAsync(inputStream);
+            return await VerifyAsync(inputStream, throwIfEncrypted);
         }
 		#endregion VerifyAndReadSignedStreamAsync
 
 		#region VerifyAndReadSignedStream
+
 		/// <summary>
-		/// PGP verify a given clear signed stream.
+		/// PGP verify a given signed stream.
 		/// </summary>
-		/// <param name="input">Clear signed stream to be verified</param>
-		public VerificationResult VerifyAndReadSignedStream(Stream inputStream)
+		/// <param name="inputStream">Signed stream to be verified</param>
+		/// <param name="throwIfEncrypted">Throw if the stream contains encrypted data. Otherwise, verify encryption key.</param>
+		public VerificationResult VerifyAndReadSignedStream(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			if (inputStream == null)
 				throw new ArgumentException("InputStream");
@@ -4668,40 +4680,44 @@ namespace PgpCore
 			if (inputStream.Position != 0)
 				throw new ArgumentException("inputStream should be at start of stream");
 
-            return Verify(inputStream);
+            return Verify(inputStream, throwIfEncrypted);
         }
 		#endregion VerifyAndReadSignedStream
 
 		#region VerifyAndReadSignedArmoredStringAsync
+
 		/// <summary>
-		/// PGP verify a given clear signed string.
+		/// PGP verify a given signed string.
 		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input)
+		/// <param name="input">Signed string to be verified</param>
+		/// <param name="throwIfEncrypted">Throw if input contains encrypted data. Otherwise, verify encryption key.</param>
+		public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input, bool throwIfEncrypted = false)
 		{
 			if (input == null)
 				throw new ArgumentNullException("input");
 
 			using (Stream inputStream = await input.GetStreamAsync())
 			{
-                return await VerifyAsync(inputStream);
+                return await VerifyAsync(inputStream, throwIfEncrypted);
             }
 		}
 		#endregion VerifyAndReadSignedArmoredStringAsync
 
 		#region VerifyAndReadSignedArmoredString
+
 		/// <summary>
-		/// PGP verify a given clear signed string.
+		/// PGP verify a given signed string.
 		/// </summary>
-		/// <param name="input">Clear signed string to be verified</param>
-		public VerificationResult VerifyAndReadSignedArmoredString(string input)
+		/// <param name="input">Signed string to be verified</param>
+		/// <param name="throwIfEncrypted">Throw if the string contains encrypted data. Otherwise, verify encryption key.</param>
+		public VerificationResult VerifyAndReadSignedArmoredString(string input, bool throwIfEncrypted = false)
 		{
 			if (input == null)
 				throw new ArgumentNullException("input");
 
             using (Stream inputStream = input.GetStream())
             {
-                return Verify(inputStream);
+                return Verify(inputStream, throwIfEncrypted);
             }
         }
 		#endregion VerifyAndReadSignedArmoredString
@@ -5645,7 +5661,7 @@ namespace PgpCore
 
 		#region VerifyAsync
 
-		private Task<VerificationResult> VerifyAsync(Stream inputStream)
+		private Task<VerificationResult> VerifyAsync(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			bool verified = false;
 			StringBuilder contentStringBuilder = new StringBuilder();
@@ -5665,10 +5681,13 @@ namespace PgpCore
 			}
 			else if (pgpObject is PgpEncryptedDataList dataList)
 			{
+				if (throwIfEncrypted)
+				{
+					throw new ArgumentException("Input is encrypted. Decrypt the input first.");
+				}
 				PgpPublicKeyEncryptedData publicKeyEncryptedData = Utilities.ExtractPublicKey(dataList);
 				var keyIdToVerify = publicKeyEncryptedData.KeyId;
 				// If we encounter an encrypted packet, verify with the encryption keys used instead
-				// TODO does this even make sense? maybe throw exception instead, or try to decrypt first
 				verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.EncryptKeys, out PgpPublicKey _);
 				
 			}
@@ -5748,7 +5767,7 @@ namespace PgpCore
 
 		#region Verify
 
-		private VerificationResult Verify(Stream inputStream)
+		private VerificationResult Verify(Stream inputStream, bool throwIfEncrypted = false)
 		{
 			bool verified = false;
             StringBuilder contentStringBuilder = new StringBuilder();
@@ -5805,13 +5824,17 @@ namespace PgpCore
 			}
 			else if (pgpObject is PgpEncryptedDataList encryptedDataList)
 			{
+				if (throwIfEncrypted)
+				{
+					throw new ArgumentException("Input is encrypted. Decrypt the input first.");
+				}
+
 				PgpPublicKeyEncryptedData publicKeyEncryptedData = Utilities.ExtractPublicKey(encryptedDataList);
 				var keyIdToVerify = publicKeyEncryptedData.KeyId;
 
 				// Verify against public key ID and that of any sub keys
 
 				// If we encounter an encrypted packet, verify the encryption key used instead
-				// TODO does this even make sense? maybe throw exception instead, or try to decrypt first
 				if (Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.EncryptKeys, out PgpPublicKey _))
 				{
 					verified = true;
