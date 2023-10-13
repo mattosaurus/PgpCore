@@ -57,7 +57,7 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
   * [VerifyClearFileAsync](#verifyclearfileasync)
   * [VerifyClearStreamAsync](#verifyclearstreamasync)
   * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
-* [Verify and Read Clear](#verify)
+* [Verify and Read Clear](#verifyand readclear)
   * [VerifyAndReadClearFileAsync](#verifyandreadclearfilessync)
   * [VerifyAndReadClearStreamAsync](#verifyandreadclearstreamasync)
   * [VerifyAndReadClearArmoredStringAsync](#verifyandreadcleararmoredstringasync)
