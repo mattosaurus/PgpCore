@@ -670,6 +670,11 @@ namespace PgpCore
 			PgpEncryptedDataGenerator pk =
 				new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
+			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
+			{
+				PgpPublicKey publicKey = publicKeyRing.PreferredKey ?? Utilities.FindBestEncryptionKey(publicKeyRing.PgpPublicKeyRing);
+				pk.AddMethod(publicKey);
+			}
 			foreach (PgpPublicKey publicKey in EncryptionKeys.EncryptKeys)
 			{
 				pk.AddMethod(publicKey);

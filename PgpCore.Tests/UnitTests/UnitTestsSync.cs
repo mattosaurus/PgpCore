@@ -1697,6 +1697,42 @@ namespace PgpCore.Tests
             testFactory.Teardown();
         }
 
+        [Fact]
+        public void DecryptStream_DecryptEncryptedStreamWithPreferredKey()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            long[] keyIdsInPublicKeyRing = encryptionKeys.PublicKeyRings.First().PgpPublicKeyRing.GetPublicKeys()
+                .Where(key => key.IsEncryptionKey).Select(key => key.KeyId).ToArray();
+            foreach (long keyId in keyIdsInPublicKeyRing)
+            {
+                // Act
+                encryptionKeys.UseEncrytionKey(keyId);
+                using (Stream inputFileStream = testFactory.ContentStream)
+                using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                    pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
+
+                using (Stream inputFileStream = testFactory.EncryptedContentStream)
+                using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+                    pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
+
+                // Assert
+                Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+                Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+                Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
+            }
+            Assert.True(keyIdsInPublicKeyRing.Length > 1);
+            
+            // Teardown
+            testFactory.Teardown();
+        }
+
         [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
