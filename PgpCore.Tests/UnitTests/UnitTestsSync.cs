@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Xunit;
@@ -358,7 +356,6 @@ namespace PgpCore.Tests
             // Arrange
             long memoryCap = 50 * 1024 * 1024;
             long startPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
-
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, fileType);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
@@ -1893,6 +1890,39 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
             Assert.True(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+        
+        [Fact]
+        public void Verify_VerifyEncryptedAndSignedStreamForMultipleKeys()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            long[] keyIdsInPublicKeyRing = encryptionKeys.PublicKeyRings.First().PgpPublicKeyRing.GetPublicKeys()
+                .Where(key => key.IsEncryptionKey).Select(key => key.KeyId).ToArray();
+            foreach (long keyId in keyIdsInPublicKeyRing)
+            {
+                encryptionKeys.UseEncrytionKey(keyId);
+                using (Stream inputFileStream = testFactory.ContentStream)
+                using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                    pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
+
+                bool verified = false;
+
+                using (Stream inputFileStream = testFactory.EncryptedContentStream)
+                    verified = pgp.VerifyStream(inputFileStream);
+
+                // Assert
+                Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+                Assert.True(verified);
+            }
 
             // Teardown
             testFactory.Teardown();

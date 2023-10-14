@@ -373,7 +373,7 @@ namespace PgpCore
 		{
 			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in PublicKeyRings)
 			{
-				publicKeyRing.UseEncryptionKey(keyId);
+				publicKeyRing.UsePreferredEncryptionKey(keyId);
 			}
 		}
 
@@ -409,14 +409,13 @@ namespace PgpCore
 			else
 			{
 				// Need to consume the stream into a list before it is closed (can happen because of lazy instantiation).
-				PgpPublicKeyRing[] publicKeyRingsConsumed = publicKeyRings.ToArray();
-				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => publicKeyRingsConsumed.Select(keyRing => new PgpPublicKeyRingWithPreferredKey(keyRing)));
+				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => publicKeyRings.Select(keyRing => new PgpPublicKeyRingWithPreferredKey(keyRing)).ToArray());
 				_masterKey = new Lazy<PgpPublicKey>(() =>
-					Utilities.FindMasterKey(publicKeyRingsConsumed.First()));
+					Utilities.FindMasterKey(publicKeyRings.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					publicKeyRingsConsumed.Select(Utilities.FindBestEncryptionKey).ToArray());
+					publicKeyRings.Select(Utilities.FindBestEncryptionKey).ToArray());
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					publicKeyRingsConsumed.Select(Utilities.FindBestVerificationKey).ToArray());
+					publicKeyRings.Select(Utilities.FindBestVerificationKey).ToArray());
 			}
 
 			if (_secretKeys != null)

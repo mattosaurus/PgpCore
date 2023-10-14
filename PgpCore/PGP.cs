@@ -552,8 +552,9 @@ namespace PgpCore
 
 			PgpEncryptedDataGenerator pk =
 				new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-			foreach (PgpPublicKey publicKey in EncryptionKeys.EncryptKeys)
+			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
 			{
+				PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
 				pk.AddMethod(publicKey);
 			}
 
@@ -672,11 +673,7 @@ namespace PgpCore
 
 			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
 			{
-				PgpPublicKey publicKey = publicKeyRing.PreferredKey ?? Utilities.FindBestEncryptionKey(publicKeyRing.PgpPublicKeyRing);
-				pk.AddMethod(publicKey);
-			}
-			foreach (PgpPublicKey publicKey in EncryptionKeys.EncryptKeys)
-			{
+				PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
 				pk.AddMethod(publicKey);
 			}
 
@@ -5674,7 +5671,7 @@ namespace PgpCore
 				var keyIdToVerify = publicKeyEncryptedData.KeyId;
 				// If we encounter an encrypted packet, verify with the encryption keys used instead
 				// TODO does this even make sense? maybe throw exception instead, or try to decrypt first
-				verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.EncryptKeys, out PgpPublicKey _);
+				verified = Utilities.FindPublicKeyInKeyRings(keyIdToVerify, EncryptionKeys.PublicKeyRings.Select(keyRing => keyRing.PgpPublicKeyRing), out PgpPublicKey _);
 				
 			}
 			else if (pgpObject is PgpOnePassSignatureList onePassSignatureList)
@@ -5817,7 +5814,7 @@ namespace PgpCore
 
 				// If we encounter an encrypted packet, verify the encryption key used instead
 				// TODO does this even make sense? maybe throw exception instead, or try to decrypt first
-				if (Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.EncryptKeys, out PgpPublicKey _))
+				if (Utilities.FindPublicKeyInKeyRings(keyIdToVerify, EncryptionKeys.PublicKeyRings.Select(keyRing => keyRing.PgpPublicKeyRing), out PgpPublicKey _))
 				{
 					verified = true;
 				}
@@ -6130,8 +6127,9 @@ namespace PgpCore
 			var encryptedDataGenerator =
 				new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-			foreach (PgpPublicKey publicKey in EncryptionKeys.EncryptKeys)
+			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
 			{
+				PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
 				encryptedDataGenerator.AddMethod(publicKey);
 			}
 
