@@ -1537,6 +1537,36 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
         }
+        
+        [Fact]
+        public async Task VerifyFileInfoAsync_ThrowIfEncrypted()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Generated, FileType.GeneratedMedium);
+            
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+            
+            // Act and Assert
+            try
+            {
+                await pgp.VerifyFileAsync(testFactory.EncryptedContentFileInfo, true);
+                Assert.Fail("Expected exception not thrown");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.Equal("Input is encrypted. Decrypt the input first.", e.Message);
+            }
+            finally
+            {
+                // Teardown
+                testFactory.Teardown();
+            }
+        }
         #endregion File - FileInfo
 
         #region Stream
@@ -2121,6 +2151,36 @@ namespace PgpCore.Tests
 
             // Teardown
             testFactory.Teardown();
+        }
+        
+        [Fact]
+        public async Task VerifyStreamAsync_ThrowIfEncrypted()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Generated, FileType.GeneratedMedium);
+            
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+            
+            // Act and Assert
+            try
+            {
+                await pgp.VerifyStreamAsync(testFactory.EncryptedContentStream, true);
+                Assert.Fail("Expected exception not thrown");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.Equal("Input is encrypted. Decrypt the input first.", e.Message);
+            }
+            finally
+            {
+                // Teardown
+                testFactory.Teardown();
+            }
         }
         #endregion Stream
 
@@ -2862,6 +2922,36 @@ namespace PgpCore.Tests
 
             // Teardown
             testFactory.Teardown();
+        }
+        
+        [Fact]
+        public async Task VerifyArmoredStringAsync_ThrowIfEncrypted()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Generated, FileType.GeneratedMedium);
+            
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+            
+            // Act and Assert
+            try
+            {
+                await pgp.VerifyAndReadSignedArmoredStringAsync(testFactory.EncryptedContent, true);
+                Assert.Fail("Expected exception not thrown");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.Equal("Input is encrypted. Decrypt the input first.", e.Message);
+            }
+            finally
+            {
+                // Teardown
+                testFactory.Teardown();
+            }
         }
         #endregion Armor
 

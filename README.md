@@ -57,7 +57,7 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
   * [VerifyClearFileAsync](#verifyclearfileasync)
   * [VerifyClearStreamAsync](#verifyclearstreamasync)
   * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
-* [Verify and Read Clear](#verify)
+* [Verify and Read Clear](#verifyand readclear)
   * [VerifyAndReadClearFileAsync](#verifyandreadclearfilessync)
   * [VerifyAndReadClearStreamAsync](#verifyandreadclearstreamasync)
   * [VerifyAndReadClearArmoredStringAsync](#verifyandreadcleararmoredstringasync)
@@ -499,7 +499,9 @@ The compression algorithim to be used on the message. This is applied prior to e
 - ZLib
 - BZip2
 ### SymmetricKeyAlgorithm
-The private key encryption algorithim.
+The private key encryption algorithm.
+> Although TripleDes is the default, it is outdated and being [discouraged by security institutions like NIST](https://en.wikipedia.org/wiki/Triple_DES). Aes is recommended.
+
 - Null
 - Idea
 - TripleDes - **Default**
