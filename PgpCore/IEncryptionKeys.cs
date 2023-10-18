@@ -12,6 +12,7 @@ namespace PgpCore
     /// </summary>
     public interface IEncryptionKeys
     {
+        IEnumerable<PgpPublicKeyRingWithPreferredKey> PublicKeyRings { get; }
         IEnumerable<PgpPublicKey> EncryptKeys { get; }
         IEnumerable<PgpPublicKey> VerificationKeys { get; }
         PgpPrivateKey SigningPrivateKey { get; }

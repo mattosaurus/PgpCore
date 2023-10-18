@@ -640,6 +640,21 @@ namespace PgpCore
 			return foundKeys.Any();
 		}
 
+		public static bool FindPublicKeyInKeyRings(long keyId, IEnumerable<PgpPublicKeyRing> publicKeyRings,
+			out PgpPublicKey verificationKey)
+		{
+			verificationKey = null;
+
+			foreach (PgpPublicKeyRing publicKeyRing in publicKeyRings)
+			{
+				var verificationKeys = publicKeyRing.GetPublicKeys();
+				if (FindPublicKey(keyId, verificationKeys, out verificationKey))
+					return true;
+			}
+
+			return false;
+		}
+
 		private static async Task PipeFileContentsAsync(FileInfo file, Stream pOut, int bufSize)
 		{
 			using (FileStream inputStream = file.OpenRead())

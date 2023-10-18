@@ -10,6 +10,7 @@ namespace PgpCore
 	{
 		#region Instance Members (Public)
 
+		public IEnumerable<PgpPublicKeyRingWithPreferredKey> PublicKeyRings => _publicKeyRingsWithPreferredKey.Value;
 		public IEnumerable<PgpPublicKey> EncryptKeys => _encryptKeys.Value;
 		public IEnumerable<PgpPublicKey> VerificationKeys => _verificationKeys.Value;
 		public PgpPrivateKey SigningPrivateKey => _signingPrivateKey.Value;
@@ -33,6 +34,7 @@ namespace PgpCore
 		private Lazy<PgpPrivateKey> _signingPrivateKey;
 		private Lazy<PgpSecretKey> _signingSecretKey;
 		private Lazy<PgpSecretKeyRingBundle> _secretKeys;
+		private Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>> _publicKeyRingsWithPreferredKey;
 
 		#endregion Instance Members (Private)
 
@@ -362,6 +364,19 @@ namespace PgpCore
 			return pgpSecKey.ExtractPrivateKey(_passPhrase.ToCharArray());
 		}
 
+		/// <summary>
+		/// This method will try to find the key with the given keyId in a key ring and set it as the preferred key.
+		/// If it cannot find the key, it will not change the preferred key.
+		/// </summary>
+		/// <param name="keyId">The keyId to find.</param>
+		public void UseEncrytionKey(long keyId)
+		{
+			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in PublicKeyRings)
+			{
+				publicKeyRing.UsePreferredEncryptionKey(keyId);
+			}
+		}
+
 		#endregion Public Methods
 
 		#region Private Key
@@ -389,10 +404,12 @@ namespace PgpCore
 				_masterKey = new Lazy<PgpPublicKey>(() => null);
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => null);
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => null);
+				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => null);
 			}
 			else
 			{
 				// Need to consume the stream into a list before it is closed (can happen because of lazy instantiation).
+				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => publicKeyRings.Select(keyRing => new PgpPublicKeyRingWithPreferredKey(keyRing)).ToArray());
 				_masterKey = new Lazy<PgpPublicKey>(() =>
 					Utilities.FindMasterKey(publicKeyRings.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
