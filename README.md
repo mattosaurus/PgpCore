@@ -1,6 +1,6 @@
 # PgpCore
 
-![.NET](https://github.com/mattosaurus/PgpCore/actions/workflows/dotnet.yml/badge.svg)
+![.NET](https://github.com/mattosaurus/PgpCore/actions/workflows/build-on-pr.yml/badge.svg)
 
 A .NET Core class library for using PGP.
 
@@ -57,7 +57,7 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
   * [VerifyClearFileAsync](#verifyclearfileasync)
   * [VerifyClearStreamAsync](#verifyclearstreamasync)
   * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
-* [Verify and Read Clear](#verifyand readclear)
+* [Verify and Read Clear](#verifyandreadclear)
   * [VerifyAndReadClearFileAsync](#verifyandreadclearfilessync)
   * [VerifyAndReadClearStreamAsync](#verifyandreadclearstreamasync)
   * [VerifyAndReadClearArmoredStringAsync](#verifyandreadcleararmoredstringasync)
