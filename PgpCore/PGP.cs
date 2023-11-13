@@ -5010,13 +5010,12 @@ namespace PgpCore
 		private async Task OutputSignedAsync(Stream inputStream, Stream outputStream,
 			string name)
 		{
-			using (Stream compressedOut = ChainCompressedOut(outputStream))
+			Stream compressedOut = ChainCompressedOut(outputStream);
+
+			PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+			using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
 			{
-				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
-				{
-					await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-				}
+				await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
 			}
 		}
 
