@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.13.0.0</Version>
+    <Version>5.13.1.0</Version>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.13.0</FileVersion>
-    <PackageReleaseNotes>v5.13.0 - Add prefered encryption key</PackageReleaseNotes>
+    <FileVersion>5.13.1</FileVersion>
+    <PackageReleaseNotes>v5.13.1 - Don't dispose compressed output stream</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
