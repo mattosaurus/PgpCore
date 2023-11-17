@@ -1253,19 +1253,6 @@ namespace PgpCore
 
 		#region ChainEncryptedOut
 
-		// private Stream ChainEncryptedOut(Stream outputStream, IEncryptionKeys encryptionKeys, bool withIntegrityCheck)
-		// {
-		// 	var encryptedDataGenerator =
-		// 		new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-		//
-		// 	foreach (PgpPublicKey publicKey in encryptionKeys.EncryptKeys)
-		// 	{
-		// 		encryptedDataGenerator.AddMethod(publicKey);
-		// 	}
-		//
-		// 	return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
-		// }
-
 		private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
 		{
 			var encryptedDataGenerator =
