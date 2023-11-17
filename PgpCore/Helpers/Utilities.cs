@@ -13,11 +13,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg.Sig;
+using PgpCore.Helpers;
 
 namespace PgpCore
 {
-	/// <remarks>Basic utility class.</remarks>
-	public static class Utilities
+    /// <remarks>Basic utility class.</remarks>
+    public static class Utilities
 	{
 		public static MPInteger[] DsaSigToMpi(
 			byte[] encoding)

@@ -1,6 +1,7 @@
 ﻿using System;
+using PgpCore.Models;
 
-namespace PgpCore
+namespace PgpCore.Extensions
 {
     internal static class DisposableExtensions
     {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
+using PgpCore.Models;
 using Xunit;
 
 namespace PgpCore.Tests
@@ -20,877 +21,15 @@ namespace PgpCore.Tests
             PGP pgp = new PGP();
 
             // Act
-            pgp.GenerateKey(testFactory.PublicKeyFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+            pgp.GenerateKey(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
 
             // Assert
-            Assert.True(File.Exists(testFactory.PublicKeyFilePath));
-            Assert.True(File.Exists(testFactory.PrivateKeyFilePath));
+            Assert.True(testFactory.PublicKeyFileInfo.Exists);
+            Assert.True(testFactory.PrivateKeyFileInfo.Exists);
 
             // Cleanup
             testFactory.Teardown();
         }
-
-        #region File - Path
-        [Theory]
-        [MemberData(nameof(KeyTypeValues))]
-        public void EncryptFile_CreateEncryptedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [MemberData(nameof(HashAlgorithmTagValues))]
-        public void EncryptFile_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(KeyType.Known, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            PGP pgp = new PGP(encryptionKeys);
-            pgp.HashAlgorithmTag = hashAlgorithmTag;
-
-            // Act
-            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void SignFile_CreateSignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.SignedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void ClearSignFile_CreateClearSignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.SignedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void ClearSignFile_CreateClearSignedFileAndVerify(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.True(pgp.VerifyClearFile(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void ClearSignFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated);
-            EncryptionKeys encryptionKeysSign = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys encryptionKeysVerify = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
-            PGP pgpSign = new PGP(encryptionKeysSign);
-            PGP pgpVerify = new PGP(encryptionKeysVerify);
-
-            // Act
-            pgpSign.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.False(pgpVerify.VerifyClearFile(testFactory.SignedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-            testFactory2.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void ClearSignFile_CreateClearSignedFileWithBadContentAndDoNotVerify(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.ClearSignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-            string fileContent = File.ReadAllText(testFactory.SignedContentFilePath);
-            fileContent = fileContent.Replace("fox", "rabbit");
-            File.WriteAllText(testFactory.SignedContentFilePath, fileContent);
-
-            // Assert
-            Assert.False(pgp.VerifyClearFile(testFactory.SignedContentFilePath, testFactory.PublicKeyFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void EncryptFile_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated);
-
-            List<FileInfo> keys = new List<FileInfo>()
-            {
-                testFactory.PublicKeyFileInfo,
-                testFactory2.PublicKeyFileInfo
-            };
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(keys);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-            testFactory2.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void EncryptFileAndSign_CreateEncryptedAndSignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void EncryptFileAndSign_CreateEncryptedAndSignedFileWithMultipleKeys(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated);
-
-            List<FileInfo> keys = new List<FileInfo>()
-            {
-                testFactory.PublicKeyFileInfo,
-                testFactory2.PublicKeyFileInfo
-            };
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(keys, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-
-            // Teardown
-            testFactory.Teardown();
-            testFactory2.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFile_DecryptEncryptedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [MemberData(nameof(HashAlgorithmTagValues))]
-        public void DecryptFile_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(KeyType.Known, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-            pgpEncrypt.HashAlgorithmTag = hashAlgorithmTag;
-
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        //[Theory]
-        //[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
-        //public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
-        //{
-        //    // Arrange
-        //    Arrange(keyType, fileType);
-        //    PGP pgp = new PGP(encryptionKeys);
-
-        //    // Act
-        //    pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
-        //    pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
-
-        //    // Assert
-        //    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-        //    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
-
-        //    // Teardown
-        //    Teardown();
-        //}
-
-        [Theory]
-        [InlineData(KeyType.Generated, FileType.GeneratedMedium)]
-        public void Decrypt300MbFile_DecryptEncryptedFileWithMemoryUsageLessThan50Mb(KeyType keyType, FileType fileType)
-        {
-            // Arrange
-            long memoryCap = 50 * 1024 * 1024;
-            long startPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, fileType);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-            
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            long encryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
-            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-            long decryptPeakWorkingSet = Process.GetCurrentProcess().PeakWorkingSet64;
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.True((encryptPeakWorkingSet - startPeakWorkingSet) < memoryCap, "Encryption used more memory than expected");
-            Assert.True((decryptPeakWorkingSet - encryptPeakWorkingSet) < memoryCap, "Decryption used more memory than expected");
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFile_DecryptEncryptedFileWithMultipleKeys(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            List<FileInfo> keys = new List<FileInfo>()
-            {
-                testFactory.PublicKeyFileInfo,
-                testFactory2.PublicKeyFileInfo
-            };
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(keys, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PrivateKeyFileInfo, testFactory2.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgpEncrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.True(testFactory2.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-            Assert.Equal(testFactory.Content, testFactory2.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFile_DecryptSignedAndEncryptedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, armor: false);
-            pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFile_DecryptSignedAndEncryptedFileWithMultipleKeys(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            List<FileInfo> keys = new List<FileInfo>()
-            {
-                testFactory.PublicKeyFileInfo,
-                testFactory2.PublicKeyFileInfo
-            };
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(keys, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PrivateKeyFileInfo, testFactory2.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgpEncrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-            pgpDecrypt.DecryptFile(testFactory.EncryptedContentFilePath, testFactory2.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.True(testFactory2.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-            Assert.Equal(testFactory.Content, testFactory2.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptUnsignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            var ex = Assert.Throws<PgpException>( () => pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath,
-                testFactory.DecryptedContentFilePath));
-
-            // Assert
-            Assert.Equal("File was not signed.", ex.Message);
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(string.Empty, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptCompressedUnsignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys)
-            {
-                CompressionAlgorithm = CompressionAlgorithmTag.Zip
-            };
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            var ex = Assert.Throws<PgpException>( () => pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath,
-                testFactory.DecryptedContentFilePath));
-
-            // Assert
-            Assert.Equal("File was not signed.", ex.Message);
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(string.Empty, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptWithWrongKey(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            var ex = Assert.Throws<PgpException>( () => pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath,
-                testFactory.DecryptedContentFilePath));
-
-            // Assert
-            Assert.Equal("Failed to verify file.", ex.Message);
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(string.Empty, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgp.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            PGP pgp = new PGP(encryptionKeys)
-            {
-                CompressionAlgorithm = CompressionAlgorithmTag.Zip,
-            };
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgp.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory2.PrivateKeyFileInfo, testFactory2.Password);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            pgpDecrypt.DecryptFileAndVerify(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Verify_VerifyEncryptedAndSignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(verified);
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Verify_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
-
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.EncryptFileAndSign(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            bool verified = pgpDecrypt.VerifyFile(testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.False(verified);
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Verify_DoNotVerifySignedFileWithBadContent(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.SignFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            string[] fileLines = File.ReadAllLines(testFactory.EncryptedContentFilePath);
-            fileLines[3] = fileLines[3].Substring(0, fileLines[3].Length - 1 - 1) + "x";
-            File.WriteAllLines(testFactory.EncryptedContentFilePath, fileLines);
-            Action action = () => pgp.VerifyFile(testFactory.EncryptedContentFilePath);
-
-            // Assert
-            var ex = Assert.Throws<IOException>(action);
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Verify_VerifySignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-            bool verified = pgp.VerifyFile(testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.SignedContentFileInfo.Exists);
-            Assert.True(verified);
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Verify_DoNotVerifySignedFile(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory2.PublicKeyFileInfo);
-            PGP pgpEncrypt = new PGP(encryptionKeys);
-            PGP pgpDecrypt = new PGP(decryptionKeys);
-
-            // Act
-            pgpEncrypt.SignFile(testFactory.ContentFilePath, testFactory.SignedContentFilePath);
-            bool verified = pgpDecrypt.VerifyFile(testFactory.SignedContentFilePath);
-
-            // Assert
-            Assert.True(testFactory.SignedContentFileInfo.Exists);
-            Assert.False(verified);
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Recipients_GetFileRecipient(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKeyFileInfo);
-            IEnumerable<long> recipients = pgp.GetFileRecipients(testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.Equal(pgpPublicKey.KeyId, recipients.FirstOrDefault());
-
-            // Teardown
-            testFactory.Teardown();
-        }
-
-        [Theory]
-        [InlineData(KeyType.Generated)]
-        [InlineData(KeyType.Known)]
-        [InlineData(KeyType.KnownGpg)]
-        public void Recipients_GetFileRecipients(KeyType keyType)
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            TestFactory testFactory2 = new TestFactory();
-            testFactory.Arrange(keyType, FileType.Known);
-            testFactory2.Arrange(KeyType.Generated, FileType.Known);
-
-            List<FileInfo> keys = new List<FileInfo>()
-            {
-                testFactory.PublicKeyFileInfo,
-                testFactory2.PublicKeyFileInfo
-            };
-
-            EncryptionKeys encryptionKeys = new EncryptionKeys(keys);
-            PGP pgp = new PGP(encryptionKeys);
-
-            // Act
-            pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath);
-            List<PgpPublicKey> pgpPublicKeys = keys.Select(x => Utilities.ReadPublicKey(x)).ToList();
-            IEnumerable<long> recipients = pgp.GetFileRecipients(testFactory.EncryptedContentFilePath);
-
-            // Assert
-            Assert.All(recipients, recipient => Assert.Contains(pgpPublicKeys, x => recipient == x.KeyId));
-
-            // Teardown
-            testFactory.Teardown();
-        }
-        
-        [Fact]
-        public void VerifyFile_ThrowIfEncrypted()
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(KeyType.Generated, FileType.GeneratedMedium);
-            
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
-            using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
-                pgp.EncryptStream(inputFileStream, outputFileStream);
-            
-            // Act and Assert
-            try
-            {
-                pgp.VerifyFile(testFactory.EncryptedContentFileInfo, true);
-                Assert.Fail("Expected exception not thrown");
-            }
-            catch (ArgumentException e)
-            {
-                Assert.Equal("Input is encrypted. Decrypt the input first.", e.Message);
-            }
-            finally
-            {
-                // Teardown
-                testFactory.Teardown();
-            }
-        }
-        #endregion File - Path
 
         #region File - FileInfo
         [Theory]
@@ -988,13 +127,15 @@ namespace PgpCore.Tests
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            PGP pgp = new PGP(encryptionKeys);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
 
             // Act
-            pgp.ClearSignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            pgpEncrypt.ClearSignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
 
             // Assert
-            Assert.True(pgp.VerifyClearFile(testFactory.SignedContentFileInfo, testFactory.PublicKeyFileInfo));
+            Assert.True(pgpVerify.VerifyClearFile(testFactory.SignedContentFileInfo));
 
             // Teardown
             testFactory.Teardown();
@@ -1175,12 +316,12 @@ namespace PgpCore.Tests
         ////    PGP pgp = new PGP(encryptionKeys);
 
         ////    // Act
-        ////    pgp.EncryptFile(testFactory.ContentFilePath, testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
-        ////    pgp.DecryptFile(testFactory.EncryptedContentFilePath, testFactory.DecryptedContentFilePath, testFactory.PrivateKeyFilePath, testFactory.Password);
+        ////    pgp.EncryptFile(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo, testFactory.PublicKeyFileInfo);
+        ////    pgp.DecryptFile(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo, testFactory.PrivateKeyFilePath, testFactory.Password);
 
         ////    // Assert
-        ////    Assert.True(File.Exists(testFactory.EncryptedContentFilePath));
-        ////    Assert.True(File.Exists(testFactory.DecryptedContentFilePath));
+        ////    Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+        ////    Assert.True(File.Exists(testFactory.DecryptedContentFileInfo));
 
         ////    // Teardown
         ////    Teardown();
@@ -1566,7 +707,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
 
             // Assert
@@ -1590,7 +731,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.SignStream(inputFileStream, outputFileStream);
 
             // Assert
@@ -1624,7 +765,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
 
             // Assert
@@ -1648,7 +789,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             // Assert
@@ -1682,7 +823,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             // Assert
@@ -1708,11 +849,11 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
                 pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             // Assert
@@ -1742,11 +883,11 @@ namespace PgpCore.Tests
                 // Act
                 encryptionKeys.UseEncrytionKey(keyId);
                 using (Stream inputFileStream = testFactory.ContentStream)
-                using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                     pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
                 using (Stream inputFileStream = testFactory.EncryptedContentStream)
-                using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+                using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
                     pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
                 // Assert
@@ -1786,15 +927,15 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
                 pgpEncrypt.DecryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory2.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory2.DecryptedContentFileInfo.Create())
                 pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             // Assert
@@ -1822,14 +963,14 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
                 pgp.DecryptStream(inputFileStream, outputFileStream);
 
-            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFilePath, testFactory.PublicKeyFilePath);
+            bool verified = pgp.VerifyFile(testFactory.EncryptedContentFileInfo);
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
@@ -1867,15 +1008,15 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
                 pgpEncrypt.DecryptStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.EncryptedContentStream)
-            using (Stream outputFileStream = File.Create(testFactory2.DecryptedContentFilePath))
+            using (Stream outputFileStream = testFactory2.DecryptedContentFileInfo.Create())
                 pgpDecrypt.DecryptStream(inputFileStream, outputFileStream);
 
             bool verified = false;
@@ -1909,7 +1050,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             bool verified = false;
@@ -1941,7 +1082,7 @@ namespace PgpCore.Tests
             {
                 encryptionKeys.UseEncrytionKey(keyId);
                 using (Stream inputFileStream = testFactory.ContentStream)
-                using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+                using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                     pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
                 bool verified = false;
@@ -1977,7 +1118,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgpEncrypt.EncryptStreamAndSign(inputFileStream, outputFileStream);
 
             bool verified = false;
@@ -2008,7 +1149,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.SignedContentFilePath))
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
                 pgp.SignStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.SignedContentStream)
@@ -2043,7 +1184,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.SignedContentFilePath))
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
                 pgpEncrypt.SignStream(inputFileStream, outputFileStream);
 
             using (Stream inputFileStream = testFactory.SignedContentStream)
@@ -2071,7 +1212,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
 
             PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKeyStream);
@@ -2107,7 +1248,7 @@ namespace PgpCore.Tests
 
             // Act
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
 
             keys = new List<Stream>()
@@ -2136,7 +1277,7 @@ namespace PgpCore.Tests
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
             
             // Act and Assert
@@ -2909,7 +2050,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = pgp.EncryptArmoredString(testFactory.ContentFilePath);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
             PgpPublicKey pgpPublicKey = Utilities.ReadPublicKey(testFactory.PublicKey);
             IEnumerable<long> recipients = pgp.GetArmoredStringRecipients(encryptedContent);
 
@@ -2942,7 +2083,7 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string encryptedContent = pgp.EncryptArmoredString(testFactory.ContentFilePath);
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content);
             List<PgpPublicKey> pgpPublicKeys = keys.Select(x => Utilities.ReadPublicKey(x)).ToList();
             IEnumerable<long> recipients = pgp.GetArmoredStringRecipients(encryptedContent);
 
@@ -2963,7 +2104,7 @@ namespace PgpCore.Tests
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
             using (Stream inputFileStream = testFactory.ContentStream)
-            using (Stream outputFileStream = File.Create(testFactory.EncryptedContentFilePath))
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 pgp.EncryptStream(inputFileStream, outputFileStream);
             
             // Act and Assert

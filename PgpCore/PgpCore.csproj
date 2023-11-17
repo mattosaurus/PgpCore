@@ -39,6 +39,42 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="PGP.DecryptAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.DecryptSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.EncryptAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.EncryptSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.KeyAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.KeySync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.RecipientsSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.SignAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.SignSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.VerifyAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.VerifySync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.1.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
