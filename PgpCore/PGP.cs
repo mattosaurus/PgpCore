@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace PgpCore
 {
-    public partial class PGP
+    public partial class PGP : IPGP
 	{
 		public static PGP Instance => _instance ?? (_instance = new PGP());
 		private static PGP _instance;

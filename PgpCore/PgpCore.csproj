@@ -72,6 +72,40 @@
     <Compile Update="PGP.VerifySync.cs">
       <DependentUpon>PGP.cs</DependentUpon>
     </Compile>
+
+    <Compile Update="Abstractions\IPGP.DecryptAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.DecryptSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.EncryptAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.EncryptSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.KeyAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.KeySync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.RecipientsSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.SignAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.SignSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.VerifyAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.VerifySync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>
