@@ -22,6 +22,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public void EncryptFile(
             FileInfo inputFile,
             FileInfo outputFile,
@@ -55,6 +56,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true,
             bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
@@ -117,6 +119,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public string EncryptArmoredString(string input, bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
             using (Stream inputStream = input.GetStream())
@@ -139,6 +142,7 @@ namespace PgpCore
         /// <param name="outputFile">Output PGP encrypted and signed file</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true,
             bool withIntegrityCheck = true, IDictionary<string, string> headers = null)
         {
@@ -180,6 +184,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true,
             bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
@@ -221,6 +226,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public string EncryptArmoredStringAndSign(string input, bool withIntegrityCheck = true,
             string name = DefaultFileName, IDictionary<string, string> headers = null)
         {

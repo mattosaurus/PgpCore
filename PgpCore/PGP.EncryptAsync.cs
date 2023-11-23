@@ -24,6 +24,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task EncryptFileAsync(
             FileInfo inputFile,
             FileInfo outputFile,
@@ -57,6 +58,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, bool armor = true,
             bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
@@ -118,6 +120,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task<string> EncryptArmoredStringAsync(string input, bool withIntegrityCheck = true,
             string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
@@ -141,6 +144,7 @@ namespace PgpCore
         /// <param name="outputFile">Output PGP encrypted and signed file path</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true,
             bool withIntegrityCheck = true, IDictionary<string, string> headers = null)
         {
@@ -182,6 +186,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, bool armor = true,
             bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
@@ -223,6 +228,7 @@ namespace PgpCore
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
+        /// <param name="headers">Optional headers to be added to the output</param>
         public async Task<string> EncryptArmoredStringAndSignAsync(string input, bool withIntegrityCheck = true,
             string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
