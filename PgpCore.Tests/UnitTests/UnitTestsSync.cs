@@ -196,7 +196,7 @@ namespace PgpCore.Tests
             };
 
             // Act
-            pgp.SignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            pgp.SignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo, headers: headers);
             string signedContent = File.ReadAllText(testFactory.SignedContentFileInfo.FullName);
 
             // Assert

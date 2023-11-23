@@ -190,7 +190,7 @@ namespace PgpCore.Tests
             };
 
             // Act
-            await pgp.SignFileAsync(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            await pgp.SignFileAsync(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo, headers: headers);
             string signedContent = await File.ReadAllTextAsync(testFactory.SignedContentFileInfo);
 
             // Assert
