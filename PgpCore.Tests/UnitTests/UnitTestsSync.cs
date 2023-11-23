@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Models;
@@ -34,7 +35,7 @@ namespace PgpCore.Tests
         #region File - FileInfo
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
-        public void EncryptFileInfo_CreateEncryptedFile(KeyType keyType)
+        public void EncryptFile_CreateEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -53,8 +54,62 @@ namespace PgpCore.Tests
         }
 
         [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptFile_CreateEncryptedFileWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            pgp.EncryptFile(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo, headers: headers);
+            string encryptedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Comment: Test comment", encryptedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptFile_CreateEncryptedFileWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            pgp.EncryptFile(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo, headers: headers);
+            string encryptedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Version: Test version", encryptedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public void EncryptFileInfo_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void EncryptFile_CreateEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -77,7 +132,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void SignFileInfo_CreateSignedFile(KeyType keyType)
+        public void SignFile_CreateSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -99,7 +154,65 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignFileInfo_CreateClearSignedFile(KeyType keyType)
+        public void SignFile_CreateSignedFileWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            pgp.SignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo, headers: headers);
+            string signedContent = File.ReadAllText(testFactory.SignedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.SignedContentFileInfo.Exists);
+            Assert.Contains("Comment: Test comment", signedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignFileAsync_CreateSignedFileWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            pgp.SignFile(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            string signedContent = File.ReadAllText(testFactory.SignedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.SignedContentFileInfo.Exists);
+            Assert.Contains("Version: Test version", signedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSignFile_CreateClearSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -121,7 +234,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndVerifyFileInfo_CreateClearSignedFileAndVerify(KeyType keyType)
+        public void ClearSignAndVerifyFile_CreateClearSignedFileAndVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -145,7 +258,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void ClearSignAndDoNotVerifyFileInfo_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
+        public void ClearSignAndDoNotVerifyFile_CreateClearSignedFileAndDoNotVerify(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -172,7 +285,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void EncryptFileInfo_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void EncryptFile_CreateEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -204,7 +317,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void EncryptFileAndSignInfo_CreateEncryptedAndSignedFile(KeyType keyType)
+        public void EncryptFileAndSign_CreateEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -226,7 +339,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void EncryptFileAndSignInfo_CreateEncryptedAndSignedFileWithMultipleKeys(KeyType keyType)
+        public void EncryptFileAndSign_CreateEncryptedAndSignedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -258,7 +371,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfo_DecryptEncryptedFile(KeyType keyType)
+        public void DecryptFile_DecryptEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -283,7 +396,7 @@ namespace PgpCore.Tests
 
         [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
-        public void DecryptFileInfo_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
+        public void DecryptFile_DecryptEncryptedFileWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -309,7 +422,7 @@ namespace PgpCore.Tests
 
         ////[Theory]
         ////[InlineData(KeyType.Generated, FileType.GeneratedLarge)]
-        ////public void DecryptLargeFileInfo_DecryptEncryptedFile(KeyType keyType, FileType fileType)
+        ////public void DecryptLargeFile_DecryptEncryptedFile(KeyType keyType, FileType fileType)
         ////{
         ////    // Arrange
         ////    Arrange(keyType, fileType);
@@ -331,7 +444,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfo_DecryptEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void DecryptFile_DecryptEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -371,7 +484,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfo_DecryptSignedAndEncryptedFile(KeyType keyType)
+        public void DecryptFile_DecryptSignedAndEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -396,7 +509,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfo_DecryptSignedAndEncryptedFileWithMultipleKeys(KeyType keyType)
+        public void DecryptFile_DecryptSignedAndEncryptedFileWithMultipleKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -436,7 +549,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfoAndVerify_DecryptUnsignedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptUnsignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -469,7 +582,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfoAndVerify_DecryptWithWrongKey(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptWithWrongKey(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -502,7 +615,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfoAndVerify_DecryptSignedAndEncryptedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -528,7 +641,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfoAndVerify_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedAndCompressedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -557,7 +670,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void DecryptFileInfoAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
+        public void DecryptFileAndVerify_DecryptSignedAndEncryptedFileDifferentKeys(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -588,7 +701,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void VerifyFileInfo_VerifyEncryptedAndSignedFile(KeyType keyType)
+        public void VerifyFile_VerifyEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -612,7 +725,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void VerifyFileInfo_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
+        public void VerifyFile_DoNotVerifyEncryptedAndSignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -642,7 +755,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void VerifyFileInfo_VerifySignedFile(KeyType keyType)
+        public void VerifyFile_VerifySignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -666,7 +779,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void VerifyFileInfo_DoNotVerifySignedFile(KeyType keyType)
+        public void VerifyFile_DoNotVerifySignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -718,6 +831,66 @@ namespace PgpCore.Tests
         }
 
         [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptStream_CreateEncryptedFileWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.EncryptStream(inputFileStream, outputFileStream, headers: headers);
+
+            string encryptedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Comment: Test comment", encryptedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptStream_CreateEncryptedFileWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.EncryptStream(inputFileStream, outputFileStream, headers: headers);
+
+            string encryptedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Version: Test version", encryptedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
@@ -736,6 +909,70 @@ namespace PgpCore.Tests
 
             // Assert
             Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignStreamAsync_CreateSignedStreamWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.SignStream(inputFileStream, outputFileStream, headers: headers);
+
+            string signedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Comment: Test comment", signedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignStreamAsync_CreateSignedStreamWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.SignStream(inputFileStream, outputFileStream, headers: headers);
+
+            string signedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName);
+
+            // Assert
+            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
+            Assert.Contains("Version: Test version", signedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", signedContent);
 
             // Teardown
             testFactory.Teardown();
@@ -1321,6 +1558,56 @@ namespace PgpCore.Tests
         }
 
         [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptArmoredString_CreateEncryptedStringWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, headers: headers);
+
+            // Assert
+            Assert.Contains("Comment: Test comment", encryptedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [MemberData(nameof(KeyTypeValues))]
+        public void EncryptArmoredString_CreateEncryptedStringWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            string encryptedContent = pgp.EncryptArmoredString(testFactory.Content, headers: headers);
+
+            // Assert
+            Assert.Contains("Version: Test version", encryptedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", encryptedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         [MemberData(nameof(HashAlgorithmTagValues))]
         public void EncryptArmoredString_CreateEncryptedStringWithDifferentHashAlgorithms(HashAlgorithmTag hashAlgorithmTag)
         {
@@ -1355,6 +1642,62 @@ namespace PgpCore.Tests
 
             // Act
             string signedContent = pgp.SignArmoredString(testFactory.Content);
+
+            // Assert
+            Assert.NotNull(signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignArmoredString_CreateSignedStringWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Comment", "Test comment" }
+            };
+
+            // Act
+            string signedContent = pgp.SignArmoredString(testFactory.Content, headers: headers);
+
+            // Assert
+            Assert.NotNull(signedContent);
+            Assert.Contains("Comment: Test comment", signedContent);
+            Assert.Contains("Version: BouncyCastle.NET Cryptography ", signedContent);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void SignArmoredString_CreateSignedStringWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "Version", "Test version" }
+            };
+
+            // Act
+            string signedContent = pgp.SignArmoredString(testFactory.Content, headers: headers);
+            Assert.Contains("Version: Test version", signedContent);
+            Assert.DoesNotContain("Version: BouncyCastle.NET Cryptography ", signedContent);
 
             // Assert
             Assert.NotNull(signedContent);

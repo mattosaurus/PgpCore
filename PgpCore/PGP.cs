@@ -7,6 +7,7 @@ using PgpCore.Extensions;
 using PgpCore.Helpers;
 using PgpCore.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -190,18 +191,18 @@ namespace PgpCore
 
 		#region OutputClearSignedAsync
 
-		private async Task OutputClearSignedAsync(FileInfo inputFile, Stream outputStream)
+		private async Task OutputClearSignedAsync(FileInfo inputFile, Stream outputStream, IDictionary<string, string> headers)
 		{
 			using (FileStream inputFileStream = inputFile.OpenRead())
 			{
-				await OutputClearSignedAsync(inputFileStream, outputStream);
+				await OutputClearSignedAsync(inputFileStream, outputStream, headers);
 			}
 		}
 
-		private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream)
+		private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers)
 		{
 			using (StreamReader streamReader = new StreamReader(inputStream))
-			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
 
@@ -240,18 +241,18 @@ namespace PgpCore
 
 		#region OutputClearSigned
 
-		private void OutputClearSigned(FileInfo inputFile, Stream outputStream)
+		private void OutputClearSigned(FileInfo inputFile, Stream outputStream, IDictionary<string, string> headers)
 		{
 			using (FileStream inputFileStream = inputFile.OpenRead())
 			{
-				OutputClearSigned(inputFileStream, outputStream);
+				OutputClearSigned(inputFileStream, outputStream, headers);
 			}
 		}
 
-		private void OutputClearSigned(Stream inputStream, Stream outputStream)
+		private void OutputClearSigned(Stream inputStream, Stream outputStream, IDictionary<string, string> headers)
 		{
-			using (StreamReader streamReader = new StreamReader(inputStream))
-			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+            using (StreamReader streamReader = new StreamReader(inputStream))
+			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
 

@@ -19,7 +19,7 @@ namespace PgpCore
         /// <param name="outputFile">Output PGP signed file</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile,
-            bool armor = true)
+            bool armor = true, IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -27,6 +27,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputFile");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (headers == null)
+                headers = new Dictionary<string, string>();
 
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
@@ -35,7 +37,7 @@ namespace PgpCore
             {
                 if (armor)
                 {
-                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
                         await OutputSignedAsync(inputFile, armoredOutputStream);
                     }
@@ -56,7 +58,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public async Task SignStreamAsync(Stream inputStream, Stream outputStream,
-            bool armor = true, string name = DefaultFileName)
+            bool armor = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -64,6 +66,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (headers == null)
+                headers = new Dictionary<string, string>();
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
 
@@ -75,7 +79,7 @@ namespace PgpCore
 
             if (armor)
             {
-                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream))
+                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                 {
                     await OutputSignedAsync(inputStream, armoredOutputStream, name);
                 }
@@ -94,12 +98,15 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         public async Task<string> SignArmoredStringAsync(string input,
-            string name = DefaultFileName)
+            string name = DefaultFileName, IDictionary<string, string> headers = null)
         {
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignStreamAsync(inputStream, outputStream, true, name);
+                await SignStreamAsync(inputStream, outputStream, true, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -113,7 +120,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFile">Plain data file to be signed</param>
         /// <param name="outputFile">Output PGP signed file</param>
-        public async Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile)
+        public async Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -121,13 +128,15 @@ namespace PgpCore
                 throw new ArgumentException("OutputFile");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (headers == null)
+                headers = new Dictionary<string, string>();
 
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.Name}] does not exist.");
 
             using (Stream outputStream = outputFile.OpenWrite())
             {
-                await OutputClearSignedAsync(inputFile, outputStream);
+                await OutputClearSignedAsync(inputFile, outputStream, headers);
             }
         }
 
@@ -139,7 +148,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream">Plain data stream to be signed</param>
         /// <param name="outputStream">Output PGP signed stream</param>
-        public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream)
+        public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -147,10 +156,12 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (headers == null)
+                headers = new Dictionary<string, string>();
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
 
-            await OutputClearSignedAsync(inputStream, outputStream);
+            await OutputClearSignedAsync(inputStream, outputStream, headers);
         }
 
         #endregion ClearSignStreamAsync
@@ -160,12 +171,15 @@ namespace PgpCore
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        public async Task<string> ClearSignArmoredStringAsync(string input)
+        public async Task<string> ClearSignArmoredStringAsync(string input, IDictionary<string, string> headers = null)
         {
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await ClearSignStreamAsync(inputStream, outputStream);
+                await ClearSignStreamAsync(inputStream, outputStream, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
