@@ -2436,13 +2436,16 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
         }
-        
-        [Fact]
-        public void Verify_ThrowIfEncrypted()
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void VerifyAndReadSignedArmoredString_WhenEncryptedAndNotSigned_ShouldThrowException(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            testFactory.Arrange(KeyType.Generated, FileType.GeneratedMedium);
+            testFactory.Arrange(keyType, FileType.Known);
             
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);

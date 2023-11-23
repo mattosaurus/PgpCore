@@ -21,7 +21,10 @@ namespace PgpCore
             string password = null,
             int strength = 1024,
             int certainty = 8,
+            bool armor = true,
             bool emitVersion = true,
+            long keyExpirationInSeconds = 0,
+            long signatureExpirationInSeconds = 0,
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
             HashAlgorithmTag[] preferredHashAlgorithmTags = null,
             SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
@@ -33,10 +36,9 @@ namespace PgpCore
 
             using (Stream pubs = publicKeyFileInfo.Create())
             using (Stream pris = privateKeyFileInfo.Create())
-                GenerateKey(pubs, pris, username, password, strength, certainty, emitVersion: emitVersion,
-                    preferredCompressionAlgorithms: preferredCompressionAlgorithms,
-                    preferredHashAlgorithmTags: preferredHashAlgorithmTags,
-                    preferredSymetricKeyAlgorithms: preferredSymetricKeyAlgorithms);
+                GenerateKey(pubs, pris, username, password, strength, certainty, armor, emitVersion,
+                    keyExpirationInSeconds, signatureExpirationInSeconds,
+                    preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymetricKeyAlgorithms);
         }
 
         public void GenerateKey(

@@ -11,28 +11,31 @@ namespace PgpCore.Abstractions
         void GenerateKey(
             FileInfo publicKeyFileInfo,
             FileInfo privateKeyFileInfo,
-            string username,
-            string password,
-            int strength,
-            int certainty,
-            bool emitVersion,
-            CompressionAlgorithmTag[] preferredCompressionAlgorithms,
-            HashAlgorithmTag[] preferredHashAlgorithmTags,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms);
+            string username = null,
+            string password = null,
+            int strength = 1024,
+            int certainty = 8,
+            bool armor = true,
+            bool emitVersion = true,
+            long keyExpirationInSeconds = 0,
+            long signatureExpirationInSeconds = 0,
+            CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
+            HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null);
 
         void GenerateKey(
             Stream publicKeyStream,
             Stream privateKeyStream,
-            string username,
-            string password,
-            int strength,
-            int certainty,
-            bool armor,
-            bool emitVersion,
-            long keyExpirationInSeconds,
-            long signatureExpirationInSeconds,
-            CompressionAlgorithmTag[] preferredCompressionAlgorithms,
-            HashAlgorithmTag[] preferredHashAlgorithmTags,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms);
+            string username = null,
+            string password = null,
+            int strength = 1024,
+            int certainty = 8,
+            bool armor = true,
+            bool emitVersion = true,
+            long keyExpirationInSeconds = 0,
+            long signatureExpirationInSeconds = 0,
+            CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
+            HashAlgorithmTag[] preferredHashAlgorithmTags = null,
+            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null);
     }
 }

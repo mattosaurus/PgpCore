@@ -8,16 +8,16 @@ namespace PgpCore.Abstractions
 {
     public interface IEncryptSync : IDisposable
     {
-        void EncryptFile(FileInfo inputFile, FileInfo outputFile, bool armor, bool withIntegrityCheck, IDictionary<string, string> headers);
+        void EncryptFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
 
-        void EncryptStream(Stream inputStream, Stream outputStream, bool armor, bool withIntegrityCheck, string name, IDictionary<string, string> headers);
+        void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
 
-        string EncryptArmoredString(string input, bool withIntegrityCheck, string name, IDictionary<string, string> headers);
+        string EncryptArmoredString(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
 
-        void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor, bool withIntegrityCheck, IDictionary<string, string> headers);
+        void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
 
-        void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor, bool withIntegrityCheck, string name, IDictionary<string, string> headers);
+        void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
 
-        string EncryptArmoredStringAndSign(string input, bool withIntegrityCheck, string name, IDictionary<string, string> headers);
+        string EncryptArmoredStringAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null);
     }
 }

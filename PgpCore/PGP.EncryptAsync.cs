@@ -30,6 +30,7 @@ namespace PgpCore
             FileInfo outputFile,
             bool armor = true,
             bool withIntegrityCheck = true,
+            string name = null,
             IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
@@ -38,12 +39,16 @@ namespace PgpCore
                 throw new ArgumentException("OutputFile");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (string.IsNullOrEmpty(name))
+                name = Path.GetFileName(inputFile.Name);
+            if (headers == null)
+                headers = new Dictionary<string, string>();
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
             using (FileStream inputStream = inputFile.OpenRead())
             using (Stream outputStream = outputFile.OpenWrite())
-                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, inputFile.Name, headers);
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
         }
 
         #endregion EncryptFileAsync
@@ -59,8 +64,13 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task EncryptStreamAsync(Stream inputStream, Stream outputStream, bool armor = true,
-            bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public async Task EncryptStreamAsync(
+            Stream inputStream,
+            Stream outputStream,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -68,16 +78,14 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
-            if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+            if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
+                Path.GetFileName(fileStream.Name);
+            else if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
             if (headers == null)
                 headers = new Dictionary<string, string>();
-
-            if (name == DefaultFileName && inputStream is FileStream fileStream)
-            {
-                string inputFilePath = fileStream.Name;
-                name = Path.GetFileName(inputFilePath);
-            }
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (armor)
             {
@@ -118,16 +126,26 @@ namespace PgpCore
         /// PGP Encrypt the string.
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task<string> EncryptArmoredStringAsync(string input, bool withIntegrityCheck = true,
-            string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public async Task<string> EncryptArmoredStringAsync(
+            string input,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
+            if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAsync(inputStream, outputStream, true, withIntegrityCheck, name, headers);
+                await EncryptStreamAsync(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -145,9 +163,15 @@ namespace PgpCore
         /// <param name="outputFile">Output PGP encrypted and signed file path</param>
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
+        /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task EncryptFileAndSignAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true,
-            bool withIntegrityCheck = true, IDictionary<string, string> headers = null)
+        public async Task EncryptFileAndSignAsync(
+            FileInfo inputFile,
+            FileInfo outputFile,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFilePath");
@@ -155,6 +179,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputFilePath");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (string.IsNullOrEmpty(name))
+                name = Path.GetFileName(inputFile.Name);
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
@@ -167,11 +193,11 @@ namespace PgpCore
                 {
                     using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
-                        await OutputEncryptedAsync(inputFile, armoredOutputStream, withIntegrityCheck);
+                        await OutputEncryptedAsync(inputFile, armoredOutputStream, withIntegrityCheck, name);
                     }
                 }
                 else
-                    await OutputEncryptedAsync(inputFile, outputStream, withIntegrityCheck);
+                    await OutputEncryptedAsync(inputFile, outputStream, withIntegrityCheck, name);
             }
         }
 
@@ -189,8 +215,13 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task EncryptStreamAndSignAsync(Stream inputStream, Stream outputStream, bool armor = true,
-            bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public async Task EncryptStreamAndSignAsync(
+            Stream inputStream,
+            Stream outputStream,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -200,14 +231,12 @@ namespace PgpCore
                 throw new ArgumentException("EncryptionKeys");
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
+            if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
+                Path.GetFileName(fileStream.Name);
+            else if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
             if (headers == null)
                 headers = new Dictionary<string, string>();
-
-            if (name == DefaultFileName && inputStream is FileStream fileStream)
-            {
-                string inputFilePath = fileStream.Name;
-                name = Path.GetFileName(inputFilePath);
-            }
 
             if (armor)
             {
@@ -229,16 +258,26 @@ namespace PgpCore
         /// This method will include the signature within the encrypted message and is different from first encrypting a file and then signing it.
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task<string> EncryptArmoredStringAndSignAsync(string input, bool withIntegrityCheck = true,
-            string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public async Task<string> EncryptArmoredStringAndSignAsync(
+            string input,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
+            if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await EncryptStreamAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name, headers);
+                await EncryptStreamAndSignAsync(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }

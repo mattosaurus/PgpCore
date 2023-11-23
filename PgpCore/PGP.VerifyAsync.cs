@@ -65,11 +65,12 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        public async Task<bool> VerifyArmoredStringAsync(string input)
+        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        public async Task<bool> VerifyArmoredStringAsync(string input, bool throwIfEncrypted = false)
         {
             using (Stream inputStream = await input.GetStreamAsync())
             {
-                return await VerifyStreamAsync(inputStream);
+                return await VerifyStreamAsync(inputStream, throwIfEncrypted);
             }
         }
 

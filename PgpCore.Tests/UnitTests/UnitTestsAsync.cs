@@ -29,25 +29,6 @@ namespace PgpCore.Tests
             public static Task<string[]> ReadAllLinesAsync(string path) => Task.FromResult(System.IO.File.ReadAllLines(path));
         }
 
-        [Fact]
-        public async Task GenerateKeyAsync_CreatePublicPrivateKeyFiles()
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync();
-            PGP pgp = new PGP();
-
-            // Act
-            await pgp.GenerateKeyAsync(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            // Assert
-            Assert.True(testFactory.PublicKeyFileInfo.Exists);
-            Assert.True(testFactory.PrivateKeyFileInfo.Exists);
-
-            // Cleanup
-            testFactory.Teardown();
-        }
-
         #region File - FileInfo
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
@@ -2461,13 +2442,16 @@ namespace PgpCore.Tests
             // Teardown
             testFactory.Teardown();
         }
-        
-        [Fact]
-        public async Task VerifyArmoredStringAsync_ThrowIfEncrypted()
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task VerifyAndReadSignedArmoredStringAsync_WhenEncryptedAndNotSigned_ShouldThrowException(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
-            await testFactory.ArrangeAsync(KeyType.Generated, FileType.GeneratedMedium);
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
             
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);

@@ -28,6 +28,7 @@ namespace PgpCore
             FileInfo outputFile,
             bool armor = true,
             bool withIntegrityCheck = true,
+            string name = null,
             IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
@@ -36,12 +37,16 @@ namespace PgpCore
                 throw new ArgumentException("OutputFile");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (string.IsNullOrEmpty(name))
+                name = Path.GetFileName(inputFile.Name);
+            if (headers == null)
+                headers = new Dictionary<string, string>();
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
             using (FileStream inputStream = inputFile.OpenRead())
             using (Stream outputStream = outputFile.OpenWrite())
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, outputFile.Name, headers);
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
         }
 
         #endregion EncryptFile
@@ -57,8 +62,13 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true,
-            bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public void EncryptStream(
+            Stream inputStream,
+            Stream outputStream,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -66,16 +76,14 @@ namespace PgpCore
                 throw new ArgumentException("OutputStream");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
-            if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+            if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
+                Path.GetFileName(fileStream.Name);
+            else if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
             if (headers == null)
                 headers = new Dictionary<string, string>();
-
-            if (name == DefaultFileName && inputStream is FileStream fileStream)
-            {
-                string inputFilePath = fileStream.Name;
-                name = Path.GetFileName(inputFilePath);
-            }
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
             if (armor)
             {
@@ -117,15 +125,26 @@ namespace PgpCore
         /// PGP Encrypt the string.
         /// </summary>
         /// <param name="input">Plain string to be encrypted</param>
+        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string EncryptArmoredString(string input, bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public string EncryptArmoredString(
+            string input,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
+            if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, true, withIntegrityCheck, name, headers);
+                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -143,8 +162,13 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true,
-            bool withIntegrityCheck = true, IDictionary<string, string> headers = null)
+        public void EncryptFileAndSign(
+            FileInfo inputFile,
+            FileInfo outputFile,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = null,
+            IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFilePath");
@@ -152,6 +176,8 @@ namespace PgpCore
                 throw new ArgumentException("OutputFilePath");
             if (EncryptionKeys == null)
                 throw new ArgumentException("EncryptionKeys");
+            if (string.IsNullOrEmpty(name))
+                name = Path.GetFileName(inputFile.Name);
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
@@ -164,11 +190,11 @@ namespace PgpCore
                 {
                     using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
-                        OutputEncrypted(inputFile, armoredOutputStream, withIntegrityCheck);
+                        OutputEncrypted(inputFile, armoredOutputStream, withIntegrityCheck, name);
                     }
                 }
                 else
-                    OutputEncrypted(inputFile, outputStream, withIntegrityCheck);
+                    OutputEncrypted(inputFile, outputStream, withIntegrityCheck, name);
             }
         }
 
@@ -185,8 +211,13 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true,
-            bool withIntegrityCheck = true, string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public void EncryptStreamAndSign(
+            Stream inputStream,
+            Stream outputStream,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName,
+            IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -196,14 +227,12 @@ namespace PgpCore
                 throw new ArgumentException("EncryptionKeys");
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
+            if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
+                Path.GetFileName(fileStream.Name);
+            else if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
             if (headers == null)
                 headers = new Dictionary<string, string>();
-
-            if (name == DefaultFileName && inputStream is FileStream fileStream)
-            {
-                string inputFilePath = fileStream.Name;
-                name = Path.GetFileName(inputFilePath);
-            }
 
             if (armor)
             {
@@ -227,13 +256,22 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string EncryptArmoredStringAndSign(string input, bool withIntegrityCheck = true,
-            string name = DefaultFileName, IDictionary<string, string> headers = null)
+        public string EncryptArmoredStringAndSign(
+            string input,
+            bool armor = true,
+            bool withIntegrityCheck = true,
+            string name = DefaultFileName,
+            IDictionary<string, string> headers = null)
         {
+            if (string.IsNullOrEmpty(name))
+                name = DefaultFileName;
+            if (headers == null)
+                headers = new Dictionary<string, string>();
+
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStreamAndSign(inputStream, outputStream, true, withIntegrityCheck, name, headers);
+                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }

@@ -60,11 +60,12 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        public bool VerifyArmoredString(string input)
+        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        public bool VerifyArmoredString(string input, bool throwIfEncrypted = false)
         {
             using (Stream inputStream = input.GetStream())
             {
-                return VerifyStream(inputStream);
+                return VerifyStream(inputStream, throwIfEncrypted);
             }
         }
 

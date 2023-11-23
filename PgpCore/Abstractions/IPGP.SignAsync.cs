@@ -7,16 +7,16 @@ namespace PgpCore.Abstractions
 {
     public interface ISignAsync : IDisposable
     {
-        Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, bool armor, IDictionary<string, string> headers);
+        Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null);
 
-        Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor, string name, IDictionary<string, string> headers);
+        Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null);
 
-        Task<string> SignArmoredStringAsync(string input, string name, IDictionary<string, string> headers);
+        Task<string> SignArmoredStringAsync(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null);
 
-        Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers);
+        Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers = null);
 
-        Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers);
+        Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers = null);
 
-        Task<string> ClearSignArmoredStringAsync(string input, IDictionary<string, string> headers);
+        Task<string> ClearSignArmoredStringAsync(string input, IDictionary<string, string> headers = null);
     }
 }
