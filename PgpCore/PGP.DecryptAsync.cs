@@ -83,6 +83,8 @@ namespace PgpCore
 
         /// <summary>
         /// PGP decrypt and verify a given file.
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="inputFile">PGP encrypted data file path to be decrypted and verified</param>
         /// <param name="outputFile">Output PGP decrypted and verified file path</param>
@@ -109,6 +111,8 @@ namespace PgpCore
 
         /// <summary>
         /// PGP decrypt and verify a given stream.
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
@@ -133,6 +137,8 @@ namespace PgpCore
 
         /// <summary>
         /// PGP decrypt and verify a given string.
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
         public async Task<string> DecryptArmoredStringAndVerifyAsync(string input)

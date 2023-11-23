@@ -138,7 +138,8 @@ namespace PgpCore
         #region EncryptFileAndSignAsync
 
         /// <summary>
-        /// Encrypt and sign the file pointed to by unencryptedFileInfo and
+        /// Encrypt and sign the file pointed to by the unencrypted FileInfo.
+        /// This method will include the signature within the encrypted message and is different from first encrypting a file and then signing it.
         /// </summary>
         /// <param name="inputFile">Plain data file path to be encrypted and signed</param>
         /// <param name="outputFile">Output PGP encrypted and signed file path</param>
@@ -179,7 +180,8 @@ namespace PgpCore
         #region EncryptStreamAndSignAsync
 
         /// <summary>
-        /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
+        /// Encrypt and sign the stream pointed to by unencrypted Stream.
+        /// This method will include the signature within the encrypted message and is different from first encrypting a file and then signing it.
         /// </summary>
         /// <param name="inputStream">Plain data stream to be encrypted and signed</param>
         /// <param name="outputStream">Output PGP encrypted and signed stream</param>
@@ -223,7 +225,8 @@ namespace PgpCore
         #region EncryptArmoredStringAndSignAsync
 
         /// <summary>
-        /// Encrypt and sign the string
+        /// Encrypt and sign the string.
+        /// This method will include the signature within the encrypted message and is different from first encrypting a file and then signing it.
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>

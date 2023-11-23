@@ -450,6 +450,8 @@ string content = verificationResult.Content;
 ### Decrypt and Verify
 Decrypt and then verify the provided encrypted and signed file, stream or string. Usually your counterparty will encrypt with your public key and sign with their private key so you can decrypt with your private key and verify with their public key.
 
+The `DecryptAndVerify` methods will only work with files that have been encrypted and signed using the `EncryptAndSign` methods. This is because the signature is included within the encrypted message rather than being appended to the encrypted message. If a file is first encrypted using an `Encrypt` method and then signed using a `Sign` method then the signature will be appended to the encrypted message rather than embedded within it and the `DecryptAndVerify` methods will not be able to verify the signature.
+
 [`gpg --output "C:\TEMP\Content\encryptedAndSigned.pgp" --decrypt "C:\TEMP\Content\decryptedAndVerified.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
 #### DecryptFileAndVerifyAsync
 ```C#
