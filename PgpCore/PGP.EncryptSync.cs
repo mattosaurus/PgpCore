@@ -216,7 +216,7 @@ namespace PgpCore
             Stream outputStream,
             bool armor = true,
             bool withIntegrityCheck = true,
-            string name = DefaultFileName,
+            string name = null,
             IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
@@ -260,7 +260,7 @@ namespace PgpCore
             string input,
             bool armor = true,
             bool withIntegrityCheck = true,
-            string name = DefaultFileName,
+            string name = null,
             IDictionary<string, string> headers = null)
         {
             if (string.IsNullOrEmpty(name))
