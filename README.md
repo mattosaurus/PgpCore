@@ -88,6 +88,8 @@ using (PGP pgp = new PGP())
 ### Encrypt
 Encrypt the provided file, stream or string using a public key.
 
+Optional headers can be provided to include in the encrypted file. These can be set by providing a `Dictionary<string, string>` to the `headers` parameter. The key of the dictionary will be the header name and the value will be the header value.
+
 [`gpg --output "C:\TEMP\Content\encrypted.pgp" --encrypt "C:\TEMP\Content\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
 #### EncryptFileAsync
 ```C#
@@ -130,6 +132,8 @@ string encryptedContent = await pgp.EncryptArmoredStringAsync("String to encrypt
 ```
 ### Sign
 Sign the provided file or stream using a private key.
+
+Optional headers can be provided to include in the signed file. These can be set by providing a `Dictionary<string, string>` to the `headers` parameter. The key of the dictionary will be the header name and the value will be the header value.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --sign "C:\TEMP\Content\signed.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
 #### SignFileAsync
