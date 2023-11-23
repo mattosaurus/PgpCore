@@ -96,7 +96,6 @@ namespace PgpCore
             {
                 PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
                 await Utilities.WriteStreamToLiteralDataAsync(comData.Open(@out), FileTypeToChar(), inputStream, name);
-                comData.Close();
             }
             else
                 await Utilities.WriteStreamToLiteralDataAsync(@out, FileTypeToChar(), inputStream, name);
