@@ -1,4 +1,8 @@
 ﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using PgpCore.Abstractions;
+using PgpCore.Extensions;
+using PgpCore.Helpers;
+using PgpCore.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +10,7 @@ using System.Linq;
 
 namespace PgpCore
 {
-	public class EncryptionKeys : IEncryptionKeys
+    public class EncryptionKeys : IEncryptionKeys
 	{
 		#region Instance Members (Public)
 

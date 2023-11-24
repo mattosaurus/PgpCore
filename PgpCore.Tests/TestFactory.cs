@@ -30,13 +30,13 @@ namespace PgpCore.Tests
 
         public string Content => Constants.CONTENT;
 
-        public string ContentFilePath => $"{ContentDirectory}{Constants.CONTENTFILENAME}";
+        private string ContentFilePath => $"{ContentDirectory}{Constants.CONTENTFILENAME}";
 
         public FileInfo ContentFileInfo => new FileInfo(ContentFilePath);
 
         public Stream ContentStream => GetFileStream(ContentFileInfo);
 
-        public string EncryptedContentFilePath => $"{ContentDirectory}{Constants.ENCRYPTEDCONTENTFILENAME}";
+        private string EncryptedContentFilePath => $"{ContentDirectory}{Constants.ENCRYPTEDCONTENTFILENAME}";
 
         public FileInfo EncryptedContentFileInfo => new FileInfo(EncryptedContentFilePath);
 
@@ -44,7 +44,7 @@ namespace PgpCore.Tests
 
         public Stream EncryptedContentStream => GetFileStream(EncryptedContentFileInfo);
 
-        public string SignedContentFilePath => $"{ContentDirectory}{Constants.SIGNEDCONTENTFILENAME}";
+        private string SignedContentFilePath => $"{ContentDirectory}{Constants.SIGNEDCONTENTFILENAME}";
 
         public FileInfo SignedContentFileInfo => new FileInfo(SignedContentFilePath);
 
@@ -52,7 +52,7 @@ namespace PgpCore.Tests
 
         public Stream SignedContentStream => GetFileStream(SignedContentFileInfo);
 
-        public string DecryptedContentFilePath => $"{ContentDirectory}{Constants.DECRYPTEDCONTENTFILENAME}";
+        private string DecryptedContentFilePath => $"{ContentDirectory}{Constants.DECRYPTEDCONTENTFILENAME}";
 
         public FileInfo DecryptedContentFileInfo => new FileInfo(DecryptedContentFilePath);
 
@@ -60,7 +60,7 @@ namespace PgpCore.Tests
 
         public Stream DecryptedContentStream => GetFileStream(DecryptedContentFileInfo);
 
-        public string PrivateKeyFilePath => $"{KeyDirectory}{Constants.PRIVATEKEYFILENAME}";
+        private string PrivateKeyFilePath => $"{KeyDirectory}{Constants.PRIVATEKEYFILENAME}";
 
         public FileInfo PrivateKeyFileInfo => new FileInfo(PrivateKeyFilePath);
 
@@ -68,7 +68,7 @@ namespace PgpCore.Tests
 
         public Stream PrivateKeyStream => GetFileStream(PrivateKeyFileInfo);
 
-        public string PublicKeyFilePath => $"{KeyDirectory}{Constants.PUBLICKEYFILENAME}";
+        private string PublicKeyFilePath => $"{KeyDirectory}{Constants.PUBLICKEYFILENAME}";
 
         public FileInfo PublicKeyFileInfo => new FileInfo(PublicKeyFilePath);
 
@@ -88,16 +88,16 @@ namespace PgpCore.Tests
             // Create keys
             if (keyType == KeyType.Generated)
             {
-                pgp.GenerateKey(PublicKeyFilePath, PrivateKeyFilePath, UserName, Password);
+                pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
             }
             else if (keyType == KeyType.Known)
             {
-                using (StreamWriter streamWriter = File.CreateText(PublicKeyFilePath))
+                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
                 {
                     streamWriter.WriteLine(Constants.PUBLICKEY1);
                 }
 
-                using (StreamWriter streamWriter = File.CreateText(PrivateKeyFilePath))
+                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
                 {
                     streamWriter.WriteLine(Constants.PRIVATEKEY1);
                 }
@@ -107,12 +107,12 @@ namespace PgpCore.Tests
             }
             else if (keyType == KeyType.KnownGpg)
             {
-                using (StreamWriter streamWriter = File.CreateText(PublicKeyFilePath))
+                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
                 {
                     streamWriter.WriteLine(Constants.PUBLICGPGKEY1);
                 }
 
-                using (StreamWriter streamWriter = File.CreateText(PrivateKeyFilePath))
+                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
                 {
                     streamWriter.WriteLine(Constants.PRIVATEGPGKEY1);
                 }
@@ -130,16 +130,16 @@ namespace PgpCore.Tests
             // Create keys
             if (keyType == KeyType.Generated)
             {
-                pgp.GenerateKey(PublicKeyFilePath, PrivateKeyFilePath, UserName, Password);
+                pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
             }
             else if (keyType == KeyType.Known)
             {
-                using (StreamWriter streamWriter = File.CreateText(PublicKeyFilePath))
+                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
                 {
                     await streamWriter.WriteLineAsync(Constants.PUBLICKEY1);
                 }
 
-                using (StreamWriter streamWriter = File.CreateText(PrivateKeyFilePath))
+                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
                 {
                     await streamWriter.WriteLineAsync(Constants.PRIVATEKEY1);
                 }
@@ -149,12 +149,12 @@ namespace PgpCore.Tests
             }
             else if (keyType == KeyType.KnownGpg)
             {
-                using (StreamWriter streamWriter = File.CreateText(PublicKeyFilePath))
+                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
                 {
                     await streamWriter.WriteLineAsync(Constants.PUBLICGPGKEY1);
                 }
 
-                using (StreamWriter streamWriter = File.CreateText(PrivateKeyFilePath))
+                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
                 {
                     await streamWriter.WriteLineAsync(Constants.PRIVATEGPGKEY1);
                 }
@@ -171,7 +171,7 @@ namespace PgpCore.Tests
             // Create content file
             if (fileType == FileType.Known)
             {
-                using (StreamWriter streamWriter = File.CreateText(ContentFilePath))
+                using (StreamWriter streamWriter = ContentFileInfo.CreateText())
                 {
                     streamWriter.WriteLine(Constants.CONTENT);
                 }
@@ -193,7 +193,7 @@ namespace PgpCore.Tests
             // Create content file
             if (fileType == FileType.Known)
             {
-                using (StreamWriter streamWriter = File.CreateText(ContentFilePath))
+                using (StreamWriter streamWriter = ContentFileInfo.CreateText())
                 {
                     await streamWriter.WriteLineAsync(Constants.CONTENT);
                 }

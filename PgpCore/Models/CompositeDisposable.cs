@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace PgpCore
+namespace PgpCore.Models
 {
     /// <seealso href="https://github.com/dotnet/reactive/blob/main/Rx.NET/Source/src/System.Reactive/Disposables/CompositeDisposable.cs">
     /// Simplified adaptation from System.Reactive.
