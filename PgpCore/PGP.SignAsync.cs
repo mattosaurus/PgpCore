@@ -1,5 +1,6 @@
 ﻿using Org.BouncyCastle.Bcpg;
 using PgpCore.Abstractions;
+using PgpCore.Extensions;
 using PgpCore.Helpers;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace PgpCore
 {
     public partial class PGP : ISignAsync
     {
-        #region SignFileAsync
+        #region SignAsync
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo
         /// </summary>
@@ -20,7 +21,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task SignFileAsync(
+        public async Task SignAsync(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
@@ -55,9 +56,6 @@ namespace PgpCore
             }
         }
 
-        #endregion SignFileAsync
-
-        #region SignStreamAsync
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
@@ -66,7 +64,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the stream name if the stream is a FileStream, otherwise to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task SignStreamAsync(
+        public async Task SignAsync(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
@@ -99,10 +97,6 @@ namespace PgpCore
                 await OutputSignedAsync(inputStream, outputStream, name);
         }
 
-        #endregion SignStreamAsync
-
-        #region SignArmoredStringAsync
-
         /// <summary>
         /// Sign the string
         /// </summary>
@@ -110,7 +104,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task<string> SignArmoredStringAsync(
+        public async Task<string> SignAsync(
             string input,
             bool armor = true,
             string name = null,
@@ -124,22 +118,29 @@ namespace PgpCore
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignStreamAsync(inputStream, outputStream, armor, name, headers);
+                await SignAsync(inputStream, outputStream, armor, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
         }
 
-        #endregion SignArmoredStringAsync
+        public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(inputFile, outputFile, armor, name, headers);
 
-        #region ClearSignFileAsync
+        public async Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(inputStream, outputStream, armor, name, headers);
+
+        public async Task<string> SignArmoredStringAsync(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(input, armor, name, headers);
+
+        #endregion SignAsync
+
+        #region ClearSignAsync
+
         /// <summary>
         /// Clear sign the file pointed to by unencryptedFileInfo
         /// </summary>
         /// <param name="inputFile">Plain data file to be signed</param>
         /// <param name="outputFile">Output PGP signed file</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task ClearSignFileAsync(
+        public async Task ClearSignAsync(
             FileInfo inputFile,
             FileInfo outputFile,
             IDictionary<string, string> headers = null)
@@ -162,16 +163,13 @@ namespace PgpCore
             }
         }
 
-        #endregion ClearSignFileAsync
-
-        #region ClearSignStreamAsync
         /// <summary>
         /// Clear sign the provided stream
         /// </summary>
         /// <param name="inputStream">Plain data stream to be signed</param>
         /// <param name="outputStream">Output PGP signed stream</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task ClearSignStreamAsync(
+        public async Task ClearSignAsync(
             Stream inputStream,
             Stream outputStream,
             IDictionary<string, string> headers = null)
@@ -190,15 +188,12 @@ namespace PgpCore
             await OutputClearSignedAsync(inputStream, outputStream, headers);
         }
 
-        #endregion ClearSignStreamAsync
-
-        #region ClearSignArmoredStringAsync
         /// <summary>
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public async Task<string> ClearSignArmoredStringAsync(
+        public async Task<string> ClearSignAsync(
             string input,
             IDictionary<string, string> headers = null)
         {
@@ -208,12 +203,18 @@ namespace PgpCore
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await ClearSignStreamAsync(inputStream, outputStream, headers);
+                await ClearSignAsync(inputStream, outputStream, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
         }
 
-        #endregion ClearSignArmoredStringAsync
+        public async Task ClearSignFileAsync(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers = null) => await ClearSignAsync(inputFile, outputFile, headers);
+
+        public async Task ClearSignStreamAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers = null) => await ClearSignAsync(inputStream, outputStream, headers);
+
+        public async Task<string> ClearSignArmoredStringAsync(string input, IDictionary<string, string> headers = null) => await ClearSignAsync(input, headers);
+
+        #endregion ClearSignAsync
     }
 }

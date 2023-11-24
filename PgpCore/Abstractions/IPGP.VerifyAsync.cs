@@ -7,19 +7,26 @@ using System.Threading.Tasks;
 
 namespace PgpCore.Abstractions
 {
-    public interface IVerifySync : IDisposable
+    public interface IVerifyAsync : IDisposable
     {
-        bool VerifyFile(FileInfo inputFile, bool throwIfEncrypted = false);
-        bool VerifyStream(Stream inputStream, bool throwIfEncrypted = false);
-        bool VerifyArmoredString(string input, bool throwIfEncrypted = false);
-        bool VerifyClearFile(FileInfo inputFile);
-        bool VerifyClearStream(Stream inputStream);
-        bool VerifyClearArmoredString(string input);
-        VerificationResult VerifyAndReadClearFile(FileInfo inputFile);
-        VerificationResult VerifyAndReadClearStream(Stream inputStream);
-        VerificationResult VerifyAndReadClearArmoredString(string input);
-        VerificationResult VerifyAndReadSignedFile(FileInfo inputFile, bool throwIfEncrypted = false);
-        VerificationResult VerifyAndReadSignedStream(Stream inputStream, bool throwIfEncrypted = false);
-        VerificationResult VerifyAndReadSignedArmoredString(string input, bool throwIfEncrypted = false);
+        Task<bool> VerifyAsync(FileInfo inputFile, FileInfo outputFile = null, bool throwIfEncrypted = false);
+        Task<bool> VerifyAsync(Stream inputStream, Stream outputStream = null, bool throwIfEncrypted = false);
+        Task<bool> VerifyAsync(string input, string output = null, bool throwIfEncrypted = false);
+        Task<bool> VerifyClearAsync(FileInfo inputFile, FileInfo outputFile = null);
+        Task<bool> VerifyClearAsync(Stream inputStream, Stream outputStream = null);
+        Task<bool> VerifyClearAsync(string input, string output = null);
+
+        Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false);
+        Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false);
+        Task<bool> VerifyArmoredStringAsync(string input, bool throwIfEncrypted = false);
+        Task<bool> VerifyClearFileAsync(FileInfo inputFile);
+        Task<bool> VerifyClearStreamAsync(Stream inputStream);
+        Task<bool> VerifyClearArmoredStringAsync(string input);
+        Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile);
+        Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream);
+        Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input);
+        Task<VerificationResult> VerifyAndReadSignedFileAsync(FileInfo inputFile, bool throwIfEncrypted = false);
+        Task<VerificationResult> VerifyAndReadSignedStreamAsync(Stream inputStream, bool throwIfEncrypted = false);
+        Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input, bool throwIfEncrypted = false);
     }
 }

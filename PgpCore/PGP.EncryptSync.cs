@@ -8,12 +8,13 @@ using System.IO;
 using System.Text;
 using PgpCore.Models;
 using PgpCore.Abstractions;
+using PgpCore.Extensions;
 
 namespace PgpCore
 {
     public partial class PGP : IEncryptSync
     {
-        #region EncryptFile
+        #region Encrypt
         /// <summary>
         /// PGP Encrypt the file.
         /// </summary>
@@ -23,7 +24,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptFile(
+        public void Encrypt(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
@@ -46,12 +47,8 @@ namespace PgpCore
 
             using (FileStream inputStream = inputFile.OpenRead())
             using (Stream outputStream = outputFile.OpenWrite())
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
         }
-
-        #endregion EncryptFile
-
-        #region EncryptStream
 
         /// <summary>
         /// PGP Encrypt the stream.
@@ -62,7 +59,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptStream(
+        public void Encrypt(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
@@ -117,10 +114,6 @@ namespace PgpCore
             }
         }
 
-        #endregion EncryptStream
-
-        #region EncryptArmoredString
-
         /// <summary>
         /// PGP Encrypt the string.
         /// </summary>
@@ -129,7 +122,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string EncryptArmoredString(
+        public string Encrypt(
             string input,
             bool armor = true,
             bool withIntegrityCheck = true,
@@ -144,15 +137,21 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStream(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        #endregion EncryptArmoredString
+        public string EncryptArmoredString(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(input, armor, withIntegrityCheck, name, headers);
+        
+        public void EncryptFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(inputFile, outputFile, armor, withIntegrityCheck, name, headers);
+        
+        public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
 
-        #region EncryptFileAndSign
+        #endregion Encrypt
+
+        #region EncryptAndSign
 
         /// <summary>
         /// Encrypt and sign the file pointed to by unencryptedFileInfo and
@@ -162,7 +161,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptFileAndSign(
+        public void EncryptAndSign(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
@@ -198,10 +197,6 @@ namespace PgpCore
             }
         }
 
-        #endregion EncryptFileAndSign
-
-        #region EncryptStreamAndSign
-
         /// <summary>
         /// Encrypt and sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
@@ -211,7 +206,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void EncryptStreamAndSign(
+        public void EncryptAndSign(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
@@ -245,10 +240,6 @@ namespace PgpCore
                 OutputEncrypted(inputStream, outputStream, withIntegrityCheck, name);
         }
 
-        #endregion EncryptStreamAndSign
-
-        #region EncryptArmoredStringAndSign
-
         /// <summary>
         /// Encrypt and sign the string
         /// </summary>
@@ -256,7 +247,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string EncryptArmoredStringAndSign(
+        public string EncryptAndSign(
             string input,
             bool armor = true,
             bool withIntegrityCheck = true,
@@ -271,12 +262,18 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptStreamAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        #endregion EncryptArmoredStringAndSign
+        public string EncryptArmoredStringAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(input, armor, withIntegrityCheck, name, headers);
+
+        public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(inputFile, outputFile, armor, withIntegrityCheck, name, headers);
+
+        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+
+        #endregion EncryptAndSign
     }
 }

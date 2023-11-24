@@ -1,5 +1,6 @@
 ﻿using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
+using PgpCore.Extensions;
 using PgpCore.Helpers;
 using PgpCore.Models;
 using System;

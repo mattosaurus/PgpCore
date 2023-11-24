@@ -1,5 +1,6 @@
 ﻿using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
+using PgpCore.Extensions;
 using PgpCore.Helpers;
 using System;
 using System.Collections.Generic;
@@ -29,10 +30,6 @@ namespace PgpCore
             using (Stream inputStream = File.OpenRead(inputFileInfo.FullName))
                 return GetStreamRecipients(inputStream);
         }
-
-        #endregion GetFileRecipients
-
-        #region GetStreamRecipients
 
         /// <summary>
         /// PGP get a recipients keys id of an encrypted stream.
@@ -64,10 +61,6 @@ namespace PgpCore
             return enc.GetEncryptedDataObjects().OfType<PgpPublicKeyEncryptedData>().Select(k => k.KeyId);
         }
 
-        #endregion GetStreamRecipients
-
-        #region GetArmoredStringRecipients
-
         /// <summary>
         /// PGP get a recipients keys id of an encrypted file.
         /// </summary>
@@ -81,6 +74,12 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
                 return GetStreamRecipients(inputStream);
         }
+
+        public IEnumerable<long> GetRecipients(FileInfo inputFileInfo) => GetFileRecipients(inputFileInfo);
+
+        public IEnumerable<long> GetRecipients(Stream inputStream) => GetStreamRecipients(inputStream);
+
+        public IEnumerable<long> GetRecipients(string input) => GetArmoredStringRecipients(input);
 
         #endregion GetArmoredStringRecipients
     }

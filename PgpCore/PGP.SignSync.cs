@@ -1,5 +1,6 @@
 ﻿using Org.BouncyCastle.Bcpg;
 using PgpCore.Abstractions;
+using PgpCore.Extensions;
 using PgpCore.Helpers;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,8 @@ namespace PgpCore
 {
     public partial class PGP : ISignSync
     {
-        #region SignFile
+        #region Sign
+
         /// <summary>
         /// Sign the file pointed to by unencryptedFileInfo
         /// </summary>
@@ -19,7 +21,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void SignFile(
+        public void Sign(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
@@ -54,9 +56,6 @@ namespace PgpCore
             }
         }
 
-        #endregion SignFile
-
-        #region SignStream
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
         /// </summary>
@@ -65,7 +64,7 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the stream name if the stream is a FileStream, otherwise to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void SignStream(
+        public void Sign(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
@@ -98,16 +97,13 @@ namespace PgpCore
                 OutputSigned(inputStream, outputStream, name);
         }
 
-        #endregion SignStream
-
-        #region SignArmoredString
         /// <summary>
         /// Sign the string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="name">Name of signed file in message, defaults to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string SignArmoredString(
+        public string Sign(
             string input,
             bool armor = true,
             string name = null,
@@ -121,22 +117,29 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                SignStream(inputStream, outputStream, armor, name, headers);
+                Sign(inputStream, outputStream, armor, name, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        #endregion SignArmoredString
+        public void SignFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(inputFile, outputFile, armor, name, headers);
 
-        #region ClearSignFile
+        public void SignStream(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(inputStream, outputStream, armor, name, headers);
+
+        public string SignArmoredString(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(input, armor, name, headers);
+
+        #endregion Sign
+
+        #region ClearSign
+
         /// <summary>
         /// Clear sign the file pointed to by unencryptedFileInfo
         /// </summary>
         /// <param name="inputFile">Plain data file to be signed</param>
         /// <param name="outputFile">Output PGP signed file</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void ClearSignFile(
+        public void ClearSign(
             FileInfo inputFile,
             FileInfo outputFile,
             IDictionary<string, string> headers = null)
@@ -159,16 +162,13 @@ namespace PgpCore
             }
         }
 
-        #endregion ClearSignFile
-
-        #region ClearSignStream
         /// <summary>
         /// Clear sign the provided stream
         /// </summary>
         /// <param name="inputStream">Plain data stream to be signed</param>
         /// <param name="outputStream">Output PGP signed stream</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public void ClearSignStream(
+        public void ClearSign(
             Stream inputStream,
             Stream outputStream,
             IDictionary<string, string> headers = null)
@@ -187,15 +187,12 @@ namespace PgpCore
             OutputClearSigned(inputStream, outputStream, headers);
         }
 
-        #endregion ClearSignStream
-
-        #region ClearSignArmoredString
         /// <summary>
         /// Clear sign the provided string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        public string ClearSignArmoredString(
+        public string ClearSign(
             string input,
             IDictionary<string, string> headers = null)
         {
@@ -205,12 +202,18 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                ClearSignStream(inputStream, outputStream, headers);
+                ClearSign(inputStream, outputStream, headers);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        #endregion ClearSignArmoredString
+        public void ClearSignFile(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers = null) => ClearSign(inputFile, outputFile, headers);
+
+        public void ClearSignStream(Stream inputStream, Stream outputStream, IDictionary<string, string> headers = null) => ClearSign(inputStream, outputStream, headers);
+
+        public string ClearSignArmoredString(string input, IDictionary<string, string> headers = null) => ClearSign(input, headers);
+
+        #endregion ClearSign
     }
 }

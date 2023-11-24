@@ -28,43 +28,14 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
 ## Methods
 
 * [Generate Key](#generate-key)
-  * [GenerateKey](#generatekey)
 * [Encrypt](#encrypt)
-  * [EncryptFileAsync](#encryptfileasync)
-  * [EncryptStreamAsync](#encryptstreamasync)
-  * [EncryptArmoredStringAsync](#encryptarmoredstringasync)
 * [Sign](#sign)
-  * [SignFileAsync](#signfileasync)
-  * [SignStreamAsync](#signstreamasync)
-  * [SignArmoredStringAsync](#signarmoredstringasync)
-* [ClearSign](#clearsign)
-  * [ClearSignFileAsync](#clearsignfileasync)
-  * [ClearSignStreamAsync](#clearsignstreamasync)
-  * [ClearSignArmoredStringAsync](#clearsignarmoredstringasync)
+* [Clear Sign](#clearsign)
 * [Encrypt and Sign](#encrypt-and-sign)
-  * [EncryptFileAndSignAsync](#encryptfileandsignasync)
-  * [EncryptStreamAndSignAsync](#encryptstreamandsignasync)
-  * [EncryptArmoredStringAndSignAsync](#encryptarmoredstringandsignasync)
 * [Decrypt](#decrypt)
-  * [DecryptFileAsync](#decryptfileasync)
-  * [DecryptStreamAsync](#decryptstreamasync)
-  * [DecryptArmoredStringAsync](#decryptarmoredstringasync)
 * [Verify](#verify)
-  * [VerifyFileAsync](#verifyfileasync)
-  * [VerifyStreamAsync](#verifystreamasync)
-  * [VerifyArmoredStringAsync](#verifyarmoredstringasync)
-* [VerifyClear](#verify)
-  * [VerifyClearFileAsync](#verifyclearfileasync)
-  * [VerifyClearStreamAsync](#verifyclearstreamasync)
-  * [VerifyClearArmoredStringAsync](#verifycleararmoredstringasync)
-* [Verify and Read Clear](#verifyandreadclear)
-  * [VerifyAndReadClearFileAsync](#verifyandreadclearfilessync)
-  * [VerifyAndReadClearStreamAsync](#verifyandreadclearstreamasync)
-  * [VerifyAndReadClearArmoredStringAsync](#verifyandreadcleararmoredstringasync)
+* [Verify Clear](#verify)
 * [Decrypt and Verify](#decrypt-and-verify)
-  * [DecryptFileAndVerifyAsync](#decryptfileandverifyasync)
-  * [DecryptStreamAndVerifyAsync](#decryptstreamandverifyasync)
-  * [DecryptArmoredStringAndVerifyAsync](#decryptarmoredstringandverifyasync)
 
 ## Settings
 * [Compression Algorithm](#compressionalgorithm)
@@ -91,7 +62,7 @@ Encrypt the provided file, stream or string using a public key.
 Optional headers can be provided to include in the encrypted file. These can be set by providing a `Dictionary<string, string>` to the `headers` parameter. The key of the dictionary will be the header name and the value will be the header value.
 
 [`gpg --output "C:\TEMP\Content\encrypted.pgp" --encrypt "C:\TEMP\Content\content.txt"`](https://www.gnupg.org/gph/en/manual/x110.html)
-#### EncryptFileAsync
+#### Encrypt File
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -103,9 +74,9 @@ FileInfo encryptedFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
 
 // Encrypt
 PGP pgp = new PGP(encryptionKeys);
-await pgp.EncryptFileAsync(inputFile, encryptedFile);
+await pgp.EncryptAsync(inputFile, encryptedFile);
 ```
-#### EncryptStreamAsync
+#### Encrypt Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -118,9 +89,9 @@ PGP pgp = new PGP(encryptionKeys);
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\encrypted.pgp"))
 	// Encrypt
-	await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
+	await pgp.EncryptAsync(inputFileStream, outputFileStream);
 ```
-#### EncryptArmoredStringAsync
+#### Encrypt String
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -128,7 +99,7 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
 
 // Encrypt
 PGP pgp = new PGP(encryptionKeys);
-string encryptedContent = await pgp.EncryptArmoredStringAsync("String to encrypt");
+string encryptedContent = await pgp.EncryptAsync("String to encrypt");
 ```
 ### Sign
 Sign the provided file or stream using a private key.
@@ -136,7 +107,7 @@ Sign the provided file or stream using a private key.
 Optional headers can be provided to include in the signed file. These can be set by providing a `Dictionary<string, string>` to the `headers` parameter. The key of the dictionary will be the header name and the value will be the header value.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --sign "C:\TEMP\Content\signed.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### SignFileAsync
+#### Sign File
 ```C#
 // Load keys
 FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
@@ -148,9 +119,9 @@ FileInfo signedFile = new FileInfo(@"C:\TEMP\Content\signed.pgp");
 
 // Sign
 PGP pgp = new PGP(encryptionKeys);
-await pgp.SignFileAsync(inputFile, signedFile);
+await pgp.SignAsync(inputFile, signedFile);
 ```
-#### SignStreamAsync
+#### Sign Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -163,9 +134,9 @@ PGP pgp = new PGP(encryptionKeys);
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
 	// Sign
-	await pgp.SignStreamAsync(inputFileStream, outputFileStream);
+	await pgp.SignAsync(inputFileStream, outputFileStream);
 ```
-#### SignArmoredStringAsync
+#### Sign String
 ```C#
 // Load keys
 string privateKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
@@ -174,13 +145,13 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
 PGP pgp = new PGP(encryptionKeys);
 
 // Sign
-string signedContent = await pgp.SignArmoredStringAsync("String to sign");
+string signedContent = await pgp.SignAsync("String to sign");
 ```
 ### Clear Sign
 Clear sign the provided file, stream, or string using a private key so that it is still human readable. A common use of digital signatures is to sign usenet postings or email messages. In such situations it is undesirable to compress the document while signing it. This is because the signature would then depend on the compression algorithm used. This is problematic when different people use different compression algorithms. To overcome this problem, the OpenPGP digital signature format has a special type of signature that is not computed on the message itself. Instead, the signature is computed on a "cleartext" version of the message - a version that is exactly the same as the original message except that it is not compressed and certain types of information (such as the end of line markers) are not included. This cleartext version is then compressed and the signature is appended to the compressed cleartext to produce the final message.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --clearsign  "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### ClearSignFileAsync
+#### Clear Sign File
 ```C#
 // Load keys
 FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
@@ -192,9 +163,9 @@ FileInfo signedFile = new FileInfo(@"C:\TEMP\Content\signed.pgp");
 
 // Sign
 PGP pgp = new PGP(encryptionKeys);
-await pgp.ClearSignFileAsync(inputFile, signedFile);
+await pgp.ClearSignAsync(inputFile, signedFile);
 ```
-#### ClearSignStreamAsync
+#### Clear Sign Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -207,9 +178,9 @@ PGP pgp = new PGP(encryptionKeys);
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
 	// Sign
-	await pgp.ClearSignStreamAsync(inputFileStream, outputFileStream);
+	await pgp.ClearSignAsync(inputFileStream, outputFileStream);
 ```
-#### ClearSignArmoredStringAsync
+#### Clear Sign String
 ```C#
 // Load keys
 string privateKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
@@ -218,7 +189,7 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
 PGP pgp = new PGP(encryptionKeys);
 
 // Sign
-string signedContent = await pgp.ClearSignArmoredStringAsync("String to sign");
+string signedContent = await pgp.ClearSignAsync("String to sign");
 ```
 ### Encrypt and Sign
 Encrypt the provided file, stream or string using a public key and sign using your private key. You usually encrypt with the public key of your counterparty so they can decrypt with their private key and sign with your private key so they can verify with your public key.
@@ -226,7 +197,7 @@ Encrypt the provided file, stream or string using a public key and sign using yo
 Although this method is called `EncryptAndSign` the signature will actually be included within the encrypted message rather than being appended to the encrypted message. This ensures that the original message was composed by the holder of the private key.
 
 [`gpg --encrypt --sign --recipient 'some user ID value' "C:\TEMP\keys\content.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
-#### EncryptFileAndSignAsync
+#### Encrypt File And Sign
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -239,9 +210,9 @@ FileInfo encryptedSignedFile = new FileInfo(@"C:\TEMP\Content\encryptedSigned.pg
 
 // Encrypt and Sign
 PGP pgp = new PGP(encryptionKeys);
-await pgp.EncryptFileAndSignAsync(inputFile, encryptedSignedFile);
+await pgp.EncryptAndSignAsync(inputFile, encryptedSignedFile);
 ```
-#### EncryptStreamAndSignAsync
+#### Encrypt Stream And Sign
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -255,9 +226,9 @@ PGP pgp = new PGP(encryptionKeys);
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\content.txt", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\signed.pgp"))
 	// Encrypt and Sign
-	await pgp.EncryptStreamAndSignAsync(inputFileStream, outputFileStream);
+	await pgp.EncryptAndSignAsync(inputFileStream, outputFileStream);
 ```
-#### EncryptArmoredStringAndSignAsync
+#### Encrypt String And Sign
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -267,13 +238,13 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "passw
 PGP pgp = new PGP(encryptionKeys);
 
 // Encrypt and Sign
-string encryptedSignedContent = await pgp.EncryptArmoredStringAndSignAsync("String to encrypt and sign");
+string encryptedSignedContent = await pgp.EncryptAndSignAsync("String to encrypt and sign");
 ```
 ### Decrypt
 Decrypt the provided file, stream or string using the matching private key and passphrase.
 
 [`gpg --output "C:\TEMP\Content\decrypted.txt" --decrypt "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x110.html)
-#### DecryptFileAsync
+#### Decrypt File
 ```C#
 // Load keys
 FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
@@ -285,9 +256,9 @@ FileInfo decryptedFile = new FileInfo(@"C:\TEMP\Content\decrypted.txt");
 
 // Decrypt
 PGP pgp = new PGP(encryptionKeys);
-await pgp.DecryptFileAsync(inputFile, decryptedFile);
+await pgp.DecryptAsync(inputFile, decryptedFile);
 ```
-#### DecryptStreamAsync
+#### Decrypt Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -300,9 +271,9 @@ PGP pgp = new PGP(encryptionKeys);
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\decrypted.txt"))
 	// Decrypt
-	await pgp.DecryptStreamAsync(inputFileStream, outputFileStream);
+	await pgp.DecryptAsync(inputFileStream, outputFileStream);
 ```
-#### DecryptArmoredStringAsync
+#### Decrypt String
 ```C#
 // Load keys
 string privateKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
@@ -311,13 +282,13 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(privateKey, "password");
 PGP pgp = new PGP(encryptionKeys);
 
 // Decrypt
-string decryptedContent = await pgp.DecryptArmoredStringAsync("String to decrypt");
+string decryptedContent = await pgp.DecryptAsync("String to decrypt");
 ```
 ### Verify
 Verify that the file, stream or string was signed by the matching private key of the counterparty.
 
 [`gpg --verify "C:\TEMP\Content\signed.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### VerifyFileAsync
+#### Verify File
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -328,9 +299,9 @@ FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\signedContent.pgp");
 
 // Verify
 PGP pgp = new PGP(encryptionKeys);
-bool verified = await pgp.VerifyFileAsync(inputFile);
+bool verified = await pgp.VerifyAsync(inputFile);
 ```
-#### VerifyStreamAsync
+#### Verify Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -343,9 +314,9 @@ PGP pgp = new PGP(encryptionKeys);
 bool verified;
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
 	// Verify
-	verified = await pgp.VerifyStreamAsync(inputFileStream);
+	verified = await pgp.VerifyAsync(inputFileStream);
 ```
-#### VerifyArmoredStringAsync
+#### Verify String
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -354,13 +325,13 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
 PGP pgp = new PGP(encryptionKeys);
 
 // Verify
-bool verified = await pgp.VerifyArmoredStringAsync("String to verify");
+bool verified = await pgp.VerifyAsync("String to verify");
 ```
 ### Verify Clear
 Verify that the clear signed file or stream was signed by the matching private key of the counterparty.
 
 [`gpg --verify "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
-#### VerifyClearFileAsync
+#### Verify Clear File
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -371,9 +342,9 @@ FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\signedContent.pgp");
 
 // Verify
 PGP pgp = new PGP(encryptionKeys);
-bool verified = await pgp.VerifyClearFileAsync(inputFile);
+bool verified = await pgp.VerifyClearAsync(inputFile);
 ```
-#### VerifyClearStreamAsync
+#### Verify Clear Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
@@ -386,9 +357,9 @@ PGP pgp = new PGP(encryptionKeys);
 bool verified;
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
 	// Verify
-	verified = await pgp.VerifyClearStreamAsync(inputFileStream);
+	verified = await pgp.VerifyClearAsync(inputFileStream);
 ```
-#### VerifyClearArmoredStringAsync
+#### Verify Clear String
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -397,12 +368,12 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
 PGP pgp = new PGP(encryptionKeys);
 
 // Verify
-bool verified = await pgp.VerifyClearArmoredStringAsync("String to verify");
+bool verified = await pgp.VerifyClearAsync("String to verify");
 ```
 ### Verify and Read Clear
 Verify that the clear signed file or stream was signed by the matching private key of the counterparty. This method returns a `VerificationResult` object that contains a boolean indicating if the message was verified or not along with the message content.
 
-#### VerifyAndReadClearFileAsync
+#### Verify And Read Clear File
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -410,31 +381,29 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
 
 // Reference input
 FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\signedContent.pgp");
+FileInfo outputFile = new FileInfo(@"C:\TEMP\Content\decryptedContent.txt");
 
 // Verify and read
 PGP pgp = new PGP(encryptionKeys);
-VerificationResult verificationResult = await pgp.VerifyAndReadClearFileAsync(inputFile);
-bool verified = verificationResult.IsVerified;
-string content = verificationResult.Content;
+bool verified = await pgp.VerifyClearAsync(inputFile, outputFile);
 ```
-#### VerifyAndReadClearStreamAsync
+#### Verify And Read Clear Stream
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
 using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
-	encryptionKeys = new EncryptionKeys(publicKeyStream);
+    encryptionKeys = new EncryptionKeys(publicKeyStream);
 
 PGP pgp = new PGP(encryptionKeys);
 
 // Reference input file
 bool verified;
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
-	// Verify and read
-	VerificationResult verificationResult = await pgp.VerifyAndReadClearStreamAsync(inputFileStream);
-	bool verified = verificationResult.IsVerified;
-	string content = verificationResult.Content;
+using (FileStream outputFileStream = new FileStream(@"C:\TEMP\Content\decryptedContent.pgp", FileMode.Open))
+    // Verify and read
+    verified = await pgp.VerifyClearAsync(inputFileStream);
 ```
-#### VerifyAndReadClearArmoredStringAsync
+#### Verify And Read Clear String
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -443,9 +412,8 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
 PGP pgp = new PGP(encryptionKeys);
 
 // Verify and read
-VerificationResult verificationResult = await pgp.VerifyAndReadClearArmoredStringAsync("String to verify");
-bool verified = verificationResult.IsVerified;
-string content = verificationResult.Content;
+string output = string.Empty;
+bool verified = await pgp.VerifyClearAsync("String to verify", output);
 ```
 ### Decrypt and Verify
 Decrypt and then verify the provided encrypted and signed file, stream or string. Usually your counterparty will encrypt with your public key and sign with their private key so you can decrypt with your private key and verify with their public key.
@@ -453,7 +421,7 @@ Decrypt and then verify the provided encrypted and signed file, stream or string
 The `DecryptAndVerify` methods will only work with files that have been encrypted and signed using the `EncryptAndSign` methods. This is because the signature is included within the encrypted message rather than being appended to the encrypted message. If a file is first encrypted using an `Encrypt` method and then signed using a `Sign` method then the signature will be appended to the encrypted message rather than embedded within it and the `DecryptAndVerify` methods will not be able to verify the signature.
 
 [`gpg --output "C:\TEMP\Content\encryptedAndSigned.pgp" --decrypt "C:\TEMP\Content\decryptedAndVerified.txt"`](https://medium.com/@acparas/how-to-encrypt-and-sign-a-file-with-gpg-531070b2fa6d)
-#### DecryptFileAndVerifyAsync
+#### Decrypt File And Verify
 ```C#
 // Load keys
 FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
@@ -462,29 +430,29 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "passw
 
 // Reference input/output files
 FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\encryptedSigned.pgp");
-FileInfo encryptedSignedFile = new FileInfo(@"C:\TEMP\Content\content.txt");
+FileInfo outputFile = new FileInfo(@"C:\TEMP\Content\content.txt");
 
 // Decrypt and Verify
 PGP pgp = new PGP(encryptionKeys);
-await pgp.DecryptFileAndVerifyAsync(inputFile, encryptedSignedFile);
+await pgp.DecryptAndVerifyAsync(inputFile, outputFile);
 ```
-#### DecryptStreamAndVerifyAsync
+#### Decrypt Stream And Verify
 ```C#
 // Load keys
 EncryptionKeys encryptionKeys;
 using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
 using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
-	encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "password");
+    encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "password");
 
 PGP pgp = new PGP(encryptionKeys);
 
 // Reference input/output files
 using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedSigned.pgp", FileMode.Open))
 using (Stream outputFileStream = File.Create(@"C:\TEMP\Content\content.txtp"))
-	// Decrypt and Verify
-	await pgp.DecryptStreamAndVerifyAsync(inputFileStream, outputFileStream);
+    // Decrypt and Verify
+    await pgp.DecryptAndVerifyAsync(inputFileStream, outputFileStream);
 ```
-#### DecryptArmoredStringAndVerifyAsync
+#### Decrypt String And Verify
 ```C#
 // Load keys
 string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
@@ -494,7 +462,7 @@ EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "passw
 PGP pgp = new PGP(encryptionKeys);
 
 // Decrypt and Verify
-string encryptedSignedContent = await pgp.DecryptArmoredStringAndVerifyAsync("String to decrypt and verify");
+string encryptedSignedContent = await pgp.DecryptAndVerifyAsync("String to decrypt and verify");
 ```
 ## Settings
 The PGP object contains a variety of settings properties that can be used to determine how files are encrypted.

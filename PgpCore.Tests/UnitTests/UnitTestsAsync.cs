@@ -2452,13 +2452,13 @@ namespace PgpCore.Tests
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            
+
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
             PGP pgp = new PGP(encryptionKeys);
             using (Stream inputFileStream = testFactory.ContentStream)
             using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                 await pgp.EncryptStreamAsync(inputFileStream, outputFileStream);
-            
+
             // Act and Assert
             try
             {

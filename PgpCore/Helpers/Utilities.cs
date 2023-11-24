@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg.Sig;
 using PgpCore.Helpers;
+using PgpCore.Extensions;
 
 namespace PgpCore
 {
