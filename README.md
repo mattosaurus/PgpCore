@@ -30,11 +30,11 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
 * [Generate Key](#generate-key)
 * [Encrypt](#encrypt)
 * [Sign](#sign)
-* [Clear Sign](#clearsign)
+* [Clear Sign](#clear-sign)
 * [Encrypt and Sign](#encrypt-and-sign)
 * [Decrypt](#decrypt)
 * [Verify](#verify)
-* [Verify Clear](#verify)
+* [Verify Clear](#verify-clear)
 * [Decrypt and Verify](#decrypt-and-verify)
 
 ## Settings
@@ -327,6 +327,53 @@ PGP pgp = new PGP(encryptionKeys);
 // Verify
 bool verified = await pgp.VerifyAsync("String to verify");
 ```
+### Verify and Read
+Verify that the file, stream or string was signed by the matching private key of the counterparty. This is an overload of the `Verify` method that takes an additional output argument.
+
+#### Verify And Read File
+```C#
+// Load keys
+FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+// Reference input
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\signedContent.pgp");
+FileInfo outputFile = new FileInfo(@"C:\TEMP\Content\decryptedContent.txt");
+
+// Verify and read
+PGP pgp = new PGP(encryptionKeys);
+bool verified = await pgp.VerifyAsync(inputFile, outputFile);
+```
+
+#### Verify And Read Stream
+```C#
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(publicKeyStream);
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input file
+bool verified;
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encryptedContent.pgp", FileMode.Open))
+using (FileStream outputFileStream = new FileStream(@"C:\TEMP\Content\decryptedContent.pgp", FileMode.Open))
+	// Verify and read
+	verified = await pgp.VerifyAsync(inputFileStream);
+```
+
+#### Verify And Read String
+```C#
+// Load keys
+string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey);
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Verify and read
+string output = string.Empty;
+bool verified = await pgp.VerifyAsync("String to verify", output);
+```
 ### Verify Clear
 Verify that the clear signed file or stream was signed by the matching private key of the counterparty.
 
@@ -371,7 +418,7 @@ PGP pgp = new PGP(encryptionKeys);
 bool verified = await pgp.VerifyClearAsync("String to verify");
 ```
 ### Verify and Read Clear
-Verify that the clear signed file or stream was signed by the matching private key of the counterparty. This method returns a `VerificationResult` object that contains a boolean indicating if the message was verified or not along with the message content.
+Verify that the clear signed file or stream was signed by the matching private key of the counterparty. This is an overload of the `VerifyClear` method that takes an additional output argument.
 
 #### Verify And Read Clear File
 ```C#
