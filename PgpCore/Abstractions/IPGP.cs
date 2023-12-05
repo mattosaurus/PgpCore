@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PgpCore.Abstractions
 {
-    public interface IPGP : IDecryptAsync, IDecryptSync, IEncryptAsync, IEncryptSync, IKeySync, IRecipientsSync, ISignAsync, ISignSync, IVerifyAsync, IVerifySync
+    public interface IPGP : IDecryptAsync, IDecryptSync, IEncryptAsync, IEncryptSync, IInspectAsync, IInspectSync, IKeySync, IRecipientsSync, ISignAsync, ISignSync, IVerifyAsync, IVerifySync
     {
     }
 }
