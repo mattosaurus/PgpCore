@@ -51,6 +51,15 @@
     <Compile Update="PGP.EncryptSync.cs">
       <DependentUpon>PGP.cs</DependentUpon>
     </Compile>
+    <Compile Update="PGP.InspectAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.InspectSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.KeyAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
     <Compile Update="PGP.KeySync.cs">
       <DependentUpon>PGP.cs</DependentUpon>
     </Compile>
@@ -80,6 +89,15 @@
       <DependentUpon>IPGP.cs</DependentUpon>
     </Compile>
     <Compile Update="Abstractions\IPGP.EncryptSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.InspectAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.InspectSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.KeyAsync.cs">
       <DependentUpon>IPGP.cs</DependentUpon>
     </Compile>
     <Compile Update="Abstractions\IPGP.KeySync.cs">
