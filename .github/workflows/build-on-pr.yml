@@ -13,6 +13,11 @@ jobs:
     runs-on: windows-latest
     needs: build
     steps:
+      - name: Download Test Coverage Artifact
+        id: download-artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -51,5 +56,4 @@ jobs:
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"mattosaurus_PgpCore" /o:"mattosaurus" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
           dotnet restore
           dotnet build --no-restore --configuration Debug
-          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
