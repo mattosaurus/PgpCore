@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions.Execution;
+using FluentAssertions;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Models;
@@ -183,7 +185,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void SignFileAsync_CreateSignedFileWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        public void SignFile_CreateSignedFileWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -918,7 +920,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void SignStreamAsync_CreateSignedStreamWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
+        public void SignStream_CreateSignedStreamWithCommentHeader_ShouldAddCommentHeader(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -950,7 +952,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public void SignStreamAsync_CreateSignedStreamWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
+        public void SignStream_CreateSignedStreamWithVersionHeader_ShouldOverwriteDefaultHeader(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -2470,6 +2472,245 @@ namespace PgpCore.Tests
             }
         }
         #endregion Armor
+
+        #region Inspect
+        [Fact]
+        public void Inspect_InspectEncryptedStream()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.Encrypt(inputFileStream, outputFileStream);
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeFalse();
+                result.IsEncrypted.Should().BeTrue();
+                result.IsIntegrityProtected.Should().BeTrue();
+                result.IsSigned.Should().BeFalse();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void Inspect_InspectCompressedEncryptedStream()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys)
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip
+            };
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgp.Encrypt(inputFileStream, outputFileStream);
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeTrue();
+                result.IsEncrypted.Should().BeTrue();
+                result.IsIntegrityProtected.Should().BeTrue();
+                result.IsSigned.Should().BeFalse();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void Inspect_InspectSignedStream()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
+                pgp.Sign(inputFileStream, outputFileStream);
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeFalse();
+                result.IsEncrypted.Should().BeFalse();
+                result.IsIntegrityProtected.Should().BeFalse();
+                result.IsSigned.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void Inspect_InspectCompressedSignedStream()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys)
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip
+            };
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
+                pgp.Sign(inputFileStream, outputFileStream);
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeTrue();
+                result.IsEncrypted.Should().BeFalse();
+                result.IsIntegrityProtected.Should().BeFalse();
+                result.IsSigned.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void Inspect_InspectCompressedSignedEncryptedStream()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys)
+            {
+                CompressionAlgorithm = CompressionAlgorithmTag.Zip
+            };
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
+                pgp.EncryptAndSign(inputFileStream, outputFileStream);
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeTrue();
+                result.IsEncrypted.Should().BeTrue();
+                result.IsIntegrityProtected.Should().BeTrue();
+                result.IsSigned.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void Inspect_InspectEncryptedHeaders()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            using (Stream inputFileStream = testFactory.ContentStream)
+            using (Stream outputFileStream = testFactory.SignedContentFileInfo.Create())
+                pgp.Encrypt(inputFileStream, outputFileStream, headers: new Dictionary<string, string>() { { "Comment", "Test comment" } });
+
+            // Act
+            PGPInspectResult result = null;
+
+            using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
+            {
+                result = pgp.Inspect(inputFileStream);
+            }
+
+            // Assert
+            using (new AssertionScope())
+            {
+                result.IsArmored.Should().BeTrue();
+                result.IsCompressed.Should().BeFalse();
+                result.IsEncrypted.Should().BeTrue();
+                result.IsIntegrityProtected.Should().BeTrue();
+                result.IsSigned.Should().BeFalse();
+            }
+
+            using (new AssertionScope())
+            {
+                result.MessageHeaders.Should().HaveCount(2);
+                result.MessageHeaders.Should().ContainKey("Comment");
+                result.MessageHeaders["Comment"].Should().Be("Test comment");
+                result.Comment.Should().Be("Test comment");
+                result.MessageHeaders.Should().ContainKey("Version");
+                result.MessageHeaders["Version"].Should().StartWith("BouncyCastle.NET Cryptography ");
+                result.Version.Should().StartWith("BouncyCastle.NET Cryptography ");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        #endregion Inspect
 
         public static IEnumerable<object[]> KeyTypeValues()
         {
