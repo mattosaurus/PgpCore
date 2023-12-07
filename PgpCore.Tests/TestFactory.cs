@@ -235,19 +235,6 @@ namespace PgpCore.Tests
             }
         }
 
-        public async Task ArrangeAsync()
-        {
-            if (!Directory.Exists(ContentDirectory))
-            {
-                Directory.CreateDirectory(ContentDirectory);
-            }
-
-            if (!Directory.Exists(KeyDirectory))
-            {
-                Directory.CreateDirectory(KeyDirectory);
-            }
-        }
-
         public void Teardown()
         {
             if (Directory.Exists(ContentDirectory))
