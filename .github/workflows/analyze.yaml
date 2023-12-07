@@ -4,7 +4,6 @@ on:
 jobs:
   analyze:
     runs-on: windows-latest
-    needs: build
     steps:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
