@@ -189,23 +189,22 @@ namespace PgpCore
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
 
-            using (StreamReader reader = new StreamReader(inputStream))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith("-----"))
-                    {
-                        break;
-                    }
+            StreamReader reader = new StreamReader(inputStream);
+            string line;
 
-                    int colonIndex = line.IndexOf(':');
-                    if (colonIndex != -1)
-                    {
-                        string key = line.Substring(0, colonIndex).Trim();
-                        string value = line.Substring(colonIndex + 1).Trim();
-                        headers[key] = value;
-                    }
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("-----"))
+                {
+                    break;
+                }
+
+                int colonIndex = line.IndexOf(':');
+                if (colonIndex != -1)
+                {
+                    string key = line.Substring(0, colonIndex).Trim();
+                    string value = line.Substring(colonIndex + 1).Trim();
+                    headers[key] = value;
                 }
             }
 
