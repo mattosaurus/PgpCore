@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>6.0.0.0</Version>
+    <Version>6.1.0.0</Version>
     <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.0.0</FileVersion>
-    <PackageReleaseNotes>v6.0.0 - Refactored and obsolete methods removed</PackageReleaseNotes>
+    <FileVersion>6.1.0</FileVersion>
+    <PackageReleaseNotes>v6.1.0 - Add inspect methods</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
