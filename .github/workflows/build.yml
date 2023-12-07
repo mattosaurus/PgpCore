@@ -21,4 +21,9 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Debug
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet-coverage collect "dotnet test --no-build --verbosity normal" -f xml -o "coverage.xml"
+    - name: Ouput Test Coverage Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage
+        path: coverage.xml
