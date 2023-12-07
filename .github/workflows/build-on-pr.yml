@@ -11,4 +11,4 @@ jobs:
     uses: ./.github/workflows/build.yml
   analyze:
     needs: build
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/analyze.yml
