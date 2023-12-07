@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>5.13.1.0</Version>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.13.1</FileVersion>
-    <PackageReleaseNotes>v5.13.1 - Don't dispose compressed output stream</PackageReleaseNotes>
+    <Version>6.0.0.0</Version>
+    <AssemblyVersion>6.0.0.0</AssemblyVersion>
+    <FileVersion>6.0.0</FileVersion>
+    <PackageReleaseNotes>v6.0.0 - Refactored and obsolete methods removed</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
@@ -38,6 +38,70 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="PGP.DecryptAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.DecryptSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.EncryptAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.EncryptSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.KeySync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.RecipientsSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.SignAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.SignSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.VerifyAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.VerifySync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+
+    <Compile Update="Abstractions\IPGP.DecryptAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.DecryptSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.EncryptAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.EncryptSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.KeySync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.RecipientsSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.SignAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.SignSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.VerifyAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.VerifySync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.1.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />

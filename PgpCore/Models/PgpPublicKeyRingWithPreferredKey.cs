@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 
-namespace PgpCore
+namespace PgpCore.Models
 {
     /// <summary>
     /// A wrapper class for <see cref="PgpPublicKeyRing"/> that also keeps track of a preferred <see cref="PgpPublicKey"/> to be used for encryption.

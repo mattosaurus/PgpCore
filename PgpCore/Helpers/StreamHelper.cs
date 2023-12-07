@@ -1,10 +1,11 @@
 ﻿using Org.BouncyCastle.Utilities.IO;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace PgpCore
+namespace PgpCore.Helpers
 {
-    public static class Streams
+    public static class StreamHelper
     {
         private const int BufferSize = 512;
 

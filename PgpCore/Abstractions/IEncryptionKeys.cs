@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Org.BouncyCastle.Bcpg.OpenPgp;
+using PgpCore.Models;
 
-namespace PgpCore
+namespace PgpCore.Abstractions
 {
     /// <summary>
     /// Encryption Keys
