@@ -18,6 +18,8 @@ jobs:
         New-Item -ItemType directory -Path certificate
         Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
         certutil -decode certificate\certificate.txt certificate\certificate.pfx
+    - name: Install dotnet-coverage
+      run: dotnet tool install --global dotnet-coverage
     - name: Build
       run: dotnet build --no-restore --configuration Debug
     - name: Test
