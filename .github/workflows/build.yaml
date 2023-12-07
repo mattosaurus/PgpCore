@@ -4,6 +4,7 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -17,14 +18,7 @@ jobs:
         New-Item -ItemType directory -Path certificate
         Set-Content -Path certificate\certificate.txt -Value '${{ secrets.CERTIFICATE }}'
         certutil -decode certificate\certificate.txt certificate\certificate.pfx
-    - name: Install dotnet-coverage
-      run: dotnet tool install --global dotnet-coverage
     - name: Build
       run: dotnet build --no-restore --configuration Debug
     - name: Test
-      run: dotnet-coverage collect "dotnet test --no-build --verbosity normal" -f xml -o "coverage.xml"
-    - name: Ouput Test Coverage Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage
-        path: coverage.xml
+      run: dotnet test --no-build --verbosity normal
