@@ -14,28 +14,14 @@ namespace PgpCore
 {
     public partial class PGP : IInspectAsync
     {
-        private async Task<bool> IsArmoredAsync(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-            byte[] headerBytes = new byte[26];
-            await stream.ReadAsync(headerBytes, 0, 26);
-            return IsArmored(headerBytes);
-        }
-
-        private async Task<Dictionary<string, string>> GetMessageHeadersAsync(Stream inputStream)
-        {
-            // Get the bytes from the inputStream that contain the headers
-            inputStream.Seek(0, SeekOrigin.Begin);
-            byte[] headerLengthBytes = new byte[2];
-            await inputStream.ReadAsync(headerLengthBytes, 0, 2);
-            int headerLength = (headerLengthBytes[0] << 8) | headerLengthBytes[1];
-            byte[] headerBytes = new byte[headerLength];
-            await inputStream.ReadAsync(headerBytes, 0, headerLength);
-
-            return GetMessageHeaders(headerBytes);
-        }
-
-        private async Task<PGPInspectResult> GetPgpDetailsAsync(Stream inputStream)
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="inputStream">The input stream containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public async Task<PGPInspectResult> InspectAsync(Stream inputStream)
         {
             bool isArmored = await IsArmoredAsync(inputStream);
             bool isSigned = false;
@@ -156,10 +142,74 @@ namespace PgpCore
                 );
         }
 
-        // Method to inspect an arbitary PGP message returning information about the message
-        public async Task<PGPInspectResult> InspectAsync(Stream inputStream)
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="inputFile">The input file containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public async Task<PGPInspectResult> InspectAsync(FileInfo inputFile)
         {
-            return await GetPgpDetailsAsync(inputStream);
+            if (inputFile == null)
+                throw new ArgumentException("InputFile");
+            if (!inputFile.Exists)
+                throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
+
+            using (FileStream inputStream = inputFile.OpenRead())
+                return await InspectAsync(inputStream);
+        }
+
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="input">The input string containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public async Task<PGPInspectResult> InspectAsync(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                throw new ArgumentException("Input");
+
+            using (Stream inputStream = await input.GetStreamAsync())
+            {
+                return await InspectAsync(inputStream);
+            }
+        }
+
+        private async Task<bool> IsArmoredAsync(Stream stream)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            byte[] headerBytes = new byte[26];
+            await stream.ReadAsync(headerBytes, 0, 26);
+            return IsArmored(headerBytes);
+        }
+
+        private async Task<Dictionary<string, string>> GetMessageHeadersAsync(Stream inputStream)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+
+            StreamReader reader = new StreamReader(inputStream);
+            string line;
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (line.StartsWith("-----"))
+                {
+                    break;
+                }
+
+                int colonIndex = line.IndexOf(':');
+                if (colonIndex != -1)
+                {
+                    string key = line.Substring(0, colonIndex).Trim();
+                    string value = line.Substring(colonIndex + 1).Trim();
+                    headers[key] = value;
+                }
+            }
+
+            return headers;
         }
     }
 }

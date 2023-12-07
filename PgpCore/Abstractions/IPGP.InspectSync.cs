@@ -6,6 +6,8 @@ namespace PgpCore.Abstractions
 {
     public interface IInspectSync : IDisposable
     {
-        PGPInspectResult Inspect(Stream stream);
+        PGPInspectResult Inspect(Stream inputStream);
+        PGPInspectResult Inspect(FileInfo inputFile);
+        PGPInspectResult Inspect(string input);
     }
 }

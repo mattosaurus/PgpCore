@@ -10,33 +10,26 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace PgpCore
 {
     public partial class PGP : IInspectSync
     {
-        private bool IsArmored(byte[] data)
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="inputStream">The input stream containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public PGPInspectResult Inspect(Stream inputStream)
         {
-            if (data[0] == 0x2D && data[1] == 0x2D && data[2] == 0x2D && data[3] == 0x2D && data[4] == 0x2D && data[5] == 0x42 && data[6] == 0x45 && data[7] == 0x47 && data[8] == 0x49 && data[9] == 0x4E && data[10] == 0x20 && data[11] == 0x50 && data[12] == 0x47 && data[13] == 0x50 && data[14] == 0x20 && data[15] == 0x4D && data[16] == 0x45 && data[17] == 0x53 && data[18] == 0x53 && data[19] == 0x41 && data[20] == 0x47 && data[21] == 0x45 && data[22] == 0x2D && data[23] == 0x2D && data[24] == 0x2D && data[25] == 0x2D)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            if (inputStream == null)
+                throw new ArgumentException("InputStream");
+            if (inputStream.Position != 0)
+                throw new ArgumentException("inputStream should be at start of stream");
 
-        private bool IsArmored(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-            byte[] headerBytes = new byte[26];
-            stream.Read(headerBytes, 0, 26);
-            return IsArmored(headerBytes);
-        }
-
-        private PGPInspectResult GetPgpDetails(Stream inputStream)
-        {
             bool isArmored = IsArmored(inputStream);
             bool isSigned = false;
             bool isCompressed = false;
@@ -156,98 +149,87 @@ namespace PgpCore
                 );
         }
 
-        private Dictionary<string, string> GetMessageHeaders(byte[] data)
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="inputFile">The input file containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public PGPInspectResult Inspect(FileInfo inputFile)
         {
-            Dictionary<string, string> messageHeaders = new Dictionary<string, string>();
-            if (data[0] == 0x85 && data[1] == 0x1 && data[2] == 0x1)
-            {
-                int fileNameLength = (data[3] << 8) | data[4];
-                int headerLength = (data[5 + fileNameLength] << 8) | data[6 + fileNameLength];
-                byte[] headerBytes = new byte[headerLength];
-                Array.Copy(data, 7 + fileNameLength, headerBytes, 0, headerLength);
-                string headerString = Encoding.UTF8.GetString(headerBytes);
-                string[] headerLines = headerString.Split('\n');
-                foreach (string headerLine in headerLines)
-                {
-                    string[] header = headerLine.Split(':');
-                    if (header.Length == 2)
-                    {
-                        messageHeaders.Add(header[0].Trim(), header[1].Trim());
-                    }
-                }
-            }
-            else if (data[0] == 0x1F && data[1] == 0x8B)
-            {
-                int fileNameLength = (data[3] << 8) | data[4];
-                int headerLength = (data[5 + fileNameLength] << 8) | data[6 + fileNameLength];
-                byte[] headerBytes = new byte[headerLength];
-                Array.Copy(data, 7 + fileNameLength, headerBytes, 0, headerLength);
-                string headerString = Encoding.UTF8.GetString(headerBytes);
-                string[] headerLines = headerString.Split('\n');
-                foreach (string headerLine in headerLines)
-                {
-                    string[] header = headerLine.Split(':');
-                    if (header.Length == 2)
-                    {
-                        messageHeaders.Add(header[0].Trim(), header[1].Trim());
-                    }
-                }
-            }
-            else if (data[0] == 0x3 && data[1] == 0x1 && data[2] == 0x8 && data[3] == 0x6 && data[4] == 0x0 && data[5] == 0x0 && data[6] == 0x0 && data[7] == 0x0 && data[8] == 0x0)
-            {
-                int fileNameLength = (data[9]);
-                int headerLength = (data[10 + fileNameLength] << 8) | data[11 + fileNameLength];
-                byte[] headerBytes = new byte[headerLength];
-                Array.Copy(data, 12 + fileNameLength, headerBytes, 0, headerLength);
-                string headerString = Encoding.UTF8.GetString(headerBytes);
-                string[] headerLines = headerString.Split('\n');
-                foreach (string headerLine in headerLines)
-                {
-                    string[] header = headerLine.Split(':');
-                    if (header.Length == 2)
-                    {
-                        messageHeaders.Add(header[0].Trim(), header[1].Trim());
-                    }
-                }
-            }
-            else if (data[0] == 0x6 && data[1] == 0x9 && data[2] == 0x2A && data[3] == 0x86 && data[4] == 0x48 && data[5] == 0x86 && data[6] == 0xF7 && data[7] == 0xD && data[8] == 0x1 && data[9] == 0x7 && data[10] == 0x1 && data[11] == 0xA)
-            {
-                int fileNameLength = (data[12]);
-                int headerLength = (data[13 + fileNameLength] << 8) | data[14 + fileNameLength];
-                byte[] headerBytes = new byte[headerLength];
-                Array.Copy(data, 15 + fileNameLength, headerBytes, 0, headerLength);
-                string headerString = Encoding.UTF8.GetString(headerBytes);
-                string[] headerLines = headerString.Split('\n');
-                foreach (string headerLine in headerLines)
-                {
-                    string[] header = headerLine.Split(':');
-                    if (header.Length == 2)
-                    {
-                        messageHeaders.Add(header[0].Trim(), header[1].Trim());
-                    }
-                }
-            }
+            if (inputFile == null)
+                throw new ArgumentException("InputFile");
+            if (!inputFile.Exists)
+                throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            return messageHeaders;
+            using (FileStream inputStream = inputFile.OpenRead())
+                return Inspect(inputStream);
+        }
+
+        /// <summary>
+        /// Inspect an arbitary PGP message returning information about the message
+        /// </summary>
+        /// <param name="input">The input string containing the PGP message</param>
+        /// <returns>Returns an object containing details of the provided PGP message</returns>
+        /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
+        /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
+        public PGPInspectResult Inspect(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                throw new ArgumentException("Input");
+
+            using (Stream inputStream = input.GetStream())
+            {
+                return Inspect(inputStream);
+            }
         }
 
         private Dictionary<string, string> GetMessageHeaders(Stream inputStream)
         {
-            // Get the bytes from the inputStream that contain the headers
-            inputStream.Seek(0, SeekOrigin.Begin);
-            byte[] headerLengthBytes = new byte[2];
-            inputStream.Read(headerLengthBytes, 0, 2);
-            int headerLength = (headerLengthBytes[0] << 8) | headerLengthBytes[1];
-            byte[] headerBytes = new byte[headerLength];
-            inputStream.Read(headerBytes, 0, headerLength);
+            Dictionary<string, string> headers = new Dictionary<string, string>();
 
-            return GetMessageHeaders(headerBytes);
+            using (StreamReader reader = new StreamReader(inputStream))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith("-----"))
+                    {
+                        break;
+                    }
+
+                    int colonIndex = line.IndexOf(':');
+                    if (colonIndex != -1)
+                    {
+                        string key = line.Substring(0, colonIndex).Trim();
+                        string value = line.Substring(colonIndex + 1).Trim();
+                        headers[key] = value;
+                    }
+                }
+            }
+
+            return headers;
         }
 
-        // Method to inspect an arbitary PGP message returning information about the message
-        public PGPInspectResult Inspect(Stream inputStream)
+        private bool IsArmored(byte[] data)
         {
-            return GetPgpDetails(inputStream);
+            if (data[0] == 0x2D && data[1] == 0x2D && data[2] == 0x2D && data[3] == 0x2D && data[4] == 0x2D && data[5] == 0x42 && data[6] == 0x45 && data[7] == 0x47 && data[8] == 0x49 && data[9] == 0x4E && data[10] == 0x20 && data[11] == 0x50 && data[12] == 0x47 && data[13] == 0x50 && data[14] == 0x20 && data[15] == 0x4D && data[16] == 0x45 && data[17] == 0x53 && data[18] == 0x53 && data[19] == 0x41 && data[20] == 0x47 && data[21] == 0x45 && data[22] == 0x2D && data[23] == 0x2D && data[24] == 0x2D && data[25] == 0x2D)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool IsArmored(Stream stream)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            byte[] headerBytes = new byte[26];
+            stream.Read(headerBytes, 0, 26);
+            return IsArmored(headerBytes);
         }
     }
 }
