@@ -7,8 +7,8 @@ namespace PgpCore.Abstractions
 {
     public interface IInspectAsync : IDisposable
     {
-        Task<PGPInspectResult> InspectAsync(Stream inputStream);
-        Task<PGPInspectResult> InspectAsync(FileInfo inputFile);
-        Task<PGPInspectResult> InspectAsync(string input);
+        Task<PgpInspectResult> InspectAsync(Stream inputStream);
+        Task<PgpInspectResult> InspectAsync(FileInfo inputFile);
+        Task<PgpInspectResult> InspectAsync(string input);
     }
 }

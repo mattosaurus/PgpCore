@@ -2592,7 +2592,7 @@ namespace PgpCore.Tests
                 await pgp.EncryptAsync(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
             {
@@ -2631,7 +2631,7 @@ namespace PgpCore.Tests
                 await pgp.EncryptAsync(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
             {
@@ -2667,7 +2667,7 @@ namespace PgpCore.Tests
                 await pgp.SignAsync(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2706,7 +2706,7 @@ namespace PgpCore.Tests
                 await pgp.SignAsync(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2745,7 +2745,7 @@ namespace PgpCore.Tests
                 await pgp.EncryptAndSignAsync(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2781,7 +2781,7 @@ namespace PgpCore.Tests
                 await pgp.EncryptAsync(inputFileStream, outputFileStream, headers: new Dictionary<string, string>() { { "Comment", "Test comment" } });
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {

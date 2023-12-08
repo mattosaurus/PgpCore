@@ -2489,7 +2489,7 @@ namespace PgpCore.Tests
                 pgp.Encrypt(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
             {
@@ -2528,7 +2528,7 @@ namespace PgpCore.Tests
                 pgp.Encrypt(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.EncryptedContentFileInfo.OpenRead())
             {
@@ -2564,7 +2564,7 @@ namespace PgpCore.Tests
                 pgp.Sign(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2603,7 +2603,7 @@ namespace PgpCore.Tests
                 pgp.Sign(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2642,7 +2642,7 @@ namespace PgpCore.Tests
                 pgp.EncryptAndSign(inputFileStream, outputFileStream);
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {
@@ -2678,7 +2678,7 @@ namespace PgpCore.Tests
                 pgp.Encrypt(inputFileStream, outputFileStream, headers: new Dictionary<string, string>() { { "Comment", "Test comment" } });
 
             // Act
-            PGPInspectResult result = null;
+            PgpInspectResult result = null;
 
             using (Stream inputFileStream = testFactory.SignedContentFileInfo.OpenRead())
             {

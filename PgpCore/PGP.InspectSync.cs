@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Utilities.Zlib;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
@@ -8,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -23,21 +25,27 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PGPInspectResult Inspect(Stream inputStream)
+        public PgpInspectResult Inspect(Stream inputStream)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
 
-            bool isArmored = IsArmored(inputStream);
+            return new PgpInspectResult(
+                GetPgpInspectBaseResult(inputStream),
+                IsArmored(inputStream),
+                GetMessageHeaders(inputStream)
+                );
+        }
+
+        private PgpInspectBaseResult GetPgpInspectBaseResult(Stream inputStream)
+        {
             bool isSigned = false;
             bool isCompressed = false;
             bool isEncrypted = false;
             bool isIntegrityProtected = false;
-            Dictionary<string, string> messageHeaders = GetMessageHeaders(inputStream);
-            string fileName = null;
-            DateTime modificationDateTime = DateTime.MinValue;
+            SymmetricKeyAlgorithmTag symmetricKeyAlgorithm = SymmetricKeyAlgorithmTag.Null;
 
             PgpLiteralData pgpLiteralData = null;
 
@@ -88,6 +96,7 @@ namespace PgpCore
 
                         if (privateKey != null)
                         {
+                            symmetricKeyAlgorithm = publicKeyEncryptedData.GetSymmetricAlgorithm(privateKey);
                             pbe = publicKeyEncryptedData;
                             break;
                         }
@@ -134,18 +143,14 @@ namespace PgpCore
                     throw new PgpException("Message is not a simple encrypted file.");
             }
 
-            fileName = pgpLiteralData.FileName;
-            modificationDateTime = pgpLiteralData.ModificationTime;
-
-            return new PGPInspectResult(
-                isArmored,
+            return new PgpInspectBaseResult(
                 isCompressed,
                 isEncrypted,
                 isIntegrityProtected,
                 isSigned,
-                messageHeaders,
-                fileName,
-                modificationDateTime
+                symmetricKeyAlgorithm,
+                pgpLiteralData?.FileName,
+                pgpLiteralData?.ModificationTime ?? DateTime.MinValue
                 );
         }
 
@@ -156,7 +161,7 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PGPInspectResult Inspect(FileInfo inputFile)
+        public PgpInspectResult Inspect(FileInfo inputFile)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -174,7 +179,7 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PGPInspectResult Inspect(string input)
+        public PgpInspectResult Inspect(string input)
         {
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException("Input");
