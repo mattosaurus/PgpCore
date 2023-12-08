@@ -96,17 +96,21 @@ namespace PgpCore
                 pk.AddMethod(publicKey);
             }
 
-            Stream @out = pk.Open(outputStream, new byte[1 << 16]);
-
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {
-                PgpCompressedDataGenerator comData = new PgpCompressedDataGenerator(CompressionAlgorithm);
-                Utilities.WriteStreamToLiteralData(comData.Open(@out), FileTypeToChar(), inputStream, name);
+                using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
+                using (Stream compressedStream = new PgpCompressedDataGenerator(CompressionAlgorithm).Open(@out, new byte[1 << 16]))
+                {
+                    Utilities.WriteStreamToLiteralData(compressedStream, FileTypeToChar(), inputStream, name);
+                }
             }
             else
-                Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name);
-
-            @out.Close();
+            {
+                using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
+                {
+                    Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name);
+                }
+            }
 
             if (armor)
             {
