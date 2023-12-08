@@ -28,6 +28,7 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
 ## Methods
 
 * [Generate Key](#generate-key)
+* [Inspect](#inspect)
 * [Encrypt](#encrypt)
 * [Sign](#sign)
 * [Clear Sign](#clear-sign)
@@ -55,6 +56,64 @@ using (PGP pgp = new PGP())
 	// Generate keys
 	pgp.GenerateKey(@"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "email@email.com", "password");
 }
+```
+#### Inspect
+Inspect the provided file, stream or string to determine if it is encrypted or signed.
+
+[`gpg --list-packets "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
+### Inspect File
+```C#
+// Load keys
+FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
+FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "password");
+
+// Reference input file
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
+
+// Inspect
+PGP pgp = new PGP();
+PgpInspectResult result = await pgp.InspectAsync(inputFile);
+```
+### Inspect File
+```C#
+// Load keys
+FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
+FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "password");
+
+// Reference input file
+FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
+
+// Inspect
+PGP pgp = new PGP();
+PgpInspectResult result = await pgp.InspectAsync(inputFile);
+```
+### Inspect Stream
+```C#
+// Load keys
+EncryptionKeys encryptionKeys;
+using (Stream publicKeyStream = new FileStream(@"C:\TEMP\Keys\public.asc", FileMode.Open))
+using (Stream privateKeyStream = new FileStream(@"C:\TEMP\Keys\private.asc", FileMode.Open))
+	encryptionKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "password");
+
+PGP pgp = new PGP(encryptionKeys);
+
+// Reference input stream
+using (FileStream inputFileStream = new FileStream(@"C:\TEMP\Content\encrypted.pgp", FileMode.Open))
+	// Inspect
+	PgpInspectResult result = await pgp.InspectAsync(inputFileStream);
+```
+### Inspect String
+```C#
+// Load keys
+string publicKey = File.ReadAllText(@"C:\TEMP\Keys\public.asc");
+string privatyeKey = File.ReadAllText(@"C:\TEMP\Keys\private.asc");
+EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "password");
+
+// Inspect
+PGP pgp = new PGP(encryptionKeys);
+PgpInspectResult result = await pgp.InspectAsync("String to inspect");
 ```
 ### Encrypt
 Encrypt the provided file, stream or string using a public key.
