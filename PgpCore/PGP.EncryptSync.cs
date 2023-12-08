@@ -24,13 +24,15 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void Encrypt(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -47,7 +49,7 @@ namespace PgpCore
 
             using (FileStream inputStream = inputFile.OpenRead())
             using (Stream outputStream = outputFile.OpenWrite())
-                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat);
         }
 
         /// <summary>
@@ -59,13 +61,15 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void Encrypt(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -101,14 +105,14 @@ namespace PgpCore
                 using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
                 using (Stream compressedStream = new PgpCompressedDataGenerator(CompressionAlgorithm).Open(@out, new byte[1 << 16]))
                 {
-                    Utilities.WriteStreamToLiteralData(compressedStream, FileTypeToChar(), inputStream, name);
+                    Utilities.WriteStreamToLiteralData(compressedStream, FileTypeToChar(), inputStream, name, oldFormat);
                 }
             }
             else
             {
                 using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
                 {
-                    Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name);
+                    Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name, oldFormat);
                 }
             }
 
@@ -126,12 +130,14 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public string Encrypt(
             string input,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (string.IsNullOrEmpty(name))
                 name = DefaultFileName;
@@ -141,17 +147,17 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        public string EncryptArmoredString(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(input, armor, withIntegrityCheck, name, headers);
+        public string EncryptArmoredString(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Encrypt(input, armor, withIntegrityCheck, name, headers, oldFormat);
         
-        public void EncryptFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(inputFile, outputFile, armor, withIntegrityCheck, name, headers);
+        public void EncryptFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Encrypt(inputFile, outputFile, armor, withIntegrityCheck, name, headers, oldFormat);
         
-        public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+        public void EncryptStream(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Encrypt(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat);
 
         #endregion Encrypt
 
@@ -165,13 +171,15 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void EncryptAndSign(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFilePath");
@@ -193,11 +201,11 @@ namespace PgpCore
                 {
                     using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
-                        OutputEncrypted(inputFile, armoredOutputStream, withIntegrityCheck, name);
+                        OutputEncrypted(inputFile, armoredOutputStream, withIntegrityCheck, name, oldFormat);
                     }
                 }
                 else
-                    OutputEncrypted(inputFile, outputStream, withIntegrityCheck, name);
+                    OutputEncrypted(inputFile, outputStream, withIntegrityCheck, name, oldFormat);
             }
         }
 
@@ -210,13 +218,15 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void EncryptAndSign(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -237,11 +247,11 @@ namespace PgpCore
             {
                 using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                 {
-                    OutputEncrypted(inputStream, armoredOutputStream, withIntegrityCheck, name);
+                    OutputEncrypted(inputStream, armoredOutputStream, withIntegrityCheck, name, oldFormat);
                 }
             }
             else
-                OutputEncrypted(inputStream, outputStream, withIntegrityCheck, name);
+                OutputEncrypted(inputStream, outputStream, withIntegrityCheck, name, oldFormat);
         }
 
         /// <summary>
@@ -251,12 +261,14 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public string EncryptAndSign(
             string input,
             bool armor = true,
             bool withIntegrityCheck = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (string.IsNullOrEmpty(name))
                 name = DefaultFileName;
@@ -266,17 +278,17 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+                EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        public string EncryptArmoredStringAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(input, armor, withIntegrityCheck, name, headers);
+        public string EncryptArmoredStringAndSign(string input, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => EncryptAndSign(input, armor, withIntegrityCheck, name, headers, oldFormat);
 
-        public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(inputFile, outputFile, armor, withIntegrityCheck, name, headers);
+        public void EncryptFileAndSign(FileInfo inputFile, FileInfo outputFile, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => EncryptAndSign(inputFile, outputFile, armor, withIntegrityCheck, name, headers, oldFormat);
 
-        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null) => EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers);
+        public void EncryptStreamAndSign(Stream inputStream, Stream outputStream, bool armor = true, bool withIntegrityCheck = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => EncryptAndSign(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat);
 
         #endregion EncryptAndSign
     }

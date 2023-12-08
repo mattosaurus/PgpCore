@@ -53,14 +53,14 @@ namespace PgpCore
 
 		#region OutputEncryptedAsync
 
-		private async Task OutputEncryptedAsync(FileInfo inputFile, Stream outputStream, bool withIntegrityCheck, string name)
+		private async Task OutputEncryptedAsync(FileInfo inputFile, Stream outputStream, bool withIntegrityCheck, string name, bool oldFormat)
 		{
 			using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
 			{
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name))
+					using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
 					{
 						using (FileStream inputFileStream = inputFile.OpenRead())
 						{
@@ -73,14 +73,14 @@ namespace PgpCore
 		}
 
 		private async Task OutputEncryptedAsync(Stream inputStream, Stream outputStream, bool withIntegrityCheck,
-			string name)
+			string name, bool oldFormat)
 		{
 			using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
 			{
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
 					{
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
@@ -92,14 +92,14 @@ namespace PgpCore
 
 		#region OutputEncrypted
 
-		private void OutputEncrypted(FileInfo inputFile, Stream outputStream, bool withIntegrityCheck, string name)
+		private void OutputEncrypted(FileInfo inputFile, Stream outputStream, bool withIntegrityCheck, string name, bool oldFormat)
 		{
 			using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
 			{
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name))
+					using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
 					{
 						using (FileStream inputFileStream = inputFile.OpenRead())
 						{
@@ -110,14 +110,14 @@ namespace PgpCore
 			}
 		}
 
-		private void OutputEncrypted(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name)
+		private void OutputEncrypted(Stream inputStream, Stream outputStream, bool withIntegrityCheck, string name, bool oldFormat)
 		{
 			using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
 			{
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
 					{
 						WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
@@ -129,12 +129,12 @@ namespace PgpCore
 
 		#region OutputSignedAsync
 
-		private async Task OutputSignedAsync(FileInfo inputFile, Stream outputStream, string name)
+		private async Task OutputSignedAsync(FileInfo inputFile, Stream outputStream, string name, bool oldFormat)
 		{
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
 				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name))
+				using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
 				{
 					using (FileStream inputFileStream = inputFile.OpenRead())
 					{
@@ -145,12 +145,12 @@ namespace PgpCore
 		}
 
 		private async Task OutputSignedAsync(Stream inputStream, Stream outputStream,
-			string name)
+			string name, bool oldFormat)
 		{
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
                 PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
                 {
                     await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
                 }
@@ -161,12 +161,12 @@ namespace PgpCore
 
 		#region OutputSigned
 
-		private void OutputSigned(FileInfo inputFile, Stream outputStream, string name)
+		private void OutputSigned(FileInfo inputFile, Stream outputStream, string name, bool oldFormat)
 		{
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
 				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name))
+				using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
 				{
 					using (FileStream inputFileStream = inputFile.OpenRead())
 					{
@@ -176,12 +176,12 @@ namespace PgpCore
 			}
 		}
 
-		private void OutputSigned(Stream inputStream, Stream outputStream, string name)
+		private void OutputSigned(Stream inputStream, Stream outputStream, string name, bool oldFormat)
 		{
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
 				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name))
+				using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
 				{
 					WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 				}
@@ -387,9 +387,9 @@ namespace PgpCore
 
 		#region ChainLiteralOut
 
-		private Stream ChainLiteralOut(Stream compressedOut, FileInfo file, string name)
+		private Stream ChainLiteralOut(Stream compressedOut, FileInfo file, string name, bool oldFormat)
 		{
-			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
 			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, file.Length,
 				DateTime.UtcNow);
 		}
@@ -398,9 +398,9 @@ namespace PgpCore
 
 		#region ChainLiteralStreamOut
 
-		private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name)
+		private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name, bool oldFormat)
 		{
-			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator();
+			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
 			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length,
 				DateTime.UtcNow);
 		}

@@ -26,7 +26,8 @@ namespace PgpCore
             FileInfo outputFile,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -48,11 +49,11 @@ namespace PgpCore
                 {
                     using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
-                        await OutputSignedAsync(inputFile, armoredOutputStream, name);
+                        await OutputSignedAsync(inputFile, armoredOutputStream, name, oldFormat);
                     }
                 }
                 else
-                    await OutputSignedAsync(inputFile, outputStream, name);
+                    await OutputSignedAsync(inputFile, outputStream, name, oldFormat);
             }
         }
 
@@ -69,7 +70,8 @@ namespace PgpCore
             Stream outputStream,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -90,11 +92,11 @@ namespace PgpCore
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                 {
-                    await OutputSignedAsync(inputStream, armoredOutputStream, name);
+                    await OutputSignedAsync(inputStream, armoredOutputStream, name, oldFormat);
                 }
             }
             else
-                await OutputSignedAsync(inputStream, outputStream, name);
+                await OutputSignedAsync(inputStream, outputStream, name, oldFormat);
         }
 
         /// <summary>
@@ -108,7 +110,8 @@ namespace PgpCore
             string input,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (string.IsNullOrEmpty(name))
                 name = DefaultFileName;
@@ -118,17 +121,17 @@ namespace PgpCore
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignAsync(inputStream, outputStream, armor, name, headers);
+                await SignAsync(inputStream, outputStream, armor, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
         }
 
-        public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(inputFile, outputFile, armor, name, headers);
+        public async Task SignFileAsync(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(inputFile, outputFile, armor, name, headers, oldFormat);
 
-        public async Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(inputStream, outputStream, armor, name, headers);
+        public async Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(inputStream, outputStream, armor, name, headers, oldFormat);
 
-        public async Task<string> SignArmoredStringAsync(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null) => await SignAsync(input, armor, name, headers);
+        public async Task<string> SignArmoredStringAsync(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(input, armor, name, headers, oldFormat);
 
         #endregion SignAsync
 
