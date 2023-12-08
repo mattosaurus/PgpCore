@@ -21,12 +21,14 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void Sign(
             FileInfo inputFile,
             FileInfo outputFile,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputFile == null)
                 throw new ArgumentException("InputFile");
@@ -48,11 +50,11 @@ namespace PgpCore
                 {
                     using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                     {
-                        OutputSigned(inputFile, armoredOutputStream, name);
+                        OutputSigned(inputFile, armoredOutputStream, name, oldFormat);
                     }
                 }
                 else
-                    OutputSigned(inputFile, outputStream, name);
+                    OutputSigned(inputFile, outputStream, name, oldFormat);
             }
         }
 
@@ -64,12 +66,14 @@ namespace PgpCore
         /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to the stream name if the stream is a FileStream, otherwise to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public void Sign(
             Stream inputStream,
             Stream outputStream,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -90,11 +94,11 @@ namespace PgpCore
             {
                 using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
                 {
-                    OutputSigned(inputStream, armoredOutputStream, name);
+                    OutputSigned(inputStream, armoredOutputStream, name, oldFormat);
                 }
             }
             else
-                OutputSigned(inputStream, outputStream, name);
+                OutputSigned(inputStream, outputStream, name, oldFormat);
         }
 
         /// <summary>
@@ -103,11 +107,13 @@ namespace PgpCore
         /// <param name="input">Plain string to be signed</param>
         /// <param name="name">Name of signed file in message, defaults to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
         public string Sign(
             string input,
             bool armor = true,
             string name = null,
-            IDictionary<string, string> headers = null)
+            IDictionary<string, string> headers = null,
+            bool oldFormat = false)
         {
             if (string.IsNullOrEmpty(name))
                 name = DefaultFileName;
@@ -117,17 +123,17 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                Sign(inputStream, outputStream, armor, name, headers);
+                Sign(inputStream, outputStream, armor, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
         }
 
-        public void SignFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(inputFile, outputFile, armor, name, headers);
+        public void SignFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(inputFile, outputFile, armor, name, headers, oldFormat);
 
-        public void SignStream(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(inputStream, outputStream, armor, name, headers);
+        public void SignStream(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(inputStream, outputStream, armor, name, headers, oldFormat);
 
-        public string SignArmoredString(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null) => Sign(input, armor, name, headers);
+        public string SignArmoredString(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(input, armor, name, headers, oldFormat);
 
         #endregion Sign
 
