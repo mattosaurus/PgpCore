@@ -884,6 +884,31 @@ namespace PgpCore.Tests
                 testFactory.Teardown();
             }
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task VerifyAsync_VerifyAndReadSignedFile(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgp = new PGP(encryptionKeys);
+
+            // Act
+            await pgp.SignAsync(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            bool verified = await pgp.VerifyAsync(testFactory.SignedContentFileInfo, testFactory.DecryptedContentFileInfo);
+
+            // Assert
+            Assert.True(testFactory.SignedContentFileInfo.Exists);
+            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
+            Assert.True(verified);
+
+            // Teardown
+            testFactory.Teardown();
+        }
         #endregion File - FileInfo
 
         #region Stream
