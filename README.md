@@ -75,20 +75,6 @@ FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
 PGP pgp = new PGP();
 PgpInspectResult result = await pgp.InspectAsync(inputFile);
 ```
-### Inspect File
-```C#
-// Load keys
-FileInfo publicKey = new FileInfo(@"C:\TEMP\Keys\public.asc");
-FileInfo privateKey = new FileInfo(@"C:\TEMP\Keys\private.asc");
-EncryptionKeys encryptionKeys = new EncryptionKeys(publicKey, privateKey, "password");
-
-// Reference input file
-FileInfo inputFile = new FileInfo(@"C:\TEMP\Content\encrypted.pgp");
-
-// Inspect
-PGP pgp = new PGP();
-PgpInspectResult result = await pgp.InspectAsync(inputFile);
-```
 ### Inspect Stream
 ```C#
 // Load keys
