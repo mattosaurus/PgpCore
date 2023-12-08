@@ -3,7 +3,7 @@ on:
   workflow_call
 jobs:
   analyze:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Download Test Coverage Artifact
         id: download-artifact
@@ -37,8 +37,8 @@ jobs:
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: View downloaded artufacts
-        run: ls -lhR ${{ steps.download-artifact.outputs.download-path }}
+      - name: List all downloaded artifacts 
+        run: dir ${{ steps.download-artifact.outputs.download-path }} /s /b
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
