@@ -27,10 +27,14 @@ namespace PgpCore
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
 
+            bool isArmored = await IsArmoredAsync(inputStream);
+            Dictionary<string, string> messageHeaders = await GetMessageHeadersAsync(inputStream);
+            PgpInspectBaseResult pgpInspectBaseResult = GetPgpInspectBaseResult(inputStream);
+
             return new PgpInspectResult(
-                GetPgpInspectBaseResult(inputStream),
-                await IsArmoredAsync(inputStream),
-                await GetMessageHeadersAsync(inputStream)
+                pgpInspectBaseResult,
+                isArmored,
+                messageHeaders
                 );
         }
 
