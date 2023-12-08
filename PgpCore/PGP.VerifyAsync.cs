@@ -63,8 +63,9 @@ namespace PgpCore
             if (outputStream == null)
                 outputStream = new MemoryStream();
 
-            using (StreamWriter contentStreamWriter = new StreamWriter(outputStream, outputStream.GetEncoding(), 1024, true))
+            using (StreamWriter contentStreamWriter = new StreamWriter(outputStream, inputStream.GetEncoding(), 1024, true))
             {
+                inputStream.Seek(0, SeekOrigin.Begin);
                 Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
                 PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
                 PgpObject pgpObject = factory.NextPgpObject();
