@@ -373,7 +373,7 @@ PGP pgp = new PGP(encryptionKeys);
 bool verified = await pgp.VerifyAsync("String to verify");
 ```
 ### Verify and Read
-Verify that the file, stream or string was signed by the matching private key of the counterparty. This is an overload of the `Verify` method that takes an additional output argument.
+Verify that the file, stream was signed by the matching private key of the counterparty. This is an overload of the `Verify` method that takes an additional output argument. Please note that this is not available for the string based method.
 
 #### Verify And Read File
 ```C#

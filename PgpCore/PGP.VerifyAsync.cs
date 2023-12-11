@@ -180,25 +180,6 @@ namespace PgpCore
             }
         }
 
-        /// <summary>
-        /// PGP verify a given string.
-        /// </summary>
-        /// <param name="input">Plain string to be verified</param>
-        /// <param name="output">String to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
-        public async Task<bool> VerifyAsync(string input, string output, bool throwIfEncrypted = false)
-        {
-            using (Stream inputStream = await input.GetStreamAsync())
-            using (Stream outputStream = new MemoryStream())
-            {
-                bool verified = await VerifyAsync(inputStream, null, throwIfEncrypted);
-
-                outputStream.Seek(0, SeekOrigin.Begin);
-                output = await outputStream.GetStringAsync();
-                return verified;
-            }
-        }
-
         public async Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false) => await VerifyAsync(inputFile, null, throwIfEncrypted);
 
         public async Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false) => await VerifyAsync(inputStream, null, throwIfEncrypted);

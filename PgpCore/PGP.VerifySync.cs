@@ -178,25 +178,6 @@ namespace PgpCore
             }
         }
 
-        /// <summary>
-        /// PGP verify a given string.
-        /// </summary>
-        /// <param name="input">Plain string to be verified</param>
-        /// <param name="output">String to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
-        public bool Verify(string input, string output, bool throwIfEncrypted = false)
-        {
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                bool verified = Verify(inputStream, null, throwIfEncrypted);
-
-                outputStream.Seek(0, SeekOrigin.Begin);
-                output = outputStream.GetString();
-                return verified;
-            }
-        }
-
         public bool VerifyFile(FileInfo inputFile, bool throwIfEncrypted = false) => Verify(inputFile, null, throwIfEncrypted);
 
         public bool VerifyStream(Stream inputStream, bool throwIfEncrypted = false) => Verify(inputStream, null, throwIfEncrypted);

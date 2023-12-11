@@ -806,7 +806,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyFileAsync_VerifySignedFile(KeyType keyType)
+        public async Task VerifyAsync_VerifySignedFile(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -815,12 +815,14 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            await pgp.SignFileAsync(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
-            bool verified = await pgp.VerifyFileAsync(testFactory.SignedContentFileInfo);
+            await pgp.SignAsync(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+            bool verified = await pgp.VerifyAsync(testFactory.SignedContentFileInfo, testFactory.DecryptedContentFileInfo);
 
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
             Assert.True(verified);
+            string clearText = await File.ReadAllTextAsync(testFactory.DecryptedContentFileInfo);
+            testFactory.Content.Should().BeEquivalentTo(testFactory.DecryptedContentFileInfo.OpenText().ReadToEnd());
 
             // Teardown
             testFactory.Teardown();
@@ -2487,7 +2489,7 @@ namespace PgpCore.Tests
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
-        public async Task VerifyAndReadAsync_VerifySignedStringAndReturnContents(KeyType keyType)
+        public async Task VerifyAsync_VerifySignedStringAndReturnContents(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -2496,13 +2498,14 @@ namespace PgpCore.Tests
             PGP pgp = new PGP(encryptionKeys);
 
             // Act
-            string signedContent = await pgp.SignArmoredStringAsync(testFactory.Content);
-            VerificationResult verificationResult = await pgp.VerifyAndReadSignedArmoredStringAsync(signedContent);
+            string signedContent = await pgp.SignAsync(testFactory.Content);
+            string verifiedContent = string.Empty;
+            bool verified = await pgp.VerifyAsync(signedContent);
 
             // Assert
             Assert.NotNull(signedContent);
-            Assert.True(verificationResult.IsVerified);
-            Assert.Equal(testFactory.Content, verificationResult.ClearText.Trim());
+            Assert.True(verified);
+            Assert.Equal(testFactory.Content, verifiedContent);
 
             // Teardown
             testFactory.Teardown();

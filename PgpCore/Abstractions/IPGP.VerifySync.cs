@@ -11,7 +11,7 @@ namespace PgpCore.Abstractions
     {
         bool Verify(FileInfo inputFile, FileInfo outputFile = null, bool throwIfEncrypted = false);
         bool Verify(Stream inputStream, Stream outputStream = null, bool throwIfEncrypted = false);
-        bool Verify(string input, string output = null, bool throwIfEncrypted = false);
+        bool Verify(string input, bool throwIfEncrypted = false);
         bool VerifyClear(FileInfo inputFile, FileInfo outputFile = null);
         bool VerifyClear(Stream inputStream, Stream outputStream = null);
         bool VerifyClear(string input, string output = null);
