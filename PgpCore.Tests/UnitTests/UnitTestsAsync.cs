@@ -821,8 +821,12 @@ namespace PgpCore.Tests
             // Assert
             Assert.True(testFactory.SignedContentFileInfo.Exists);
             Assert.True(verified);
-            string clearText = await File.ReadAllTextAsync(testFactory.DecryptedContentFileInfo);
-            testFactory.Content.Should().BeEquivalentTo(testFactory.DecryptedContentFileInfo.OpenText().ReadToEnd());
+            
+            using (StreamReader streamReader = testFactory.DecryptedContentFileInfo.OpenText())
+            {
+                string decryptedContent = await streamReader.ReadToEndAsync();
+                testFactory.Content.Should().BeEquivalentTo(decryptedContent);
+            }
 
             // Teardown
             testFactory.Teardown();
@@ -2499,13 +2503,11 @@ namespace PgpCore.Tests
 
             // Act
             string signedContent = await pgp.SignAsync(testFactory.Content);
-            string verifiedContent = string.Empty;
             bool verified = await pgp.VerifyAsync(signedContent);
 
             // Assert
             Assert.NotNull(signedContent);
             Assert.True(verified);
-            Assert.Equal(testFactory.Content, verifiedContent);
 
             // Teardown
             testFactory.Teardown();

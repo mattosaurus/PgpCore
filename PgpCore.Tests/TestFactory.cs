@@ -195,7 +195,7 @@ namespace PgpCore.Tests
             {
                 using (StreamWriter streamWriter = ContentFileInfo.CreateText())
                 {
-                    await streamWriter.WriteLineAsync(Constants.CONTENT);
+                    await streamWriter.WriteAsync(Constants.CONTENT);
                 }
             }
             else if (fileType == FileType.GeneratedMedium)
