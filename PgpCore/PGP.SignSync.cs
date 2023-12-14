@@ -84,7 +84,7 @@ namespace PgpCore
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
             if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
-                Path.GetFileName(fileStream.Name);
+                name = Path.GetFileName(fileStream.Name);
             else if (string.IsNullOrEmpty(name))
                 name = DefaultFileName;
             if (headers == null)
