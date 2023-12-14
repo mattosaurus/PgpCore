@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Utilities.Zlib;
 using PgpCore.Abstractions;
@@ -14,7 +14,7 @@ namespace PgpCore
     public partial class PGP : IInspectAsync
     {
         /// <summary>
-        /// Inspect an arbitary PGP message returning information about the message
+        /// Inspect an arbitrary PGP message returning information about the message
         /// </summary>
         /// <param name="inputStream">The input stream containing the PGP message</param>
         /// <returns>Returns an object containing details of the provided PGP message</returns>
@@ -39,7 +39,7 @@ namespace PgpCore
         }
 
         /// <summary>
-        /// Inspect an arbitary PGP message returning information about the message
+        /// Inspect an arbitrary PGP message returning information about the message
         /// </summary>
         /// <param name="inputFile">The input file containing the PGP message</param>
         /// <returns>Returns an object containing details of the provided PGP message</returns>
@@ -57,7 +57,7 @@ namespace PgpCore
         }
 
         /// <summary>
-        /// Inspect an arbitary PGP message returning information about the message
+        /// Inspect an arbitrary PGP message returning information about the message
         /// </summary>
         /// <param name="input">The input string containing the PGP message</param>
         /// <returns>Returns an object containing details of the provided PGP message</returns>

@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Security;
 using System;
@@ -26,7 +26,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task EncryptAsync(
             FileInfo inputFile,
             FileInfo outputFile,
@@ -63,7 +63,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task EncryptAsync(
             Stream inputStream,
             Stream outputStream,
@@ -131,7 +131,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True, to perform integrity packet check on input file. Otherwise, false</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task<string> EncryptAsync(
             string input,
             bool armor = true,
@@ -174,7 +174,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task EncryptAndSignAsync(
             FileInfo inputFile,
             FileInfo outputFile,
@@ -222,7 +222,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task EncryptAndSignAsync(
             Stream inputStream,
             Stream outputStream,
@@ -267,7 +267,7 @@ namespace PgpCore
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>
-        /// <param name="oldFormat">True, to use old format for encryption if you need compatability with PGP 2.6.x. Otherwise, false</param>
+        /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task<string> EncryptAndSignAsync(
             string input,
             bool armor = true,

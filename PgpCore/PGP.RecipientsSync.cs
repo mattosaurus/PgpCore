@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -17,7 +17,7 @@ namespace PgpCore
         /// <summary>
         /// PGP get a recipients keys id of an encrypted file.
         /// </summary>
-        /// <param name="inputFilePath">PGP encrypted data file path</param>
+        /// <param name="inputFileInfo">PGP encrypted data file path</param>
         /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
         public IEnumerable<long> GetFileRecipients(FileInfo inputFileInfo)
         {
