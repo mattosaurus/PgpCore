@@ -14,7 +14,11 @@ namespace PgpCore.Tests.UnitTests
 {
     public class KeyAsync
     {
+#if NETFRAMEWORK
+        public const string VERSION = "Version: BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
+#else
         public const string VERSION = "Version: BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
+#endif
 
         //[Theory]
         //[MemberData(nameof(GetAllCombinations))]

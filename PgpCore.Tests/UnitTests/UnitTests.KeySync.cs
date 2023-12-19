@@ -14,7 +14,11 @@ namespace PgpCore.Tests.UnitTests
 {
     public class KeySync
     {
+#if NETFRAMEWORK
+        public const string VERSION = "Version: BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
+#else
         public const string VERSION = "Version: BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
+#endif
 
         [Fact]
         public void GenerateKey_CreatePublicAndPrivateKeys_ShouldCreateKeysWithDefaultProperties()
