@@ -16,7 +16,7 @@ namespace PgpCore.Tests
     public class UnitTestsSync
     {
         [Fact]
-        public void GenerateKey_CreatePublicPrivateKeyFiles()
+        public void GenerateKeyAsync_CreatePublicAndPrivateKeyFiles_ShouldCreatePublicAndPrivateKeyFiles()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
