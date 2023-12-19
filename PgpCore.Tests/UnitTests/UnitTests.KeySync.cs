@@ -12,64 +12,12 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace PgpCore.Tests.UnitTests
 {
-    public class KeyAsync
+    public class KeySync
     {
         public const string VERSION = "Version: BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
 
-        //[Theory]
-        //[MemberData(nameof(GetAllCombinations))]
-        //public async Task GenerateKeyAsync_CreatePublicAndPrivateKeys_ShouldCreateKeysWithSpecifiedProperties(
-        //    CompressionAlgorithmTag compressionAlgorithmTag,
-        //    HashAlgorithmTag hashAlgorithmTag,
-        //    SymmetricKeyAlgorithmTag symmetricKeyAlgorithmTag
-        //    )
-        //{
-        //    // Arrange
-        //    TestFactory testFactory = new TestFactory();
-        //    testFactory.Arrange();
-        //    PGP pgp = new PGP();
-        //    PgpPublicKey publicKey = null;
-
-        //    // Act
-        //    await pgp.GenerateKeyAsync(
-        //        testFactory.PublicKeyFileInfo,
-        //        testFactory.PrivateKeyFileInfo,
-        //        testFactory.UserName,
-        //        testFactory.Password,
-        //        preferredCompressionAlgorithms: new CompressionAlgorithmTag[] { compressionAlgorithmTag },
-        //        preferredHashAlgorithmTags: new HashAlgorithmTag[] { hashAlgorithmTag },
-        //        preferredSymetricKeyAlgorithms: new SymmetricKeyAlgorithmTag[] { symmetricKeyAlgorithmTag }
-        //        );
-
-        //    using (Stream publicKeyStream = testFactory.PublicKeyFileInfo.OpenRead())
-        //    {
-        //        publicKey = ReadPublicKey(publicKeyStream);
-        //        // If we successfully read the public key without exceptions, it is considered valid
-        //    }
-
-        //    // Assert
-        //    using (new AssertionScope())
-        //    {
-        //        testFactory.PublicKeyFileInfo.Exists.Should().BeTrue();
-        //        testFactory.PrivateKeyFileInfo.Exists.Should().BeTrue();
-        //    }
-
-        //    using (new AssertionScope())
-        //    {
-        //        publicKey.Should().NotBeNull();
-        //        publicKey.Version.Should().Be(4);
-        //        publicKey.CreationTime.Should().BeCloseTo(DateTime.UtcNow, new TimeSpan(0, 0, 1));
-        //        publicKey.IsEncryptionKey.Should().BeTrue();
-        //        publicKey.IsMasterKey.Should().BeTrue();
-        //        publicKey.IsRevoked().Should().BeFalse();
-        //        //publicKey.KeyId.Should().NotBe(0);
-        //        //publicKey.BitStrength.Should().Be(2048);
-        //        //publicKey.PublicKeyPacket.Should().NotBeNull();
-        //    }
-        //}
-
         [Fact]
-        public async Task GenerateKeyAsync_CreatePublicAndPrivateKeys_ShouldCreateKeysWithDefaultProperties()
+        public void GenerateKey_CreatePublicAndPrivateKeys_ShouldCreateKeysWithDefaultProperties()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -77,7 +25,7 @@ namespace PgpCore.Tests.UnitTests
             PGP pgp = new PGP();
 
             // Act
-            await pgp.GenerateKeyAsync(
+            pgp.GenerateKey(
                 testFactory.PublicKeyFileInfo,
                 testFactory.PrivateKeyFileInfo,
                 testFactory.UserName,
@@ -138,7 +86,7 @@ namespace PgpCore.Tests.UnitTests
         }
 
         [Fact]
-        public async Task GenerateKeyAsync_CreatePublicAndPrivateKeysWithKeyStrength_ShouldCreateKeysWithSpecifiedProperties()
+        public void GenerateKey_CreatePublicAndPrivateKeysWithKeyStrength_ShouldCreateKeysWithSpecifiedProperties()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -146,7 +94,7 @@ namespace PgpCore.Tests.UnitTests
             PGP pgp = new PGP();
 
             // Act
-            await pgp.GenerateKeyAsync(
+            pgp.GenerateKey(
                 testFactory.PublicKeyFileInfo,
                 testFactory.PrivateKeyFileInfo,
                 testFactory.UserName,
@@ -207,7 +155,7 @@ namespace PgpCore.Tests.UnitTests
         }
 
         [Fact]
-        public async Task GenerateKeyAsync_CreatePublicAndPrivateKeysWithoutVersion_ShouldCreateKeysWithSpecifiedProperties()
+        public void GenerateKey_CreatePublicAndPrivateKeysWithoutVersion_ShouldCreateKeysWithSpecifiedProperties()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -215,7 +163,7 @@ namespace PgpCore.Tests.UnitTests
             PGP pgp = new PGP();
 
             // Act
-            await pgp.GenerateKeyAsync(
+            pgp.GenerateKey(
                 testFactory.PublicKeyFileInfo,
                 testFactory.PrivateKeyFileInfo,
                 testFactory.UserName,
@@ -277,7 +225,7 @@ namespace PgpCore.Tests.UnitTests
         }
 
         [Fact]
-        public async Task GenerateKeyAsync_CreatePublicAndPrivateKeysWithExpiryDate_ShouldCreateKeysWithSpecifiedProperties()
+        public void GenerateKey_CreatePublicAndPrivateKeysWithExpiryDate_ShouldCreateKeysWithSpecifiedProperties()
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
@@ -285,7 +233,7 @@ namespace PgpCore.Tests.UnitTests
             PGP pgp = new PGP();
 
             // Act
-            await pgp.GenerateKeyAsync(
+            pgp.GenerateKey(
                 testFactory.PublicKeyFileInfo,
                 testFactory.PrivateKeyFileInfo,
                 testFactory.UserName,
@@ -372,11 +320,11 @@ namespace PgpCore.Tests.UnitTests
         public static IEnumerable<object[]> GetAllCombinations()
         {
             foreach (CompressionAlgorithmTag compressionAlgorithmTag in GetEnumValues<CompressionAlgorithmTag>())
-            foreach (HashAlgorithmTag hashAlgorithmTag in GetEnumValues<HashAlgorithmTag>())
-            foreach (SymmetricKeyAlgorithmTag symmetricKeyAlgorithmTag in GetEnumValues<SymmetricKeyAlgorithmTag>())
-            {
-                yield return new object[] { compressionAlgorithmTag, hashAlgorithmTag, symmetricKeyAlgorithmTag };
-            }
+                foreach (HashAlgorithmTag hashAlgorithmTag in GetEnumValues<HashAlgorithmTag>())
+                    foreach (SymmetricKeyAlgorithmTag symmetricKeyAlgorithmTag in GetEnumValues<SymmetricKeyAlgorithmTag>())
+                    {
+                        yield return new object[] { compressionAlgorithmTag, hashAlgorithmTag, symmetricKeyAlgorithmTag };
+                    }
         }
     }
 }

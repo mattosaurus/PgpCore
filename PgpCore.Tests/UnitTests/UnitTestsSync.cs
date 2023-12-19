@@ -15,25 +15,6 @@ namespace PgpCore.Tests
 {
     public class UnitTestsSync
     {
-        [Fact]
-        public void GenerateKeyAsync_CreatePublicAndPrivateKeyFiles_ShouldCreatePublicAndPrivateKeyFiles()
-        {
-            // Arrange
-            TestFactory testFactory = new TestFactory();
-            testFactory.Arrange();
-            PGP pgp = new PGP();
-
-            // Act
-            pgp.GenerateKey(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
-
-            // Assert
-            Assert.True(testFactory.PublicKeyFileInfo.Exists);
-            Assert.True(testFactory.PrivateKeyFileInfo.Exists);
-
-            // Cleanup
-            testFactory.Teardown();
-        }
-
         #region File - FileInfo
         [Theory]
         [MemberData(nameof(KeyTypeValues))]
