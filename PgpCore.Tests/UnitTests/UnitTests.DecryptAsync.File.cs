@@ -39,10 +39,6 @@ namespace PgpCore.Tests.UnitTests
                 File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
             }
 
-            Assert.True(testFactory.EncryptedContentFileInfo.Exists);
-            Assert.True(testFactory.DecryptedContentFileInfo.Exists);
-            Assert.Equal(testFactory.Content, testFactory.DecryptedContent.Trim());
-
             // Teardown
             testFactory.Teardown();
         }
