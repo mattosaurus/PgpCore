@@ -54,7 +54,7 @@ Generate a new public and private key for the provided username and password.
 using (PGP pgp = new PGP())
 {
 	// Generate keys
-	pgp.GenerateKey(@"C:\TEMP\Keys\public.asc", @"C:\TEMP\Keys\private.asc", "email@email.com", "password");
+	pgp.GenerateKey(new FileInfo(@"C:\TEMP\Keys\public.asc"), new FileInfo(@"C:\TEMP\Keys\private.asc"), "email@email.com", "password");
 }
 ```
 #### Inspect
