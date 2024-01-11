@@ -111,7 +111,6 @@ namespace PgpCore
         /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public async Task<string> SignAsync(
             string input,
-            bool armor = true,
             string name = null,
             IDictionary<string, string> headers = null,
             bool oldFormat = false)
@@ -124,7 +123,7 @@ namespace PgpCore
             using (Stream inputStream = await input.GetStreamAsync())
             using (Stream outputStream = new MemoryStream())
             {
-                await SignAsync(inputStream, outputStream, armor, name, headers, oldFormat);
+                await SignAsync(inputStream, outputStream, true, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return await outputStream.GetStringAsync();
             }
@@ -134,7 +133,7 @@ namespace PgpCore
 
         public async Task SignStreamAsync(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(inputStream, outputStream, armor, name, headers, oldFormat);
 
-        public async Task<string> SignArmoredStringAsync(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(input, armor, name, headers, oldFormat);
+        public async Task<string> SignArmoredStringAsync(string input, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => await SignAsync(input, name, headers, oldFormat);
 
         #endregion SignAsync
 

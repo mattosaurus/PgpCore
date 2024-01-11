@@ -111,7 +111,6 @@ namespace PgpCore
         /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
         public string Sign(
             string input,
-            bool armor = true,
             string name = null,
             IDictionary<string, string> headers = null,
             bool oldFormat = false)
@@ -124,7 +123,7 @@ namespace PgpCore
             using (Stream inputStream = input.GetStream())
             using (Stream outputStream = new MemoryStream())
             {
-                Sign(inputStream, outputStream, armor, name, headers, oldFormat);
+                Sign(inputStream, outputStream, true, name, headers, oldFormat);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 return outputStream.GetString();
             }
@@ -134,7 +133,7 @@ namespace PgpCore
 
         public void SignStream(Stream inputStream, Stream outputStream, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(inputStream, outputStream, armor, name, headers, oldFormat);
 
-        public string SignArmoredString(string input, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(input, armor, name, headers, oldFormat);
+        public string SignArmoredString(string input, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(input, name, headers, oldFormat);
 
         #endregion Sign
 
