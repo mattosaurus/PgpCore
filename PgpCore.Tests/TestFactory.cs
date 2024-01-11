@@ -173,7 +173,7 @@ namespace PgpCore.Tests
             {
                 using (StreamWriter streamWriter = ContentFileInfo.CreateText())
                 {
-                    streamWriter.WriteLine(Constants.CONTENT);
+                    streamWriter.Write(Constants.CONTENT);
                 }
             }
             else if (fileType == FileType.GeneratedMedium)
