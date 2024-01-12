@@ -33,7 +33,11 @@ namespace PgpCore
                 throw new ArgumentException("inputStream should be at start of stream");
 
             bool isArmored = IsArmored(inputStream);
-            Dictionary<string, string> messageHeaders = GetMessageHeaders(inputStream);
+            Dictionary<string, string> messageHeaders = null;
+            
+            if (isArmored)
+                messageHeaders = GetMessageHeaders(inputStream);
+
             PgpInspectBaseResult pgpInspectBaseResult = GetPgpInspectBaseResult(inputStream);
 
             return new PgpInspectResult(
