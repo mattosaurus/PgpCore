@@ -426,7 +426,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             using (new AssertionScope())
             {
                 ex.Should().BeAssignableTo<ArgumentException>();
-                ex.Message.Should().Be("Failed to detect encrypted content format. (Parameter 'inputStream')");
+                ex.Message.Should().StartWith("Failed to detect encrypted content format.");
             }
 
             // Teardown

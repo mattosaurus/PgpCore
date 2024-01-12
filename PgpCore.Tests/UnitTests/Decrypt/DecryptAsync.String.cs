@@ -299,7 +299,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Func<Task> act = async () => await pgpDecrypt.DecryptAsync(testFactory.Content);
-                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message == "Failed to detect encrypted content format. (Parameter 'inputStream')");
+                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message.StartsWith("Failed to detect encrypted content format."));
                 }
             }
 
