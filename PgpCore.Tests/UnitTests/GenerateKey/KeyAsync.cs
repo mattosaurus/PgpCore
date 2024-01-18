@@ -4,22 +4,14 @@ using System.Threading.Tasks;
 using Xunit;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using System.IO;
-using Org.BouncyCastle.Utilities.Zlib;
 using System;
 using System.Collections.Generic;
 using Org.BouncyCastle.Bcpg;
-using System.Security.Cryptography.X509Certificates;
 
 namespace PgpCore.Tests.UnitTests.GenerateKey
 {
-    public class KeyAsync
+    public class KeyAsync : TestBase
     {
-#if NETFRAMEWORK
-        public const string VERSION = "Version: BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
-#else
-        public const string VERSION = "Version: BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
-#endif
-
         [Fact]
         public async Task GenerateKeyAsync_CreatePublicAndPrivateKeys_ShouldCreateKeysWithDefaultProperties()
         {

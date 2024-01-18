@@ -9,6 +9,16 @@ namespace PgpCore.Tests.UnitTests
 {
     public class TestBase
     {
+#if NETFRAMEWORK
+        public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
+#else
+        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
+#endif
+        public const string DEFAULTNAME = "name";
+        public const string TESTNAME = "Test Name";
+        public const string TESTHEADERKEY = "Test Header";
+        public const string TESTHEADERVALUE = "Test Value";
+
         public static IEnumerable<object[]> GetCompressionAlgorithimTags()
         {
             foreach (CompressionAlgorithmTag compressionAlgorithmTag in TestHelper.GetEnumValues<CompressionAlgorithmTag>())
