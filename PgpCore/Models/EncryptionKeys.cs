@@ -360,6 +360,9 @@ namespace PgpCore
 
 		public PgpPrivateKey FindSecretKey(long keyId)
 		{
+			if (SecretKeys == null)
+				throw new ArgumentNullException("No private keys found. These should be provided in EncryptionKeys constructor.");
+
 			PgpSecretKey pgpSecKey = SecretKeys.GetSecretKey(keyId);
 
 			if (pgpSecKey == null)
