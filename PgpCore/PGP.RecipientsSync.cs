@@ -19,7 +19,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFileInfo">PGP encrypted data file path</param>
         /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
-        public IEnumerable<long> GetFileRecipients(FileInfo inputFileInfo)
+        public IEnumerable<long> GetRecipients(FileInfo inputFileInfo)
         {
             if (inputFileInfo == null)
                 throw new ArgumentException("InputFileInfo");
@@ -28,7 +28,7 @@ namespace PgpCore
                 throw new FileNotFoundException($"Encrypted File [{inputFileInfo.FullName}] not found.");
 
             using (Stream inputStream = File.OpenRead(inputFileInfo.FullName))
-                return GetStreamRecipients(inputStream);
+                return GetRecipients(inputStream);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream">PGP encrypted data stream</param>
         /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
-        public IEnumerable<long> GetStreamRecipients(Stream inputStream)
+        public IEnumerable<long> GetRecipients(Stream inputStream)
         {
             if (inputStream == null)
                 throw new ArgumentException("InputStream");
@@ -66,20 +66,20 @@ namespace PgpCore
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
         /// <returns>Enumerable of public key ids. Value "0" means that the recipient is hidden.</returns>
-        public IEnumerable<long> GetArmoredStringRecipients(string input)
+        public IEnumerable<long> GetRecipients(string input)
         {
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException("Input");
 
             using (Stream inputStream = input.GetStream())
-                return GetStreamRecipients(inputStream);
+                return GetRecipients(inputStream);
         }
 
-        public IEnumerable<long> GetRecipients(FileInfo inputFileInfo) => GetFileRecipients(inputFileInfo);
+        public IEnumerable<long> GetFileRecipients(FileInfo inputFileInfo) => GetRecipients(inputFileInfo);
 
-        public IEnumerable<long> GetRecipients(Stream inputStream) => GetStreamRecipients(inputStream);
+        public IEnumerable<long> GetStreamRecipients(Stream inputStream) => GetRecipients(inputStream);
 
-        public IEnumerable<long> GetRecipients(string input) => GetArmoredStringRecipients(input);
+        public IEnumerable<long> GetArmoredStringRecipients(string input) => GetRecipients(input);
 
         #endregion GetArmoredStringRecipients
     }
