@@ -278,14 +278,12 @@ namespace PgpCore
 
                             line = lineOut.ToArray();
                             await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
-                            await outStream.WriteAsync(lineSep, 0, lineSep.Length);
                         }
                     }
                     else if (lookAhead != -1)
                     {
                         byte[] line = lineOut.ToArray();
                         await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
-                        await outStream.WriteAsync(lineSep, 0, lineSep.Length);
                     }
 
                     // Get public key from correctly positioned stream and initialise for verification
