@@ -186,6 +186,40 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public void Encrypt_EncryptMessageAndOverwriteVersionHeader_ShouldEncryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+
+            // Act
+            pgpEncrypt.Encrypt(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo, headers: new Dictionary<string, string> { { "Version", TESTHEADERVALUE } });
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                PgpInspectResult pgpInspectResult = pgpEncrypt.Inspect(testFactory.EncryptedContentFileInfo);
+                pgpInspectResult.IsEncrypted.Should().BeTrue();
+                pgpInspectResult.IsSigned.Should().BeFalse();
+                pgpInspectResult.IsArmored.Should().BeTrue();
+                pgpInspectResult.IsIntegrityProtected.Should().BeTrue();
+                pgpInspectResult.FileName.Should().Be(testFactory.ContentFileInfo.Name);
+                pgpInspectResult.MessageHeaders.Should().HaveCount(1);
+                pgpInspectResult.MessageHeaders.Single().Key.Should().Be("Version");
+                pgpInspectResult.MessageHeaders.Single().Value.Should().Be(TESTHEADERVALUE);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public void Encrypt_EncryptMessageWithOldFormat_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
