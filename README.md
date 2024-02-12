@@ -58,7 +58,7 @@ using (PGP pgp = new PGP())
 }
 ```
 #### Inspect
-Inspect the provided file, stream or string to determine if it is encrypted or signed.
+Inspect the provided file, stream or string and return a [PGPInspectResult](https://github.com/mattosaurus/PgpCore/blob/master/PgpCore/Models/PGPInspectResult.cs) object that contains details on the messages encryption and sign status as well as additional information on filename, headers, etc. where available. 
 
 [`gpg --list-packets "C:\TEMP\Content\encrypted.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
 ### Inspect File
