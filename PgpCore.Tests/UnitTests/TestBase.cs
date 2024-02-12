@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace PgpCore.Tests.UnitTests
 {
-    public class TestBase
+    public abstract class TestBase
     {
 #if NETFRAMEWORK
         public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
