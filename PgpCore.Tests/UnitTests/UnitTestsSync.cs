@@ -1101,7 +1101,7 @@ namespace PgpCore.Tests
             foreach (long keyId in keyIdsInPublicKeyRing)
             {
                 // Act
-                encryptionKeys.UseEncrytionKey(keyId);
+                encryptionKeys.UseEncryptionKey(keyId);
                 using (Stream inputFileStream = testFactory.ContentStream)
                 using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                     pgpEncrypt.EncryptStream(inputFileStream, outputFileStream);
@@ -1300,7 +1300,7 @@ namespace PgpCore.Tests
                 .Where(key => key.IsEncryptionKey).Select(key => key.KeyId).ToArray();
             foreach (long keyId in keyIdsInPublicKeyRing)
             {
-                encryptionKeys.UseEncrytionKey(keyId);
+                encryptionKeys.UseEncryptionKey(keyId);
                 using (Stream inputFileStream = testFactory.ContentStream)
                 using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
                     pgp.EncryptStreamAndSign(inputFileStream, outputFileStream);
