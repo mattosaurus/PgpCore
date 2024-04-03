@@ -105,7 +105,6 @@ namespace PgpCore
         /// Sign the string
         /// </summary>
         /// <param name="input">Plain string to be signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="name">Name of signed file in message, defaults to "name"</param>
         /// <param name="headers">Optional headers to be added to the output</param>
         /// <param name="oldFormat">True, to use old format for encryption if you need compatibility with PGP 2.6.x. Otherwise, false</param>
