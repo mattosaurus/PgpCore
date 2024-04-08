@@ -257,7 +257,6 @@ namespace PgpCore
         /// Encrypt and sign the string
         /// </summary>
         /// <param name="input">Plain string to be encrypted and signed</param>
-        /// <param name="armor">True, means a binary data representation as an ASCII-only text. Otherwise, false</param>
         /// <param name="withIntegrityCheck">True to include integrity packet during signing</param>
         /// <param name="name">Name of encrypted file in message, defaults to the input file name</param>
         /// <param name="headers">Optional headers to be added to the output</param>

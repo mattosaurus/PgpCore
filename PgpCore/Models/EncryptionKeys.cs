@@ -376,7 +376,7 @@ namespace PgpCore
 		/// If it cannot find the key, it will not change the preferred key.
 		/// </summary>
 		/// <param name="keyId">The keyId to find.</param>
-		public void UseEncrytionKey(long keyId)
+		public void UseEncryptionKey(long keyId)
 		{
 			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in PublicKeyRings)
 			{
