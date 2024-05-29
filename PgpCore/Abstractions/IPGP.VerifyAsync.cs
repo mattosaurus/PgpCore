@@ -14,7 +14,7 @@ namespace PgpCore.Abstractions
         Task<bool> VerifyAsync(string input, bool throwIfEncrypted = false);
         Task<bool> VerifyClearAsync(FileInfo inputFile, FileInfo outputFile = null);
         Task<bool> VerifyClearAsync(Stream inputStream, Stream outputStream = null);
-        Task<bool> VerifyClearAsync(string input, string output = null);
+        Task<bool> VerifyClearAsync(string input);
 
         Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false);
         Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false);

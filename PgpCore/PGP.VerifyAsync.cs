@@ -333,24 +333,6 @@ namespace PgpCore
                 return await VerifyClearAsync(inputStream, null);
         }
 
-        /// <summary>
-        /// PGP verify a given string.
-        /// </summary>
-        /// <param name="input">Plain string to be verified</param>
-        /// <param name="output">String to write the decrypted data to</param>
-        public async Task<bool> VerifyClearAsync(string input, string output)
-        {
-            using (Stream inputStream = await input.GetStreamAsync())
-            using (Stream outputStream = new MemoryStream())
-            {
-                bool verified = await VerifyClearAsync(inputStream, outputStream);
-
-                outputStream.Seek(0, SeekOrigin.Begin);
-                output = await outputStream.GetStringAsync();
-                return verified;
-            }
-        }
-
         public async Task<bool> VerifyClearFileAsync(FileInfo inputFile) => await VerifyClearAsync(inputFile, null);
 
         public async Task<bool> VerifyClearStreamAsync(Stream inputStream) => await VerifyClearAsync(inputStream, null);
