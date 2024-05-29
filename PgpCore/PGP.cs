@@ -414,7 +414,7 @@ namespace PgpCore
 			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
 			{
 				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.SetSignerUserId(false, userId);
+				subPacketGenerator.AddSignerUserId(false, userId);
 				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
 				// Just the first one!
 				break;
@@ -437,7 +437,7 @@ namespace PgpCore
 			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
 			{
 				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.SetSignerUserId(false, userId);
+				subPacketGenerator.AddSignerUserId(false, userId);
 				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
 				// Just the first one!
 				break;
