@@ -12,8 +12,8 @@
     <PackageTags>PGP .NET Core</PackageTags>
     <Version>6.4.0.0</Version>
     <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.4.0</FileVersion>
-    <PackageReleaseNotes>v6.4.0 - Remove armor option from string methods</PackageReleaseNotes>
+    <FileVersion>6.4.1</FileVersion>
+    <PackageReleaseNotes>v6.4.1 - Package updates</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
@@ -121,8 +121,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.1.1" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

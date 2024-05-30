@@ -12,9 +12,9 @@ namespace PgpCore.Tests.UnitTests
     public abstract class TestBase
     {
 #if NETFRAMEWORK
-        public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.1.1+851feee009";
+        public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.4.0+83ebf4a805";
 #else
-        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.1.1+851feee009";
+        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.4.0+83ebf4a805";
 #endif
         public const string DEFAULTNAME = "name";
         public const string TESTNAME = "Test Name";

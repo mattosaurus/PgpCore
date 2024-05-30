@@ -80,7 +80,7 @@ namespace PgpCore
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
+					using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
 					{
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
@@ -117,7 +117,7 @@ namespace PgpCore
 				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
 				{
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
+					using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
 					{
 						WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
@@ -150,7 +150,7 @@ namespace PgpCore
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
                 PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
+                using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
                 {
                     await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
                 }
@@ -181,7 +181,7 @@ namespace PgpCore
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
 				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralStreamOut(compressedOut, inputStream, name, oldFormat))
+				using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
 				{
 					WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 				}
@@ -390,26 +390,23 @@ namespace PgpCore
 		private Stream ChainLiteralOut(Stream compressedOut, FileInfo file, string name, bool oldFormat)
 		{
 			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
-			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, file.Length,
+
+            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, file.Length,
 				DateTime.UtcNow);
 		}
 
-		#endregion ChainLiteralOut
-
-		#region ChainLiteralStreamOut
-
-		private Stream ChainLiteralStreamOut(Stream compressedOut, Stream inputStream, string name, bool oldFormat)
+		private Stream ChainLiteralOut(Stream compressedOut, Stream inputStream, string name, bool oldFormat)
 		{
 			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
 			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length,
 				DateTime.UtcNow);
 		}
 
-		#endregion ChainLiteralStreamOut
+        #endregion ChainLiteralOut
 
-		#region InitSignatureGenerator
+        #region InitSignatureGenerator
 
-		private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
+        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
 		{
 			PublicKeyAlgorithmTag tag = EncryptionKeys.SigningSecretKey.PublicKey.Algorithm;
 			PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
@@ -417,7 +414,7 @@ namespace PgpCore
 			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
 			{
 				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.SetSignerUserId(false, userId);
+				subPacketGenerator.AddSignerUserId(false, userId);
 				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
 				// Just the first one!
 				break;
@@ -440,7 +437,7 @@ namespace PgpCore
 			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
 			{
 				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.SetSignerUserId(false, userId);
+				subPacketGenerator.AddSignerUserId(false, userId);
 				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
 				// Just the first one!
 				break;
