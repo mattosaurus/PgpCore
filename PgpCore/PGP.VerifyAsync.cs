@@ -158,7 +158,7 @@ namespace PgpCore
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
-            outputStream.Flush();
+            await outputStream.FlushAsync();
             outputStream.Seek(0, SeekOrigin.Begin);
 
             return (verified);
