@@ -9,6 +9,7 @@ using PgpCore.Abstractions;
 using System.IO;
 using System;
 using Org.BouncyCastle.Math;
+using PgpCore.Helpers;
 
 namespace PgpCore
 {
@@ -95,9 +96,43 @@ namespace PgpCore
                     SymmetricKeyAlgorithm, SymmetricKeyAlgorithmTag.TripleDes
                 });
 
-            IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
+            IAsymmetricCipherKeyPairGenerator kpg = null;
+            KeyGenerationParameters kgp = null;
 
-            kpg.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(0x13), new SecureRandom(), strength, certainty));
+            switch (PublicKeyAlgorithm)
+            {
+                case PublicKeyAlgorithmTag.RsaGeneral:
+                case PublicKeyAlgorithmTag.RsaEncrypt:
+                case PublicKeyAlgorithmTag.RsaSign:
+                    kpg = GeneratorUtilities.GetKeyPairGenerator("RSA");
+                    kgp = new RsaKeyGenerationParameters(
+                        BigInteger.ValueOf(0x10001),
+                        new SecureRandom(),
+                        strength,
+                        certainty);
+                    break;
+                case PublicKeyAlgorithmTag.ElGamalEncrypt:
+                case PublicKeyAlgorithmTag.ElGamalGeneral:
+                    kpg = GeneratorUtilities.GetKeyPairGenerator("ELGAMAL");
+                    ElGamalParametersGenerator elGamalParametersGenerator = new ElGamalParametersGenerator();
+                    elGamalParametersGenerator.Init(strength, certainty, new SecureRandom());
+                    kgp = new ElGamalKeyGenerationParameters(
+                        new SecureRandom(),
+                        elGamalParametersGenerator.GenerateParameters());
+                    break;
+                case PublicKeyAlgorithmTag.Dsa:
+                    kpg = GeneratorUtilities.GetKeyPairGenerator("DSA");
+                    DsaParametersGenerator dsaParametersGenerator = new DsaParametersGenerator();
+                    dsaParametersGenerator.Init(strength, certainty, new SecureRandom());
+                    kgp = new DsaKeyGenerationParameters(
+                        new SecureRandom(),
+                        dsaParametersGenerator.GenerateParameters());
+                    break;
+                default:
+                    throw new PgpException("Unknown PublicKeyAlgorithm: " + PublicKeyAlgorithm);
+            }
+
+            kpg.Init(kgp);
 
             PgpKeyPair masterKey = new PgpKeyPair(PublicKeyAlgorithm, kpg.GenerateKeyPair(), DateTime.UtcNow);
 
