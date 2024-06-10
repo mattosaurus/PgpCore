@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>6.4.0.0</Version>
+    <Version>6.5.0.0</Version>
     <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.4.1</FileVersion>
-    <PackageReleaseNotes>v6.4.1 - Package updates</PackageReleaseNotes>
+    <FileVersion>6.5.0</FileVersion>
+    <PackageReleaseNotes>v6.5.0 - Fix setting key hash algorithim</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
