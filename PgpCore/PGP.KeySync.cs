@@ -115,8 +115,9 @@ namespace PgpCore
                 masterKey,
                 username,
                 SymmetricKeyAlgorithm,
+                preferredHashAlgorithmTags[0],
                 password.ToCharArray(),
-                true,
+                preferredHashAlgorithmTags[0] == HashAlgorithmTag.Sha1 ? true : false,
                 signHashGen.Generate(),
                 null,
                 new SecureRandom());
