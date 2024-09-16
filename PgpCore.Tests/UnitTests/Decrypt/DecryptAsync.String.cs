@@ -45,6 +45,35 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         }
 
         [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task DecryptAsync_DecryptEmptyEncryptedMessage_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string encryptedContent = await pgpEncrypt.EncryptAsync(string.Empty);
+            string decryptedContent = await pgpDecrypt.DecryptAsync(encryptedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().BeEmpty();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         [MemberData(nameof(GetCompressionAlgorithimTags))]
         public async Task DecryptAsync_DecryptEncryptedCompressedMessage_ShouldDecryptMessage(CompressionAlgorithmTag compressionAlgorithmTag)
         {

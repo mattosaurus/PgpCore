@@ -51,6 +51,39 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        public async Task DecryptAsync_DecryptEmptyEncryptedMessage_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                await pgpEncrypt.EncryptAsync(new MemoryStream(), outputFileStream);
+
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
+                await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentStream, outputFileStream);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().BeEmpty();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
         public async Task DecryptAsync_DecryptBinaryEncryptedMessage_ShouldDecryptMessage(KeyType keyType)
         {
             // Arrange
