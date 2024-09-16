@@ -258,10 +258,17 @@ namespace PgpCore
 			if (string.IsNullOrEmpty(publicKey))
 				throw new ArgumentException("PublicKey");
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKey.GetStream());
+            try
+            {
+                var keyRings = Utilities.ReadAllKeyRings(publicKey.GetStream());
 
-			InitializeKeys(keyRings);
-		}
+                InitializeKeys(keyRings);
+            }
+            catch (Exception ex)
+            {
+                throw new PgpException($"Error reading public key file [{publicKey}].", ex);
+            }
+        }
 
 		/// <summary>
 		/// Initializes a new instance of the EncryptionKeys class.
@@ -278,9 +285,16 @@ namespace PgpCore
 			if (!publicKeyFile.Exists)
 				throw new FileNotFoundException($"Public Key file [{publicKeyFile.FullName}] does not exist.");
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKeyFile.OpenRead());
+			try
+			{
+				var keyRings = Utilities.ReadAllKeyRings(publicKeyFile.OpenRead());
 
-			InitializeKeys(keyRings);
+				InitializeKeys(keyRings);
+			}
+			catch (Exception ex)
+			{
+				throw new PgpException($"Error reading public key file [{publicKeyFile.FullName}].", ex);
+			}
 		}
 
 		/// <summary>
@@ -299,9 +313,16 @@ namespace PgpCore
 					throw new ArgumentException(nameof(publicKey));
 			}
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKeyStrings.Select(s => s.GetStream()));
+			try
+			{
+                var keyRings = Utilities.ReadAllKeyRings(publicKeyStrings.Select(s => s.GetStream()));
 
-			InitializeKeys(keyRings);
+                InitializeKeys(keyRings);
+            }
+			catch (Exception ex)
+            {
+                throw new PgpException("Error reading public key files.", ex);
+            }
 		}
 
 		/// <summary>
@@ -324,9 +345,16 @@ namespace PgpCore
 					throw new FileNotFoundException($"Input file [{publicKeyFile.FullName}] does not exist.");
 			}
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKeys.Select(fileInfo => fileInfo.OpenRead()));
+			try
+			{
+                var keyRings = Utilities.ReadAllKeyRings(publicKeys.Select(fileInfo => fileInfo.OpenRead()));
 
-			InitializeKeys(keyRings);
+                InitializeKeys(keyRings);
+            }
+			catch (Exception ex)
+            {
+                throw new PgpException("Error reading public key files.", ex);
+            }
 		}
 
 		public EncryptionKeys(Stream publicKeyStream)
@@ -334,9 +362,16 @@ namespace PgpCore
 			if (publicKeyStream == null)
 				throw new ArgumentException("PublicKeyStream");
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKeyStream);
+			try
+			{
+                var keyRings = Utilities.ReadAllKeyRings(publicKeyStream);
 
-			InitializeKeys(keyRings);
+                InitializeKeys(keyRings);
+            }
+			catch (Exception ex)
+            {
+                throw new PgpException("Error reading public key stream.", ex);
+            }
 		}
 
 		public EncryptionKeys(IEnumerable<Stream> publicKeyStreams)
@@ -349,9 +384,16 @@ namespace PgpCore
 					throw new ArgumentException("PublicKeyStream");
 			}
 
-			var keyRings = Utilities.ReadAllKeyRings(publicKeys);
-			
-			InitializeKeys(keyRings);
+			try
+			{
+                var keyRings = Utilities.ReadAllKeyRings(publicKeys);
+
+                InitializeKeys(keyRings);
+            }
+			catch (Exception ex)
+            {
+                throw new PgpException("Error reading public key streams.", ex);
+            }
 		}
 
 		#endregion Constructors
