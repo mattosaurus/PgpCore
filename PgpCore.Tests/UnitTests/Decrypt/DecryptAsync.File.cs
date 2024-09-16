@@ -7,8 +7,6 @@ using PgpCore.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -460,6 +458,43 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             {
                 ex.Should().BeAssignableTo<ArgumentException>();
                 ex.Message.Should().Be("Secret key for message not found.");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public async Task DecryptAsync_DecryptEncryptedMessageWithoutPassword_ShouldDecryptMessage()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Generated, FileType.Known);
+            string password = string.Empty;
+
+            PGP pgpKeys = new PGP();
+            await pgpKeys.GenerateKeyAsync(
+                testFactory.PublicKeyFileInfo,
+                testFactory.PrivateKeyFileInfo,
+                testFactory.UserName,
+                password
+                );
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptAsync(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
+            await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
             }
 
             // Teardown
