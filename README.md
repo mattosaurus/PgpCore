@@ -25,6 +25,9 @@ This is intended for usage in projects [targeting .NET Standard 2.0](https://dot
 # Azure Function Example
 If you want a (basic) example of how you can use an Azure Function to encrypt/decrypt from Azure Blob Storage I've created a sample project [here](https://github.com/mattosaurus/PgpEncrypt).
 
+# Performance
+By default encrypted files are armoured. [It is suggested](https://github.com/mattosaurus/PgpCore/pull/312#issuecomment-2931559301) that for larger files this is disabled as it can significantly increase the file size and processing time. To disable armouring set the `armour` property to `false`.
+
 ## Methods
 
 * [Generate Key](#generate-key)
@@ -45,6 +48,7 @@ If you want a (basic) example of how you can use an Azure Function to encrypt/de
 * [Public Key Algorithm](#publickeyalgorithm)
 * [File Type](#filetype)
 * [Hash Algorithm Tag](#hashalgorithmtag)
+
 #### Generate Key
 Generate a new public and private key for the provided username and password.
 
