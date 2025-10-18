@@ -68,7 +68,9 @@ namespace PgpCore
 								signatureGenerator);
 						}
 					}
+					await compressedOut.FlushAsync();
 				}
+				await encryptedOut.FlushAsync();
 			}
 		}
 
@@ -84,7 +86,9 @@ namespace PgpCore
 					{
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
+					await compressedOut.FlushAsync();
 				}
+				await encryptedOut.FlushAsync();
 			}
 		}
 
@@ -106,7 +110,9 @@ namespace PgpCore
 							WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
 						}
 					}
+					compressedOut.Flush();
 				}
+				encryptedOut.Flush();
 			}
 		}
 
@@ -121,7 +127,9 @@ namespace PgpCore
 					{
 						WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
+					compressedOut.Flush();
 				}
+				encryptedOut.Flush();
 			}
 		}
 
@@ -141,6 +149,7 @@ namespace PgpCore
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
 					}
 				}
+				await compressedOut.FlushAsync();
 			}
 		}
 
@@ -154,6 +163,7 @@ namespace PgpCore
                 {
                     await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
                 }
+				await compressedOut.FlushAsync();
             }
 		}
 
@@ -173,6 +183,7 @@ namespace PgpCore
 						WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
 					}
 				}
+				compressedOut.Flush();
 			}
 		}
 
@@ -185,6 +196,7 @@ namespace PgpCore
 				{
 					WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 				}
+				compressedOut.Flush();
 			}
 		}
 
@@ -304,6 +316,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			await literalOut.FlushAsync();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -318,6 +331,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			literalOut.Flush();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -332,6 +346,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			await literalOut.FlushAsync();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -346,6 +361,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			literalOut.Flush();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
