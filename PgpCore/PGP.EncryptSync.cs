@@ -106,14 +106,18 @@ namespace PgpCore
                 using (Stream compressedStream = new PgpCompressedDataGenerator(CompressionAlgorithm).Open(@out, new byte[1 << 16]))
                 {
                     Utilities.WriteStreamToLiteralData(compressedStream, FileTypeToChar(), inputStream, name, oldFormat);
+                    compressedStream.Flush();
                 }
+                outputStream.Flush();
             }
             else
             {
                 using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
                 {
                     Utilities.WriteStreamToLiteralData(@out, FileTypeToChar(), inputStream, name, oldFormat);
+                    @out.Flush();
                 }
+                outputStream.Flush();
             }
 
             if (armor)
