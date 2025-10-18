@@ -57,4 +57,4 @@ jobs:
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"mattosaurus_PgpCore" /o:"mattosaurus" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
           dotnet restore
           dotnet build --no-restore --configuration Debug
-          .\.sonar\scanner\dotnet-sonarscanner end
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
