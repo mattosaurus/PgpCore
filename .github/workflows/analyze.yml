@@ -9,25 +9,21 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
-          distribution: 'zulu'
-
+          distribution: 'zulu' # Alternative distribution options are available.
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Shallow clones must be disabled for SonarQube analysis
-
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
       - name: Download Test Coverage Artifact
         id: download-artifact
         uses: actions/download-artifact@v4
         with:
           name: coverage
-
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
           path: ~\sonar\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
       - name: Cache SonarCloud scanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
@@ -35,34 +31,23 @@ jobs:
           path: .\.sonar\scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
-
       - name: Install SonarCloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
-
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
       - name: List all downloaded artifacts
         run: |
           cd ${{ steps.download-artifact.outputs.download-path }}
           dir
-
       - name: Build and analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for PR decoration
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
         run: |
-          dotnet tool install --global dotnet-sonarscanner
-          export PATH="$PATH:/home/runner/.dotnet/tools"
-
-          dotnet sonarscanner begin \
-            /k:"mattosaurus_PgpCore" \
-            /o:"mattosaurus" \
-            /d:sonar.token="${SONAR_TOKEN}" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
-
-          dotnet build --no-restore --configuration Release
-          dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"mattosaurus_PgpCore" /o:"mattosaurus" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          dotnet restore
+          dotnet build --no-restore --configuration Debug
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
