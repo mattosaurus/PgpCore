@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace PgpCore
 {
-    public partial class PGP : IPGP
+	public partial class PGP : IPGP
 	{
 		public static PGP Instance => _instance ?? (_instance = new PGP());
 		private static PGP _instance;
@@ -68,7 +68,9 @@ namespace PgpCore
 								signatureGenerator);
 						}
 					}
+					await compressedOut.FlushAsync();
 				}
+				await encryptedOut.FlushAsync();
 			}
 		}
 
@@ -84,7 +86,9 @@ namespace PgpCore
 					{
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
+					await compressedOut.FlushAsync();
 				}
+				await encryptedOut.FlushAsync();
 			}
 		}
 
@@ -106,7 +110,9 @@ namespace PgpCore
 							WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
 						}
 					}
+					compressedOut.Flush();
 				}
+				encryptedOut.Flush();
 			}
 		}
 
@@ -121,7 +127,9 @@ namespace PgpCore
 					{
 						WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 					}
+					compressedOut.Flush();
 				}
+				encryptedOut.Flush();
 			}
 		}
 
@@ -141,6 +149,7 @@ namespace PgpCore
 						await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator);
 					}
 				}
+				await compressedOut.FlushAsync();
 			}
 		}
 
@@ -149,12 +158,13 @@ namespace PgpCore
 		{
 			using (Stream compressedOut = ChainCompressedOut(outputStream))
 			{
-                PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-                using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
-                {
-                    await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
-                }
-            }
+				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
+				using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
+				{
+					await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator);
+				}
+				await compressedOut.FlushAsync();
+			}
 		}
 
 		#endregion OutputSignedAsync
@@ -173,6 +183,7 @@ namespace PgpCore
 						WriteOutputAndSign(compressedOut, literalOut, inputFileStream, signatureGenerator);
 					}
 				}
+				compressedOut.Flush();
 			}
 		}
 
@@ -185,6 +196,7 @@ namespace PgpCore
 				{
 					WriteOutputAndSign(compressedOut, literalOut, inputStream, signatureGenerator);
 				}
+				compressedOut.Flush();
 			}
 		}
 
@@ -252,7 +264,7 @@ namespace PgpCore
 
 		private void OutputClearSigned(Stream inputStream, Stream outputStream, IDictionary<string, string> headers)
 		{
-            using (StreamReader streamReader = new StreamReader(inputStream))
+			using (StreamReader streamReader = new StreamReader(inputStream))
 			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
@@ -304,6 +316,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			await literalOut.FlushAsync();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -318,6 +331,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			literalOut.Flush();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -332,6 +346,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			await literalOut.FlushAsync();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -346,6 +361,7 @@ namespace PgpCore
 				signatureGenerator.Update(buf, 0, length);
 			}
 
+			literalOut.Flush();
 			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
@@ -391,7 +407,7 @@ namespace PgpCore
 		{
 			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
 
-            return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, file.Length,
+			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, file.Length,
 				DateTime.UtcNow);
 		}
 
@@ -402,11 +418,11 @@ namespace PgpCore
 				DateTime.UtcNow);
 		}
 
-        #endregion ChainLiteralOut
+		#endregion ChainLiteralOut
 
-        #region InitSignatureGenerator
+		#region InitSignatureGenerator
 
-        private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
+		private PgpSignatureGenerator InitSignatureGenerator(Stream compressedOut)
 		{
 			PublicKeyAlgorithmTag tag = EncryptionKeys.SigningSecretKey.PublicKey.Algorithm;
 			PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
@@ -621,9 +637,9 @@ namespace PgpCore
 		public void Dispose()
 		{ }
 
-		# endregion Misc Utilities
+		#endregion Misc Utilities
 
 		#endregion Private helpers
-		
+
 	}
 }

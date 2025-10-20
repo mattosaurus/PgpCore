@@ -382,6 +382,7 @@ namespace PgpCore
 			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
 			{
 				await input.CopyToAsync(pOut);
+				await pOut.FlushAsync();
 			}
 		}
 
@@ -396,6 +397,7 @@ namespace PgpCore
 			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
 			{
 				input.CopyTo(pOut);
+				pOut.Flush();
 			}
 		}
 
