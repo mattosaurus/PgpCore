@@ -47,6 +47,36 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             testFactory.Teardown();
         }
 
+        [Fact]
+        public void Decrypt_DecryptLargeEncryptedFile_ShouldDecryptFile()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Generated, FileType.GeneratedLarge);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgpEncrypt.Encrypt(testFactory.ContentStream, outputFileStream);
+
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
+                pgpDecrypt.Decrypt(testFactory.EncryptedContentStream, outputFileStream);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
         [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
