@@ -9,6 +9,7 @@ using System.Text;
 using PgpCore.Models;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PgpCore
 {
@@ -99,7 +100,16 @@ namespace PgpCore
                 PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
                 pk.AddMethod(publicKey);
             }
-
+            /*
+            Encoding cp1253 = Encoding.GetEncoding(1253);
+            string text;
+            using (StreamReader reader = new StreamReader(inputStream, cp1253))
+            {
+                text = reader.ReadToEnd();
+            }
+            byte[] cp1253Bytes = cp1253.GetBytes(text);
+            MemoryStream inputStream1253 = new MemoryStream(cp1253Bytes);
+            */
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {
                 using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
@@ -146,7 +156,9 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
-            using (Stream inputStream = input.GetStream())
+            Encoding encoding1253 = Encoding.GetEncoding(1253);
+
+            using (Stream inputStream = input.GetStream(encoding1253))
             using (Stream outputStream = new MemoryStream())
             {
                 Encrypt(inputStream, outputStream, true, withIntegrityCheck, name, headers, oldFormat);
