@@ -14,7 +14,7 @@ namespace PgpCore.Tests.UnitTests
 #if NETFRAMEWORK
         public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.4.0+83ebf4a805";
 #else
-        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.4.0+83ebf4a805";
+        public const string VERSION = "BouncyCastle.NET Cryptography (net8.0) v2.4.0+83ebf4a805";
 #endif
         public const string DEFAULTNAME = "name";
         public const string TESTNAME = "Test Name";
