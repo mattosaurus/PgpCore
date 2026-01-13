@@ -289,5 +289,44 @@ namespace PgpCore.Tests.UnitTests.Sign
             // Teardown
             testFactory.Teardown();
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void ClearSign_SignMessageWithUtf8Characters_ShouldPreserveUtf8(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType);
+            string utf8Content = "Test with UTF-8: š ž č ć đ ñ ü ö ä € ₹ 中文 日本語 한글";
+            File.WriteAllText(testFactory.ContentFileInfo.FullName, utf8Content, Encoding.UTF8);
+            
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            // Act
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgpSign.ClearSign(testFactory.ContentStream, outputFileStream);
+
+            bool verified = pgpVerify.VerifyClear(testFactory.EncryptedContentStream);
+            string signedContent = File.ReadAllText(testFactory.EncryptedContentFileInfo.FullName, Encoding.UTF8);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                verified.Should().BeTrue();
+                signedContent.Should().Contain(utf8Content);
+                // Verify that specific UTF-8 characters are preserved
+                signedContent.Should().Contain("š");
+                signedContent.Should().Contain("€");
+                signedContent.Should().Contain("中文");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

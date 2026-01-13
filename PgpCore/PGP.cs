@@ -222,11 +222,11 @@ namespace PgpCore
 				while (streamReader.Peek() >= 0)
 				{
 					string line = await streamReader.ReadLineAsync();
-					byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+					byte[] lineByteArray = Encoding.UTF8.GetBytes(line);
 					// Does the line end with whitespace?
 					// Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
 					string cleanLine = line.TrimEnd();
-					byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+					byte[] cleanLineByteArray = Encoding.UTF8.GetBytes(cleanLine);
 
 					pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
 					await armoredOutputStream.WriteAsync(lineByteArray, 0, lineByteArray.Length);
@@ -273,11 +273,11 @@ namespace PgpCore
 				{
 					string line = streamReader.ReadLine();
 					if (line == null) continue;
-					byte[] lineByteArray = Encoding.ASCII.GetBytes(line);
+					byte[] lineByteArray = Encoding.UTF8.GetBytes(line);
 					// Does the line end with whitespace?
 					// Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
 					string cleanLine = line.TrimEnd();
-					byte[] cleanLineByteArray = Encoding.ASCII.GetBytes(cleanLine);
+					byte[] cleanLineByteArray = Encoding.UTF8.GetBytes(cleanLine);
 
 					pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
 					armoredOutputStream.Write(lineByteArray, 0, lineByteArray.Length);
