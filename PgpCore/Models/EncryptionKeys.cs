@@ -77,7 +77,7 @@ namespace PgpCore
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
 
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
@@ -149,7 +149,7 @@ namespace PgpCore
 
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
@@ -225,7 +225,7 @@ namespace PgpCore
 			
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
@@ -310,7 +310,7 @@ namespace PgpCore
 
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
@@ -372,7 +372,7 @@ namespace PgpCore
 			
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
 			InitializeKeys();
 		}
 		
@@ -408,7 +408,7 @@ namespace PgpCore
 			
 			_secretKeys =
 				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
 			InitializeKeys();
 		}
 		
@@ -452,7 +452,7 @@ namespace PgpCore
 			var keyRings = Utilities.ReadAllKeyRings(publicKeyStream);
 
 			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyStream));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
@@ -489,7 +489,7 @@ namespace PgpCore
 				throw new ArgumentException("PrivateKeyStream");
 			
 			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyStream));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase ?? throw new ArgumentNullException(nameof(passPhrase), "Invalid Pass Phrase."));
 			InitializeKeys();
 		}
 		
@@ -530,7 +530,7 @@ namespace PgpCore
 			var keyRings = Utilities.ReadAllKeyRings(publicKeyStreamArray);
 
 			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyStream));
-			_passPhrase = Encoding.Default.GetBytes(passPhrase);
+			_passPhrase = Encoding.UTF8.GetBytes(passPhrase);
 			InitializeKeys(keyRings);
 		}
 		
