@@ -24,7 +24,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -60,7 +60,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -96,7 +96,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -130,7 +130,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -166,7 +166,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -202,7 +202,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -240,7 +240,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -276,7 +276,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act

@@ -19,8 +19,8 @@ namespace PgpCore.Tests.UnitTests.Verify
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -49,8 +49,8 @@ namespace PgpCore.Tests.UnitTests.Verify
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -83,8 +83,8 @@ namespace PgpCore.Tests.UnitTests.Verify
 
             await testFactory1.ArrangeAsync(keyType, FileType.Known);
             await testFactory2.ArrangeAsync(KeyType.Generated, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory1.PrivateKeyStream, testFactory1.Password, testFactory1.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory2.PublicKeyStream, testFactory2.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory1.PrivateKeyStream, testFactory1.Password) { SymmetricKey = testFactory1.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory2.PublicKeyStream) { SymmetricKey = testFactory2.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -114,8 +114,8 @@ namespace PgpCore.Tests.UnitTests.Verify
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -144,8 +144,8 @@ namespace PgpCore.Tests.UnitTests.Verify
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -211,8 +211,8 @@ namespace PgpCore.Tests.UnitTests.Verify
             TestFactory testFactory = new TestFactory();
 
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password, testFactory.SymmetricKey);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.SymmetricKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyStream) { SymmetricKey = testFactory.SymmetricKey };
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
