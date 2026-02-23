@@ -263,12 +263,12 @@ namespace PgpCore
                 {
                     MemoryStream lineOut = new MemoryStream();
                     byte[] lineSep = LineSeparator;
-                    int lookAhead = ReadInputLine(lineOut, armoredInputStream);
+                    var lookAhead = ReadInputLine(lineOut, armoredInputStream);
 
                     // Read past message to signature and store message in stream
                     if (lookAhead != -1 && armoredInputStream.IsClearText())
                     {
-                        byte[] line = lineOut.ToArray();
+                        var line = lineOut.ToArray();
                         await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
                         await outStream.WriteAsync(lineSep, 0, lineSep.Length);
 
@@ -278,11 +278,14 @@ namespace PgpCore
 
                             line = lineOut.ToArray();
                             await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
+                            // Add missing new line
+                            if (lookAhead != 1)
+                                await outStream.WriteAsync(lineSep, 0, lineSep.Length);
                         }
                     }
                     else if (lookAhead != -1)
                     {
-                        byte[] line = lineOut.ToArray();
+                        var line = lineOut.ToArray();
                         await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
                     }
 
