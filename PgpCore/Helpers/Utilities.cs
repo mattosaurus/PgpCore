@@ -595,7 +595,10 @@ namespace PgpCore
 			var secretKeys = keyRings.SelectMany(ring => ring.GetSecretKeys().Cast<PgpSecretKey>())
 				.OrderByDescending(GetSigningScore).ToArray();
 
-			return secretKeys.FirstOrDefault();
+			if(!secretKeys.Any())
+				throw new ArgumentException("Could not find any signing keys in keyring");
+
+			return secretKeys.First();
 		}
 
 		/// <summary>
