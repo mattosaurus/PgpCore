@@ -16,12 +16,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageWithDefaultProperties_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -50,6 +51,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptEmptyMessageWithDefaultProperties_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
@@ -58,7 +60,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
 
             // Create empty file
             testFactory.ContentFileInfo.Create().Close();
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -87,12 +89,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageAsBinary_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -119,12 +122,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageWithoutIntegrityCheck_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -153,12 +157,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageWithName_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -187,12 +192,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageWithHeaders_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -223,12 +229,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageAndOverwriteVersionHeader_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -257,12 +264,13 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAsync_EncryptMessageWithOldFormat_ShouldEncryptMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act
@@ -291,6 +299,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageWithDefaultProperties_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange
@@ -331,6 +340,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageAsBinary_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange
@@ -368,6 +378,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageWithoutIntegrityCheck_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange
@@ -407,6 +418,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageWithName_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange
@@ -446,6 +458,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageWithHeaders_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange
@@ -487,6 +500,7 @@ namespace PgpCore.Tests.UnitTests.Encrypt
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task EncryptAndSignAsync_EncryptAndSignMessageWithOldFormat_ShouldEncryptAndSignMessage(KeyType keyType)
         {
             // Arrange

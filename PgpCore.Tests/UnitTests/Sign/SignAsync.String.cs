@@ -17,13 +17,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task SignAsync_SignMessageWithDefaultProperties_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -58,13 +59,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task SignAsync_SignMessageWithName_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -99,13 +101,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task SignAsync_SignMessageWithHeaders_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -142,13 +145,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task SignAsync_SignMessageWithOldFormat_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -183,13 +187,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task ClearSignAsync_SignMessageWithDefaultProperties_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -212,13 +217,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task ClearSignAsync_SignMessageWithHeaders_ShouldSignMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -241,13 +247,14 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task ClearSignAsync_SignMessageWithUtf8Characters_ShouldPreserveUtf8(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
             string utf8Content = "Test with UTF-8: š ž č ć đ ñ ü ö ä € ₹ 中文 日本語 한글";

@@ -563,7 +563,7 @@ string encryptedSignedContent = await pgp.DecryptAndVerifyAsync("String to decry
 ## Settings
 The PGP object contains a variety of settings properties that can be used to determine how files are encrypted.
 ### CompressionAlgorithm
-The compression algorithim to be used on the message. This is applied prior to encryption, either to the message or the signed message.
+The compression algorithm to be used on the message. This is applied prior to encryption, either to the message or the signed message.
 - Uncompressed - **Default**
 - Zip
 - ZLib
@@ -603,7 +603,7 @@ The type of signature to be used for file signing.
 - CertificationRevocation
 - Timestamp
 ### PublicKeyAlgorithm
-The public key encryption algorithim.
+The public key encryption algorithm.
 - RsaGeneral - **Default**
 - RsaEncrypt
 - RsaSign
@@ -620,7 +620,7 @@ Encoding to be used for the output file.
 - Text
 - UTF8
 ### HashAlgorithmTag
-The hash algorithim to be used by the signature.
+The hash algorithm to be used by the signature.
 - MD5
 - Sha1 - **Default**
 - RipeMD160

@@ -88,7 +88,7 @@ namespace PgpCore
 
             if (armor)
             {
-                outputStream = new ArmoredOutputStream(outputStream, headers);
+                outputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader);
             }
 
             PgpEncryptedDataGenerator pk =
@@ -100,6 +100,11 @@ namespace PgpCore
                 pk.AddMethod(publicKey);
             }
 
+            if (EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
+            {
+                pk.AddMethodRaw(EncryptionKeys.SymmetricKey, HashAlgorithmTag);
+            }
+            
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {
                 using (Stream @out = pk.Open(outputStream, new byte[1 << 16]))
@@ -202,7 +207,7 @@ namespace PgpCore
             {
                 if (armor)
                 {
-                    using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
+                    using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
                     {
                         OutputEncrypted(inputFile, armoredOutputStream, withIntegrityCheck, name, oldFormat);
                     }
@@ -248,7 +253,7 @@ namespace PgpCore
 
             if (armor)
             {
-                using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
+                using (var armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
                 {
                     OutputEncrypted(inputStream, armoredOutputStream, withIntegrityCheck, name, oldFormat);
                 }

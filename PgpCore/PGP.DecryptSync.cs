@@ -72,24 +72,44 @@ namespace PgpCore
             {
                 // decrypt
                 PgpPrivateKey privateKey = null;
-                PgpPublicKeyEncryptedData pbe = null;
+                PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
+                PgpPbeEncryptedData encryptedDataSymmetric = null;
+                
                 if (enc != null)
                 {
-                    foreach (PgpPublicKeyEncryptedData publicKeyEncryptedData in enc.GetEncryptedDataObjects())
+                    foreach (PgpEncryptedData encryptedData in enc.GetEncryptedDataObjects())
                     {
-                        privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
-
-                        if (privateKey != null)
+                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                         {
-                            pbe = publicKeyEncryptedData;
-                            break;
+                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
+
+                            if (privateKey != null)
+                            {
+                                encryptedDataAsymmetric = publicKeyEncryptedData;
+                                break;
+                            }   
+                        }
+
+                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
+                        {
+                            encryptedDataSymmetric = passwordEncryptedData;
                         }
                     }
 
-                    if (privateKey == null)
+                    Stream clear = null;
+
+                    if (encryptedDataAsymmetric != null)
+                    {
+                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                    }
+                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
+                    {
+                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
+                    }
+                    
+                    if (clear == null)
                         throw new ArgumentException("Secret key for message not found.");
 
-                    Stream clear = pbe.GetDataStream(privateKey).DisposeWith(disposables);
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 
                     message = plainFact.NextPgpObject();
@@ -125,11 +145,24 @@ namespace PgpCore
                     Stream unc = literalData.GetInputStream();
                     StreamHelper.PipeAll(unc, outputStream);
 
-                    if (pbe.IsIntegrityProtected())
+                    if (encryptedDataAsymmetric != null)
                     {
-                        if (!pbe.Verify())
+                        if (encryptedDataAsymmetric.IsIntegrityProtected())
                         {
-                            throw new PgpException("Message failed integrity check.");
+                            if (!encryptedDataAsymmetric.Verify())
+                            {
+                                throw new PgpException("Message failed integrity check.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (encryptedDataSymmetric.IsIntegrityProtected())
+                        {
+                            if (!encryptedDataSymmetric.Verify())
+                            {
+                                throw new PgpException("Message failed integrity check.");
+                            }
                         }
                     }
                 }
@@ -219,25 +252,44 @@ namespace PgpCore
             {
                 // decrypt
                 PgpPrivateKey privateKey = null;
-                PgpPublicKeyEncryptedData pbe = null;
+                PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
+                PgpPbeEncryptedData encryptedDataSymmetric = null;
+                
                 if (encryptedDataList != null)
                 {
-                    foreach (PgpPublicKeyEncryptedData publicKeyEncryptedData in
-                             encryptedDataList.GetEncryptedDataObjects())
+                    foreach (PgpEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
                     {
-                        privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
-
-                        if (privateKey != null)
+                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                         {
-                            pbe = publicKeyEncryptedData;
-                            break;
+                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
+
+                            if (privateKey != null)
+                            {
+                                encryptedDataAsymmetric = publicKeyEncryptedData;
+                                break;
+                            }   
+                        }
+
+                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
+                        {
+                            encryptedDataSymmetric = passwordEncryptedData;
                         }
                     }
 
-                    if (privateKey == null)
+                    Stream clear = null;
+
+                    if (encryptedDataAsymmetric != null)
+                    {
+                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                    }
+                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
+                    {
+                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
+                    }
+                    
+                    if (clear == null)
                         throw new ArgumentException("Secret key for message not found.");
 
-                    Stream clear = pbe.GetDataStream(privateKey).DisposeWith(disposables);
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 
                     message = plainFact.NextPgpObject();
@@ -310,11 +362,24 @@ namespace PgpCore
                     Stream unc = literalData.GetInputStream();
                     StreamHelper.PipeAll(unc, outputStream);
 
-                    if (pbe.IsIntegrityProtected())
+                    if (encryptedDataAsymmetric != null)
                     {
-                        if (!pbe.Verify())
+                        if (encryptedDataAsymmetric.IsIntegrityProtected())
                         {
-                            throw new PgpException("Message failed integrity check.");
+                            if (!encryptedDataAsymmetric.Verify())
+                            {
+                                throw new PgpException("Message failed integrity check.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (encryptedDataSymmetric.IsIntegrityProtected())
+                        {
+                            if (!encryptedDataSymmetric.Verify())
+                            {
+                                throw new PgpException("Message failed integrity check.");
+                            }
                         }
                     }
                 }

@@ -22,7 +22,7 @@ namespace PgpCore.Tests.UnitTests.Recipient
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange(keyType, FileType.Known);
-            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.SymmetricKey);
             PGP pgpEncrypt = new PGP(encryptionKeys);
 
             // Act

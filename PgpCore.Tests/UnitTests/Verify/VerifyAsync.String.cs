@@ -13,13 +13,14 @@ namespace PgpCore.Tests.UnitTests.Verify
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task VerifyAsync_VerifySignedMessage_ShouldVerifyMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -41,6 +42,7 @@ namespace PgpCore.Tests.UnitTests.Verify
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task VerifyAsync_VerifySignedMessageWithWrongKey_ShouldNotVerifyMessage(KeyType keyType)
         {
             // Arrange
@@ -73,13 +75,14 @@ namespace PgpCore.Tests.UnitTests.Verify
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task VerifyClearAsync_VerifyClearSignedMessage_ShouldVerifyMessage(KeyType keyType)
         {
             // Arrange
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(keyType, FileType.Known);
-            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
-            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password, testFactory.SymmetricKey);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.SymmetricKey);
             PGP pgpSign = new PGP(signingKeys);
             PGP pgpVerify = new PGP(verificationKeys);
 
@@ -101,6 +104,7 @@ namespace PgpCore.Tests.UnitTests.Verify
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task VerifyClearAsync_VerifyClearSignedMessageWithWrongKey_ShouldNotVerifyMessage(KeyType keyType)
         {
             // Arrange
@@ -133,6 +137,7 @@ namespace PgpCore.Tests.UnitTests.Verify
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task VerifyClearAsync_VerifyClearSignedModifiedMessage_ShouldNotVerifyMessage(KeyType keyType)
         {
             // Arrange
