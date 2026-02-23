@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>6.5.4.0</Version>
+    <Version>6.5.5.0</Version>
     <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.5.4</FileVersion>
-    <PackageReleaseNotes>v6.5.4 - Fix missing newlines</PackageReleaseNotes>
+    <FileVersion>6.5.5</FileVersion>
+    <PackageReleaseNotes>v6.5.5 - Fix missing newlines</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
