@@ -474,5 +474,69 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             encryptTestFactory.Teardown();
             signTestFactory.Teardown();
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Decrypt_DecryptWithSymmetricKeySetViaProperty_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            decryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string encryptedContent = pgpEncrypt.Encrypt(testFactory.Content);
+            string decryptedContent = pgpDecrypt.Decrypt(encryptedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Decrypt_DecryptWithoutSymmetricKeySet_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string encryptedContent = pgpEncrypt.Encrypt(testFactory.Content);
+            string decryptedContent = pgpDecrypt.Decrypt(encryptedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().NotBeNullOrEmpty();
+                encryptionKeys.SymmetricKey.Should().BeNull();
+                decryptionKeys.SymmetricKey.Should().BeNull();
+                decryptedContent.Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

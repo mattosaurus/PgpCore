@@ -463,5 +463,96 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             testFactoryEncrypt.Teardown();
             testFactorySign.Teardown();
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptMessageWithSymmetricKeySetViaProperty_ShouldEncryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+
+            // Act
+            string encryptedContent = await pgpEncrypt.EncryptAsync(testFactory.Content);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                PgpInspectResult pgpInspectResult = await pgpEncrypt.InspectAsync(encryptedContent);
+                pgpInspectResult.IsEncrypted.Should().BeTrue();
+                pgpInspectResult.IsSigned.Should().BeFalse();
+                pgpInspectResult.IsArmored.Should().BeTrue();
+                pgpInspectResult.IsIntegrityProtected.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptAndDecryptWithSymmetricKeySetViaProperty_ShouldRoundTrip(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            decryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            string encryptedContent = await pgpEncrypt.EncryptAsync(testFactory.Content);
+            string decryptedContent = await pgpDecrypt.DecryptAsync(encryptedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().NotBeNullOrEmpty();
+                decryptedContent.Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptMessageWithoutSymmetricKeySet_ShouldEncryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey, testFactory.PrivateKey, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+
+            // Act
+            string encryptedContent = await pgpEncrypt.EncryptAsync(testFactory.Content);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                encryptedContent.Should().NotBeNullOrEmpty();
+                encryptionKeys.SymmetricKey.Should().BeNull();
+                PgpInspectResult pgpInspectResult = await pgpEncrypt.InspectAsync(encryptedContent);
+                pgpInspectResult.IsEncrypted.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

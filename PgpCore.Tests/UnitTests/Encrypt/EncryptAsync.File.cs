@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using PgpCore.Models;
+using System.IO;
 
 namespace PgpCore.Tests.UnitTests.Encrypt
 {
@@ -534,6 +535,97 @@ namespace PgpCore.Tests.UnitTests.Encrypt
             // Teardown
             testFactoryEncrypt.Teardown();
             testFactorySign.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptMessageWithSymmetricKeySetViaProperty_ShouldEncryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptAsync(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                PgpInspectResult pgpInspectResult = await pgpEncrypt.InspectAsync(testFactory.EncryptedContentFileInfo);
+                pgpInspectResult.IsEncrypted.Should().BeTrue();
+                pgpInspectResult.IsSigned.Should().BeFalse();
+                pgpInspectResult.IsArmored.Should().BeTrue();
+                pgpInspectResult.IsIntegrityProtected.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptAndDecryptWithSymmetricKeySetViaProperty_ShouldRoundTrip(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            decryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptAsync(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
+            await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public async Task EncryptAsync_EncryptMessageWithoutSymmetricKeySet_ShouldEncryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+
+            // Act
+            await pgpEncrypt.EncryptAsync(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                encryptionKeys.SymmetricKey.Should().BeNull();
+                PgpInspectResult pgpInspectResult = await pgpEncrypt.InspectAsync(testFactory.EncryptedContentFileInfo);
+                pgpInspectResult.IsEncrypted.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
         }
     }
 }

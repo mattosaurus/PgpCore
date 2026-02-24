@@ -625,5 +625,75 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             encryptTestFactory.Teardown();
             signTestFactory.Teardown();
         }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Decrypt_DecryptWithSymmetricKeySetViaProperty_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream);
+            encryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            decryptionKeys.SymmetricKey = testFactory.SymmetricKey;
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgpEncrypt.Encrypt(testFactory.ContentStream, outputFileStream);
+
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
+                pgpDecrypt.Decrypt(testFactory.EncryptedContentStream, outputFileStream);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        public void Decrypt_DecryptWithoutSymmetricKeySet_ShouldDecryptMessage(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKeyStream, testFactory.PrivateKeyStream, testFactory.Password);
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyStream, testFactory.Password);
+            PGP pgpEncrypt = new PGP(encryptionKeys);
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            using (Stream outputFileStream = testFactory.EncryptedContentFileInfo.Create())
+                pgpEncrypt.Encrypt(testFactory.ContentStream, outputFileStream);
+
+            using (Stream outputFileStream = testFactory.DecryptedContentFileInfo.Create())
+                pgpDecrypt.Decrypt(testFactory.EncryptedContentStream, outputFileStream);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.EncryptedContentFileInfo.Exists.Should().BeTrue();
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                encryptionKeys.SymmetricKey.Should().BeNull();
+                decryptionKeys.SymmetricKey.Should().BeNull();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().Be(testFactory.Content);
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }
