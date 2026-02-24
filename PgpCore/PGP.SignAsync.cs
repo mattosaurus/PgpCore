@@ -48,7 +48,7 @@ namespace PgpCore
             {
                 if (armor)
                 {
-                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
+                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
                     {
                         await OutputSignedAsync(inputFile, armoredOutputStream, name, oldFormat);
                     }
@@ -92,7 +92,7 @@ namespace PgpCore
 
             if (armor)
             {
-                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers))
+                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
                 {
                     await OutputSignedAsync(inputStream, armoredOutputStream, name, oldFormat);
                 }

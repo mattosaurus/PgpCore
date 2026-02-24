@@ -27,7 +27,7 @@ namespace PgpCore
             long signatureExpirationInSeconds = 0,
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
             HashAlgorithmTag[] preferredHashAlgorithmTags = null,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
+            SymmetricKeyAlgorithmTag[] preferredSymmetricKeyAlgorithms = null)
         {
             if (publicKeyFileInfo == null)
                 throw new ArgumentException("PublicKeyFileInfo");
@@ -38,7 +38,7 @@ namespace PgpCore
             using (Stream pris = privateKeyFileInfo.Create())
                 GenerateKey(pubs, pris, username, password, strength, certainty, armor, emitVersion,
                     keyExpirationInSeconds, signatureExpirationInSeconds,
-                    preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymetricKeyAlgorithms);
+                    preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms);
         }
 
         public void GenerateKey(
@@ -54,7 +54,7 @@ namespace PgpCore
             long signatureExpirationInSeconds = 0,
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
             HashAlgorithmTag[] preferredHashAlgorithmTags = null,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null)
+            SymmetricKeyAlgorithmTag[] preferredSymmetricKeyAlgorithms = null)
         {
             username = username ?? string.Empty;
             password = password ?? string.Empty;
@@ -84,7 +84,7 @@ namespace PgpCore
                     HashAlgorithmTag, HashAlgorithmTag.Sha1
                 });
 
-            preferredSymetricKeyAlgorithms = preferredSymetricKeyAlgorithms ??
+            preferredSymmetricKeyAlgorithms = preferredSymmetricKeyAlgorithms ??
                 (SymmetricKeyAlgorithm == SymmetricKeyAlgorithmTag.TripleDes ?
                 new[]
                 {
@@ -105,7 +105,7 @@ namespace PgpCore
             signHashGen.SetKeyFlags(false, PgpKeyFlags.CanCertify | PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage | PgpKeyFlags.CanSign);
             signHashGen.SetPreferredCompressionAlgorithms(false, Array.ConvertAll(preferredCompressionAlgorithms, item => (int)item));
             signHashGen.SetPreferredHashAlgorithms(false, Array.ConvertAll(preferredHashAlgorithmTags, item => (int)item));
-            signHashGen.SetPreferredSymmetricAlgorithms(false, Array.ConvertAll(preferredSymetricKeyAlgorithms, item => (int)item));
+            signHashGen.SetPreferredSymmetricAlgorithms(false, Array.ConvertAll(preferredSymmetricKeyAlgorithms, item => (int)item));
             signHashGen.SetFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
             signHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
             signHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);

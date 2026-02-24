@@ -21,7 +21,7 @@ namespace PgpCore.Tests.UnitTests
         public const string TESTHEADERKEY = "Test Header";
         public const string TESTHEADERVALUE = "Test Value";
 
-        public static IEnumerable<object[]> GetCompressionAlgorithimTags()
+        public static IEnumerable<object[]> GetCompressionAlgorithmTags()
         {
             foreach (CompressionAlgorithmTag compressionAlgorithmTag in TestHelper.GetEnumValues<CompressionAlgorithmTag>())
             {
@@ -29,7 +29,7 @@ namespace PgpCore.Tests.UnitTests
             }
         }
 
-        public static IEnumerable<object[]> GetHashAlgorithimTags()
+        public static IEnumerable<object[]> GetHashAlgorithmTags()
         {
             foreach (HashAlgorithmTag hashAlgorithmTag in TestHelper.GetEnumValues<HashAlgorithmTag>())
             {
@@ -37,7 +37,7 @@ namespace PgpCore.Tests.UnitTests
             }
         }
 
-        public static IEnumerable<object[]> GetSymmetricAlgorithimTags()
+        public static IEnumerable<object[]> GetSymmetricAlgorithmTags()
         {
             foreach (SymmetricKeyAlgorithmTag symmetricKeyAlgorithmTag in TestHelper.GetEnumValues<SymmetricKeyAlgorithmTag>())
             {

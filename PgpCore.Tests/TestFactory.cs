@@ -13,6 +13,7 @@ namespace PgpCore.Tests
         private string _uniqueIdentifier;
         private string _userName;
         private string _password;
+        private byte[] _symmetricKey;
 
         public TestFactory()
         {
@@ -79,46 +80,68 @@ namespace PgpCore.Tests
         public string UserName => _userName != null ? _userName : $"{_uniqueIdentifier}@email.com" ;
 
         public string Password => _password != null ? _password : _uniqueIdentifier;
+        
+        public byte[] SymmetricKey => _symmetricKey;
 
         public void Arrange(KeyType keyType)
         {
             Arrange();
             PGP pgp = new PGP();
 
-            // Create keys
-            if (keyType == KeyType.Generated)
+            switch (keyType)
             {
-                pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
-            }
-            else if (keyType == KeyType.Known)
-            {
-                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
-                {
-                    streamWriter.WriteLine(Constants.PUBLICKEY1);
-                }
+                // Create keys
+                case KeyType.Generated:
+                    pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
+                    break;
+                case KeyType.Symmetric:
+                    _symmetricKey = Encoding.UTF8.GetBytes(Constants.PASSWORD1);
+                    
+                    using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PUBLICKEY1);
+                    }
 
-                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
-                {
-                    streamWriter.WriteLine(Constants.PRIVATEKEY1);
-                }
+                    using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PRIVATEKEY1);
+                    }
 
-                _userName = Constants.USERNAME1;
-                _password = Constants.PASSWORD1;
-            }
-            else if (keyType == KeyType.KnownGpg)
-            {
-                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                case KeyType.Known:
                 {
-                    streamWriter.WriteLine(Constants.PUBLICGPGKEY1);
-                }
+                    using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PUBLICKEY1);
+                    }
 
-                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PRIVATEKEY1);
+                    }
+
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                }
+                case KeyType.KnownGpg:
                 {
-                    streamWriter.WriteLine(Constants.PRIVATEGPGKEY1);
-                }
+                    using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PUBLICGPGKEY1);
+                    }
 
-                _userName = Constants.USERNAME1;
-                _password = Constants.PASSWORD1;
+                    using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        streamWriter.WriteLine(Constants.PRIVATEGPGKEY1);
+                    }
+
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                }
             }
         }
 
@@ -127,40 +150,60 @@ namespace PgpCore.Tests
             Arrange();
             PGP pgp = new PGP();
 
-            // Create keys
-            if (keyType == KeyType.Generated)
+            switch (keyType)
             {
-                pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
-            }
-            else if (keyType == KeyType.Known)
-            {
-                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
-                {
-                    await streamWriter.WriteLineAsync(Constants.PUBLICKEY1);
-                }
+                // Create keys
+                case KeyType.Generated:
+                    await pgp.GenerateKeyAsync(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
+                    break;
+                case KeyType.Symmetric:
+                    _symmetricKey = Encoding.UTF8.GetBytes(Constants.PASSWORD1);
+                    
+                    await using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PUBLICKEY1);
+                    }
 
-                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
-                {
-                    await streamWriter.WriteLineAsync(Constants.PRIVATEKEY1);
-                }
+                    await using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PRIVATEKEY1);
+                    }
 
-                _userName = Constants.USERNAME1;
-                _password = Constants.PASSWORD1;
-            }
-            else if (keyType == KeyType.KnownGpg)
-            {
-                using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                case KeyType.Known:
                 {
-                    await streamWriter.WriteLineAsync(Constants.PUBLICGPGKEY1);
-                }
+                    await using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PUBLICKEY1);
+                    }
 
-                using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    await using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PRIVATEKEY1);
+                    }
+
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                }
+                case KeyType.KnownGpg:
                 {
-                    await streamWriter.WriteLineAsync(Constants.PRIVATEGPGKEY1);
-                }
+                    using (StreamWriter streamWriter = PublicKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PUBLICGPGKEY1);
+                    }
 
-                _userName = Constants.USERNAME1;
-                _password = Constants.PASSWORD1;
+                    using (StreamWriter streamWriter = PrivateKeyFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteLineAsync(Constants.PRIVATEGPGKEY1);
+                    }
+
+                    _userName = Constants.USERNAME1;
+                    _password = Constants.PASSWORD1;
+                    break;
+                }
             }
         }
 
@@ -168,21 +211,23 @@ namespace PgpCore.Tests
         {
             Arrange();
 
-            // Create content file
-            if (fileType == FileType.Known)
+            switch (fileType)
             {
-                using (StreamWriter streamWriter = ContentFileInfo.CreateText())
+                // Create content file
+                case FileType.Known:
                 {
-                    streamWriter.Write(Constants.CONTENT);
+                    using (StreamWriter streamWriter = ContentFileInfo.CreateText())
+                    {
+                        streamWriter.Write(Constants.CONTENT);
+                    }
+                    break;
                 }
-            }
-            else if (fileType == FileType.GeneratedMedium)
-            {
-                CreateRandomFile(ContentFilePath, 300);
-            }
-            else if (fileType == FileType.GeneratedLarge)
-            {
-                CreateRandomFile(ContentFilePath, 5000);
+                case FileType.GeneratedMedium:
+                    CreateRandomFile(ContentFilePath, 300);
+                    break;
+                case FileType.GeneratedLarge:
+                    CreateRandomFile(ContentFilePath, 5000);
+                    break;
             }
         }
 
@@ -190,21 +235,23 @@ namespace PgpCore.Tests
         {
             Arrange();
 
-            // Create content file
-            if (fileType == FileType.Known)
+            switch (fileType)
             {
-                using (StreamWriter streamWriter = ContentFileInfo.CreateText())
+                // Create content file
+                case FileType.Known:
                 {
-                    await streamWriter.WriteAsync(Constants.CONTENT);
+                    using (StreamWriter streamWriter = ContentFileInfo.CreateText())
+                    {
+                        await streamWriter.WriteAsync(Constants.CONTENT);
+                    }
+                    break;
                 }
-            }
-            else if (fileType == FileType.GeneratedMedium)
-            {
-                await CreateRandomFileAsync(ContentFilePath, 300);
-            }
-            else if (fileType == FileType.GeneratedLarge)
-            {
-                await CreateRandomFileAsync(ContentFilePath, 5000);
+                case FileType.GeneratedMedium:
+                    await CreateRandomFileAsync(ContentFilePath, 300);
+                    break;
+                case FileType.GeneratedLarge:
+                    await CreateRandomFileAsync(ContentFilePath, 5000);
+                    break;
             }
         }
 
@@ -308,7 +355,8 @@ namespace PgpCore.Tests
     {
         Generated,
         Known,
-        KnownGpg
+        KnownGpg,
+        Symmetric
     }
 
     public enum FileType

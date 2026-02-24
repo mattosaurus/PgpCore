@@ -26,6 +26,7 @@ namespace PgpCore.Abstractions
         PgpPrivateKey PrivateKey { get; }
         PgpSecretKey SecretKey { get; }
         PgpSecretKeyRingBundle SecretKeys { get; }
+        byte[] SymmetricKey { get; set; }
 
         PgpPrivateKey FindSecretKey(long keyId);
     }

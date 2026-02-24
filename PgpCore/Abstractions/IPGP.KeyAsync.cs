@@ -19,7 +19,7 @@ namespace PgpCore.Abstractions
             long signatureExpirationInSeconds = 0,
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
             HashAlgorithmTag[] preferredHashAlgorithmTags = null,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null);
+            SymmetricKeyAlgorithmTag[] preferredSymmetricKeyAlgorithms = null);
 
         Task GenerateKeyAsync(
             Stream publicKeyStream,
@@ -34,6 +34,6 @@ namespace PgpCore.Abstractions
             long signatureExpirationInSeconds = 0,
             CompressionAlgorithmTag[] preferredCompressionAlgorithms = null,
             HashAlgorithmTag[] preferredHashAlgorithmTags = null,
-            SymmetricKeyAlgorithmTag[] preferredSymetricKeyAlgorithms = null);
+            SymmetricKeyAlgorithmTag[] preferredSymmetricKeyAlgorithms = null);
     }
 }
