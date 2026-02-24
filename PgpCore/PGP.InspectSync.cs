@@ -111,7 +111,7 @@ namespace PgpCore
                     }
 
                     if (privateKey == null)
-                        throw new ArgumentException("Secret key for message not found.");
+                        throw new ArgumentException("Decryption key for message not found.");
 
                     Stream clear = pbe.GetDataStream(privateKey).DisposeWith(disposables);
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);

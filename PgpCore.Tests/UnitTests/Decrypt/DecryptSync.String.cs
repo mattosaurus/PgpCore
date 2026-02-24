@@ -396,7 +396,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Action act = () => pgpDecrypt.Decrypt(encrypted);
-                    act.Should().Throw<ArgumentException>().Where(e => e.Message == "Secret key for message not found.");
+                    act.Should().Throw<ArgumentException>().Where(e => e.Message == "Decryption key for message not found.");
                 }
             }
 

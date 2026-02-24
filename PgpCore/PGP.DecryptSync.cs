@@ -4,9 +4,7 @@ using PgpCore.Extensions;
 using PgpCore.Helpers;
 using PgpCore.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace PgpCore
 {
@@ -108,7 +106,7 @@ namespace PgpCore
                     }
                     
                     if (clear == null)
-                        throw new ArgumentException("Secret key for message not found.");
+                        throw new ArgumentException("Decryption key for message not found.");
 
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 
@@ -288,7 +286,7 @@ namespace PgpCore
                     }
                     
                     if (clear == null)
-                        throw new ArgumentException("Secret key for message not found.");
+                        throw new ArgumentException("Decryption key for message not found.");
 
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 

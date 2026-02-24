@@ -496,7 +496,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             using (new AssertionScope())
             {
                 ex.Should().BeAssignableTo<ArgumentException>();
-                ex.Message.Should().Be("Secret key for message not found.");
+                ex.Message.Should().Be("Decryption key for message not found.");
             }
 
             // Teardown

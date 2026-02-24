@@ -539,7 +539,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Func<Task> act = async () => await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentStream, outputStream);
-                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message == "Secret key for message not found.");
+                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message == "Decryption key for message not found.");
                 }
             }
 
