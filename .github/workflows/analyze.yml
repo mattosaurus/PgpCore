@@ -44,8 +44,25 @@ jobs:
         run: |
           cd ${{ steps.download-artifact.outputs.download-path }}
           dir
+      - name: Validate Sonar token
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SONAR_TOKEN)) {
+            throw "SONAR_TOKEN is missing."
+          }
+
+          $basicAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$env:SONAR_TOKEN:"))
+          $headers = @{ Authorization = "Basic $basicAuth" }
+          $authResult = Invoke-RestMethod -Method Get -Uri "https://sonarcloud.io/api/authentication/validate" -Headers $headers
+          if (-not $authResult.valid) {
+            throw "SONAR_TOKEN failed authentication against SonarCloud."
+          }
+
       - name: Sonar Begin
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |

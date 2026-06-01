@@ -12,4 +12,5 @@ jobs:
   analyze:
     needs: build
     uses: ./.github/workflows/analyze.yml
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
