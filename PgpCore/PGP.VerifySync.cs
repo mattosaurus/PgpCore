@@ -88,14 +88,24 @@ namespace PgpCore
             }
             else if (pgpObject is PgpOnePassSignatureList onePassSignatureList)
             {
-                PgpOnePassSignature pgpOnePassSignature = onePassSignatureList[0];
+                // A message may be signed with multiple keys. Pick the first one-pass signature whose key
+                // matches one of the supplied verification keys, rather than assuming the first signature.
+                PgpOnePassSignature pgpOnePassSignature = null;
+                PgpPublicKey validationKey = null;
+                for (int i = 0; i < onePassSignatureList.Count; i++)
+                {
+                    if (Utilities.FindPublicKey(onePassSignatureList[i].KeyId, EncryptionKeys.VerificationKeys,
+                            out validationKey))
+                    {
+                        pgpOnePassSignature = onePassSignatureList[i];
+                        break;
+                    }
+                }
+
                 PgpLiteralData pgpLiteralData = (PgpLiteralData)factory.NextPgpObject();
                 Stream pgpLiteralStream = pgpLiteralData.GetInputStream();
 
-                // Verify against public key ID and that of any sub keys
-                var keyIdToVerify = pgpOnePassSignature.KeyId;
-                if (Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
-                        out PgpPublicKey validationKey))
+                if (pgpOnePassSignature != null)
                 {
                     pgpOnePassSignature.InitVerify(validationKey);
 

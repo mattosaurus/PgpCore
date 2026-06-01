@@ -631,6 +631,42 @@ namespace PgpCore
 			return foundKeys.Any();
 		}
 
+		/// <summary>
+		/// Returns true if any signature in the one-pass signature list was made by one of the supplied
+		/// verification keys. A message may carry more than one signature (e.g. signed with multiple keys),
+		/// so all entries are checked rather than just the first.
+		/// </summary>
+		public static bool FindPublicKey(PgpOnePassSignatureList onePassSignatureList,
+			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
+		{
+			verificationKey = null;
+			for (int i = 0; i < onePassSignatureList.Count; i++)
+			{
+				if (FindPublicKey(onePassSignatureList[i].KeyId, verificationKeys, out verificationKey))
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Returns true if any signature in the signature list was made by one of the supplied verification
+		/// keys. A message may carry more than one signature, so all entries are checked rather than just the
+		/// first.
+		/// </summary>
+		public static bool FindPublicKey(PgpSignatureList signatureList,
+			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
+		{
+			verificationKey = null;
+			for (int i = 0; i < signatureList.Count; i++)
+			{
+				if (FindPublicKey(signatureList[i].KeyId, verificationKeys, out verificationKey))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool FindPublicKeyInKeyRings(long keyId, IEnumerable<PgpPublicKeyRing> publicKeyRings,
 			out PgpPublicKey verificationKey)
 		{

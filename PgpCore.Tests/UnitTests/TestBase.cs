@@ -1,5 +1,6 @@
 ﻿using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -69,6 +70,90 @@ namespace PgpCore.Tests.UnitTests
             {
                 yield return enumValue;
             }
+        }
+
+        /// <summary>
+        /// Builds a message encrypted to a single recipient and signed by two distinct keys, mirroring a
+        /// GnuPG <c>gpg -r recipient -u signer1 -u signer2</c> message. The two signatures are emitted as a
+        /// single one-pass signature list, which is what exercises multi-signature verification.
+        /// </summary>
+        public static byte[] CreateEncryptedAndDoubleSignedMessage(
+            string content,
+            Stream recipientPublicKeyStream,
+            Stream firstSignerPrivateKeyStream, string firstSignerPassword,
+            Stream secondSignerPrivateKeyStream, string secondSignerPassword,
+            bool armor = false)
+        {
+            PgpPublicKey encryptionKey = ReadPublicKey(recipientPublicKeyStream);
+
+            PgpSecretKey firstSecretKey = ReadSigningSecretKey(firstSignerPrivateKeyStream);
+            PgpPrivateKey firstPrivateKey = firstSecretKey.ExtractPrivateKey(firstSignerPassword.ToCharArray());
+            PgpSecretKey secondSecretKey = ReadSigningSecretKey(secondSignerPrivateKeyStream);
+            PgpPrivateKey secondPrivateKey = secondSecretKey.ExtractPrivateKey(secondSignerPassword.ToCharArray());
+
+            byte[] data = Encoding.UTF8.GetBytes(content);
+
+            using (MemoryStream output = new MemoryStream())
+            {
+                Stream armoredOut = armor ? new ArmoredOutputStream(output) : null;
+                Stream messageOut = armoredOut ?? (Stream)output;
+
+                PgpEncryptedDataGenerator encryptedDataGenerator =
+                    new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true, new SecureRandom());
+                encryptedDataGenerator.AddMethod(encryptionKey);
+
+                using (Stream encryptedOut = encryptedDataGenerator.Open(messageOut, new byte[1 << 16]))
+                using (Stream compressedOut = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip).Open(encryptedOut))
+                {
+                    PgpSignatureGenerator firstSignatureGenerator =
+                        CreateSignatureGenerator(firstSecretKey, firstPrivateKey);
+                    PgpSignatureGenerator secondSignatureGenerator =
+                        CreateSignatureGenerator(secondSecretKey, secondPrivateKey);
+
+                    // One-pass signature headers are written outermost-first (nested).
+                    firstSignatureGenerator.GenerateOnePassVersion(true).Encode(compressedOut);
+                    secondSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
+
+                    PgpLiteralDataGenerator literalDataGenerator = new PgpLiteralDataGenerator();
+                    using (Stream literalOut = literalDataGenerator.Open(
+                        compressedOut, PgpLiteralData.Binary, "message.txt", data.Length, DateTime.UtcNow))
+                    {
+                        literalOut.Write(data, 0, data.Length);
+                        firstSignatureGenerator.Update(data);
+                        secondSignatureGenerator.Update(data);
+                    }
+
+                    // Signatures are emitted in reverse order to the one-pass headers (innermost first).
+                    secondSignatureGenerator.Generate().Encode(compressedOut);
+                    firstSignatureGenerator.Generate().Encode(compressedOut);
+                }
+
+                armoredOut?.Dispose();
+
+                return output.ToArray();
+            }
+        }
+
+        private static PgpSignatureGenerator CreateSignatureGenerator(PgpSecretKey secretKey, PgpPrivateKey privateKey)
+        {
+            PgpSignatureGenerator signatureGenerator =
+                new PgpSignatureGenerator(secretKey.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            signatureGenerator.InitSign(PgpSignature.BinaryDocument, privateKey);
+            return signatureGenerator;
+        }
+
+        private static PgpSecretKey ReadSigningSecretKey(Stream privateKeyStream)
+        {
+            PgpSecretKeyRingBundle bundle = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
+            foreach (PgpSecretKeyRing keyRing in bundle.GetKeyRings())
+            {
+                foreach (PgpSecretKey key in keyRing.GetSecretKeys())
+                {
+                    if (key.IsSigningKey)
+                        return key;
+                }
+            }
+            throw new ArgumentException("No signing key found in secret key ring.");
         }
     }
 }
