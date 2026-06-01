@@ -632,9 +632,11 @@ namespace PgpCore
 		}
 
 		/// <summary>
-		/// Returns true if any signature in the one-pass signature list was made by one of the supplied
-		/// verification keys. A message may carry more than one signature (e.g. signed with multiple keys),
-		/// so all entries are checked rather than just the first.
+		/// Returns true if any signature in the one-pass signature list has a key id matching one of the
+		/// supplied verification keys (as determined by
+		/// <see cref="FindPublicKey(long, IEnumerable{PgpPublicKey}, out PgpPublicKey)"/>). This is a key-id
+		/// presence check and does not cryptographically verify the signature. A message may carry more than
+		/// one signature (e.g. signed with multiple keys), so all entries are checked rather than just the first.
 		/// </summary>
 		public static bool FindPublicKey(PgpOnePassSignatureList onePassSignatureList,
 			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
@@ -650,9 +652,11 @@ namespace PgpCore
 		}
 
 		/// <summary>
-		/// Returns true if any signature in the signature list was made by one of the supplied verification
-		/// keys. A message may carry more than one signature, so all entries are checked rather than just the
-		/// first.
+		/// Returns true if any signature in the signature list has a key id matching one of the supplied
+		/// verification keys (as determined by
+		/// <see cref="FindPublicKey(long, IEnumerable{PgpPublicKey}, out PgpPublicKey)"/>). This is a key-id
+		/// presence check and does not cryptographically verify the signature. A message may carry more than
+		/// one signature, so all entries are checked rather than just the first.
 		/// </summary>
 		public static bool FindPublicKey(PgpSignatureList signatureList,
 			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)

@@ -118,13 +118,16 @@ namespace PgpCore
 
                     PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
 
+                    // Verify only the signature that matches the selected one-pass signature's key. Calling
+                    // Verify finalizes the (stateful) message digest, so attempting it against a non-matching
+                    // signature first would corrupt the digest and cause the correct signature to fail.
                     for (int i = 0; i < pgpSignatureList.Count; i++)
                     {
                         PgpSignature pgpSignature = pgpSignatureList[i];
 
-                        if (pgpOnePassSignature.Verify(pgpSignature))
+                        if (pgpSignature.KeyId == pgpOnePassSignature.KeyId)
                         {
-                            verified = true;
+                            verified = pgpOnePassSignature.Verify(pgpSignature);
                             break;
                         }
                     }

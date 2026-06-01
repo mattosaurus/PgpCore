@@ -297,20 +297,22 @@ namespace PgpCore
 
                     if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                     {
-                        // A message may be signed with multiple keys; verification succeeds if any of the
-                        // signatures was made by one of the supplied verification keys.
-                        var verified = Utilities.FindPublicKey(pgpOnePassSignatureList,
+                        // A message may carry multiple signatures (e.g. signed with several keys). This is a
+                        // key-id presence check, not a cryptographic signature verification: it confirms that
+                        // at least one signature was made by a key id matching one of the supplied
+                        // verification keys, regardless of the signature's position in the list.
+                        bool signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
                             EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (verified == false)
+                        if (signerKeyFound == false)
                             throw new PgpException("Failed to verify file.");
 
                         message = plainFact.NextPgpObject();
                     }
                     else if (message is PgpSignatureList pgpSignatureList)
                     {
-                        var verified = Utilities.FindPublicKey(pgpSignatureList,
+                        bool signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
                             EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (verified == false)
+                        if (signerKeyFound == false)
                             throw new PgpException("Failed to verify file.");
 
                         message = plainFact.NextPgpObject();
@@ -326,18 +328,20 @@ namespace PgpCore
                     message = objectFactory.NextPgpObject();
 
                     bool isSigned = true;
-                    bool verified = false;
+                    bool signerKeyFound = false;
 
-                    // A message may be signed with multiple keys; verification succeeds if any of the
-                    // signatures was made by one of the supplied verification keys.
+                    // A message may carry multiple signatures (e.g. signed with several keys). This is a
+                    // key-id presence check, not a cryptographic signature verification: it confirms that at
+                    // least one signature was made by a key id matching one of the supplied verification keys,
+                    // regardless of the signature's position in the list.
                     if (message is PgpSignatureList pgpSignatureList)
                     {
-                        verified = Utilities.FindPublicKey(pgpSignatureList,
+                        signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
                             EncryptionKeys.VerificationKeys, out PgpPublicKey _);
                     }
                     else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
                     {
-                        verified = Utilities.FindPublicKey(pgpOnePassSignatureList,
+                        signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
                             EncryptionKeys.VerificationKeys, out PgpPublicKey _);
                     }
                     else
@@ -347,7 +351,7 @@ namespace PgpCore
 
                     if (isSigned)
                     {
-                        if (verified == false)
+                        if (signerKeyFound == false)
                             throw new PgpException("Failed to verify file.");
 
                         message = objectFactory.NextPgpObject();

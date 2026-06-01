@@ -95,43 +95,131 @@ namespace PgpCore.Tests.UnitTests
 
             using (MemoryStream output = new MemoryStream())
             {
-                Stream armoredOut = armor ? new ArmoredOutputStream(output) : null;
-                Stream messageOut = armoredOut ?? (Stream)output;
-
-                PgpEncryptedDataGenerator encryptedDataGenerator =
-                    new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true, new SecureRandom());
-                encryptedDataGenerator.AddMethod(encryptionKey);
-
-                using (Stream encryptedOut = encryptedDataGenerator.Open(messageOut, new byte[1 << 16]))
-                using (Stream compressedOut = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip).Open(encryptedOut))
+                if (armor)
                 {
-                    PgpSignatureGenerator firstSignatureGenerator =
-                        CreateSignatureGenerator(firstSecretKey, firstPrivateKey);
-                    PgpSignatureGenerator secondSignatureGenerator =
-                        CreateSignatureGenerator(secondSecretKey, secondPrivateKey);
-
-                    // One-pass signature headers are written outermost-first (nested).
-                    firstSignatureGenerator.GenerateOnePassVersion(true).Encode(compressedOut);
-                    secondSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
-
-                    PgpLiteralDataGenerator literalDataGenerator = new PgpLiteralDataGenerator();
-                    using (Stream literalOut = literalDataGenerator.Open(
-                        compressedOut, PgpLiteralData.Binary, "message.txt", data.Length, DateTime.UtcNow))
+                    // The ArmoredOutputStream writes its footer (checksum + end marker) on dispose, so it must
+                    // be closed before output.ToArray() is read. Scoping it to its own using block guarantees
+                    // that ordering and also disposes it on exception paths.
+                    using (ArmoredOutputStream armoredOut = new ArmoredOutputStream(output))
                     {
-                        literalOut.Write(data, 0, data.Length);
-                        firstSignatureGenerator.Update(data);
-                        secondSignatureGenerator.Update(data);
+                        WriteEncryptedAndDoubleSignedMessage(armoredOut, encryptionKey,
+                            firstSecretKey, firstPrivateKey, secondSecretKey, secondPrivateKey, data);
                     }
-
-                    // Signatures are emitted in reverse order to the one-pass headers (innermost first).
-                    secondSignatureGenerator.Generate().Encode(compressedOut);
-                    firstSignatureGenerator.Generate().Encode(compressedOut);
                 }
-
-                armoredOut?.Dispose();
+                else
+                {
+                    WriteEncryptedAndDoubleSignedMessage(output, encryptionKey,
+                        firstSecretKey, firstPrivateKey, secondSecretKey, secondPrivateKey, data);
+                }
 
                 return output.ToArray();
             }
+        }
+
+        private static void WriteEncryptedAndDoubleSignedMessage(
+            Stream messageOut,
+            PgpPublicKey encryptionKey,
+            PgpSecretKey firstSecretKey, PgpPrivateKey firstPrivateKey,
+            PgpSecretKey secondSecretKey, PgpPrivateKey secondPrivateKey,
+            byte[] data)
+        {
+            PgpEncryptedDataGenerator encryptedDataGenerator =
+                new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true, new SecureRandom());
+            encryptedDataGenerator.AddMethod(encryptionKey);
+
+            using (Stream encryptedOut = encryptedDataGenerator.Open(messageOut, new byte[1 << 16]))
+            using (Stream compressedOut = new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip).Open(encryptedOut))
+            {
+                PgpSignatureGenerator firstSignatureGenerator =
+                    CreateSignatureGenerator(firstSecretKey, firstPrivateKey);
+                PgpSignatureGenerator secondSignatureGenerator =
+                    CreateSignatureGenerator(secondSecretKey, secondPrivateKey);
+
+                // One-pass signature headers are written outermost-first (nested).
+                firstSignatureGenerator.GenerateOnePassVersion(true).Encode(compressedOut);
+                secondSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
+
+                PgpLiteralDataGenerator literalDataGenerator = new PgpLiteralDataGenerator();
+                using (Stream literalOut = literalDataGenerator.Open(
+                    compressedOut, PgpLiteralData.Binary, "message.txt", data.Length, DateTime.UtcNow))
+                {
+                    literalOut.Write(data, 0, data.Length);
+                    firstSignatureGenerator.Update(data);
+                    secondSignatureGenerator.Update(data);
+                }
+
+                // Signatures are emitted in reverse order to the one-pass headers (innermost first).
+                secondSignatureGenerator.Generate().Encode(compressedOut);
+                firstSignatureGenerator.Generate().Encode(compressedOut);
+            }
+        }
+
+        /// <summary>
+        /// Builds a signed (not encrypted, not compressed) message carrying two distinct one-pass signatures,
+        /// mirroring a GnuPG <c>gpg --sign -u signer1 -u signer2</c> message. Leaving it uncompressed ensures
+        /// the message parses as a one-pass signature list, which is what exercises multi-signature verification
+        /// in the Verify code path.
+        /// </summary>
+        public static byte[] CreateDoubleSignedMessage(
+            string content,
+            Stream firstSignerPrivateKeyStream, string firstSignerPassword,
+            Stream secondSignerPrivateKeyStream, string secondSignerPassword,
+            bool armor = false)
+        {
+            PgpSecretKey firstSecretKey = ReadSigningSecretKey(firstSignerPrivateKeyStream);
+            PgpPrivateKey firstPrivateKey = firstSecretKey.ExtractPrivateKey(firstSignerPassword.ToCharArray());
+            PgpSecretKey secondSecretKey = ReadSigningSecretKey(secondSignerPrivateKeyStream);
+            PgpPrivateKey secondPrivateKey = secondSecretKey.ExtractPrivateKey(secondSignerPassword.ToCharArray());
+
+            byte[] data = Encoding.UTF8.GetBytes(content);
+
+            using (MemoryStream output = new MemoryStream())
+            {
+                if (armor)
+                {
+                    // The ArmoredOutputStream writes its footer on dispose, so it must close before
+                    // output.ToArray() is read; its own using block guarantees that ordering.
+                    using (ArmoredOutputStream armoredOut = new ArmoredOutputStream(output))
+                    {
+                        WriteDoubleSignedMessage(armoredOut,
+                            firstSecretKey, firstPrivateKey, secondSecretKey, secondPrivateKey, data);
+                    }
+                }
+                else
+                {
+                    WriteDoubleSignedMessage(output,
+                        firstSecretKey, firstPrivateKey, secondSecretKey, secondPrivateKey, data);
+                }
+
+                return output.ToArray();
+            }
+        }
+
+        private static void WriteDoubleSignedMessage(
+            Stream messageOut,
+            PgpSecretKey firstSecretKey, PgpPrivateKey firstPrivateKey,
+            PgpSecretKey secondSecretKey, PgpPrivateKey secondPrivateKey,
+            byte[] data)
+        {
+            PgpSignatureGenerator firstSignatureGenerator = CreateSignatureGenerator(firstSecretKey, firstPrivateKey);
+            PgpSignatureGenerator secondSignatureGenerator = CreateSignatureGenerator(secondSecretKey, secondPrivateKey);
+
+            // One-pass signature headers are written outermost-first (nested).
+            firstSignatureGenerator.GenerateOnePassVersion(true).Encode(messageOut);
+            secondSignatureGenerator.GenerateOnePassVersion(false).Encode(messageOut);
+
+            PgpLiteralDataGenerator literalDataGenerator = new PgpLiteralDataGenerator();
+            using (Stream literalOut = literalDataGenerator.Open(
+                messageOut, PgpLiteralData.Binary, "message.txt", data.Length, DateTime.UtcNow))
+            {
+                literalOut.Write(data, 0, data.Length);
+                firstSignatureGenerator.Update(data);
+                secondSignatureGenerator.Update(data);
+            }
+
+            // Signatures are emitted in reverse order to the one-pass headers (innermost first).
+            secondSignatureGenerator.Generate().Encode(messageOut);
+            firstSignatureGenerator.Generate().Encode(messageOut);
         }
 
         private static PgpSignatureGenerator CreateSignatureGenerator(PgpSecretKey secretKey, PgpPrivateKey privateKey)
