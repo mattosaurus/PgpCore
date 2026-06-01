@@ -1,6 +1,9 @@
 name: Analyze
 on:
-  workflow_call
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
 jobs:
   analyze:
     runs-on: windows-latest
@@ -41,13 +44,23 @@ jobs:
         run: |
           cd ${{ steps.download-artifact.outputs.download-path }}
           dir
-      - name: Build and analyze
+      - name: Sonar Begin
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"mattosaurus_PgpCore" /o:"mattosaurus" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"mattosaurus_PgpCore" /o:"mattosaurus" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="${{ steps.download-artifact.outputs.download-path }}\coverage.xml"
+
+      - name: Build
+        shell: powershell
+        run: |
           dotnet restore
           dotnet build --no-restore --configuration Debug
-          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Sonar End
+        if: success()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
