@@ -413,28 +413,19 @@ namespace PgpCore
 			{
 				PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(inputStream);
 
-				// we just loop through the collection till we find a key suitable for encryption, in the real
-				// world you would probably want to be a bit smarter about this.
-				// iterate through the key rings.
+				// Return the best encryption key from the first key ring that contains one.
+				// FindBestEncryptionKey disqualifies keys that declare key flags excluding encryption
+				// (e.g. RSA sign-only keys, where IsEncryptionKey reports true based on algorithm alone).
 				foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
 				{
-					List<PgpPublicKey> keys = kRing.GetPublicKeys()
-						.Cast<PgpPublicKey>()
-						.Where(k => k.IsEncryptionKey).ToList();
-
-					const int encryptKeyFlags = PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage;
-
-					foreach (PgpPublicKey key in keys.Where(k => k.Version >= 4))
+					try
 					{
-						foreach (PgpSignature s in key.GetSignatures())
-						{
-							if (s.HasSubpackets && s.GetHashedSubPackets().GetKeyFlags() == encryptKeyFlags)
-								return key;
-						}
+						return FindBestEncryptionKey(kRing);
 					}
-
-					if (keys.Any())
-						return keys.First();
+					catch (ArgumentException)
+					{
+						// No suitable encryption key in this key ring, try the next one.
+					}
 				}
 			}
 
@@ -860,24 +851,37 @@ namespace PgpCore
 		/// IsEncryptionKey += 2
 		/// Either of the encryption flags += 1 (for each)
 		/// Highest score is 5
+		/// A key that declares key flags that do not permit encryption is disqualified (score 0).
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
 		private static int GetEncryptionScore(PgpPublicKey key)
 		{
+			PgpSignature[] signatures = key.GetSignatures().Cast<PgpSignature>()
+				.Where(signature => signature.HasSubpackets).ToArray();
+
+			// Combine the key flags declared across all the key's self-signatures.
+			int keyFlags = signatures
+				.Select(signature => signature.GetHashedSubPackets().GetKeyFlags())
+				.Aggregate(0, (current, flags) => current | flags);
+
+			const int encryptionFlags = KeyFlags.EncryptComms | KeyFlags.EncryptStorage;
+
+			// If the key explicitly declares key flags but none of them permit encryption then it
+			// must not be used for encryption (RFC 4880 §5.2.3.21), even when its algorithm is
+			// encryption-capable (e.g. an RSA sign-only key, where IsEncryptionKey is true based on
+			// the algorithm alone). Disqualify it so it can never be selected.
+			if (keyFlags != 0 && (keyFlags & encryptionFlags) == 0)
+				return 0;
+
 			int score = 0;
 			if (key.IsMasterKey)
 				score += 1;
 			if (key.IsEncryptionKey)
 				score += 2;
-			PgpSignature[] signatures = key.GetSignatures().Cast<PgpSignature>()
-				.Where(signature => signature.HasSubpackets).ToArray();
-
-			if (signatures.Any(signature =>
-				    (signature.GetHashedSubPackets().GetKeyFlags() & KeyFlags.EncryptComms) > 0))
+			if ((keyFlags & KeyFlags.EncryptComms) > 0)
 				score += 1;
-			if (signatures.Any(signature =>
-				    (signature.GetHashedSubPackets().GetKeyFlags() & KeyFlags.EncryptStorage) > 0))
+			if ((keyFlags & KeyFlags.EncryptStorage) > 0)
 				score += 1;
 			return score;
 		}

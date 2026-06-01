@@ -8,9 +8,9 @@ using System;
 using System.Collections.Generic;
 using Org.BouncyCastle.Bcpg;
 
-namespace PgpCore.Tests.UnitTests.GenerateKey
+namespace PgpCore.Tests.UnitTests.Keys
 {
-    public class KeyAsync : TestBase
+    public class GenerateKeyAsync : TestBase
     {
         [Fact]
         public async Task GenerateKeyAsync_CreatePublicAndPrivateKeys_ShouldCreateKeysWithDefaultProperties()
