@@ -858,9 +858,11 @@ namespace PgpCore
 		private static int GetEncryptionScore(PgpPublicKey key)
 		{
 			PgpSignature[] signatures = key.GetSignatures().Cast<PgpSignature>()
-				.Where(signature => signature.HasSubpackets).ToArray();
+				.Where(signature => signature.HasSubpackets &&
+				                   (signature.KeyId == key.KeyId || signature.SignatureType == 0x18 /* Subkey Binding */))
+				.ToArray();
 
-			// Combine the key flags declared across all the key's self-signatures.
+			// Combine the key flags declared across the relevant self/binding signatures.
 			int keyFlags = signatures
 				.Select(signature => signature.GetHashedSubPackets().GetKeyFlags())
 				.Aggregate(0, (current, flags) => current | flags);
