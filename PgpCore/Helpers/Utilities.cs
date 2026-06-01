@@ -631,6 +631,46 @@ namespace PgpCore
 			return foundKeys.Any();
 		}
 
+		/// <summary>
+		/// Returns true if any signature in the one-pass signature list has a key id matching one of the
+		/// supplied verification keys (as determined by
+		/// <see cref="FindPublicKey(long, IEnumerable{PgpPublicKey}, out PgpPublicKey)"/>). This is a key-id
+		/// presence check and does not cryptographically verify the signature. A message may carry more than
+		/// one signature (e.g. signed with multiple keys), so all entries are checked rather than just the first.
+		/// </summary>
+		public static bool FindPublicKey(PgpOnePassSignatureList onePassSignatureList,
+			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
+		{
+			verificationKey = null;
+			for (int i = 0; i < onePassSignatureList.Count; i++)
+			{
+				if (FindPublicKey(onePassSignatureList[i].KeyId, verificationKeys, out verificationKey))
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Returns true if any signature in the signature list has a key id matching one of the supplied
+		/// verification keys (as determined by
+		/// <see cref="FindPublicKey(long, IEnumerable{PgpPublicKey}, out PgpPublicKey)"/>). This is a key-id
+		/// presence check and does not cryptographically verify the signature. A message may carry more than
+		/// one signature, so all entries are checked rather than just the first.
+		/// </summary>
+		public static bool FindPublicKey(PgpSignatureList signatureList,
+			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
+		{
+			verificationKey = null;
+			for (int i = 0; i < signatureList.Count; i++)
+			{
+				if (FindPublicKey(signatureList[i].KeyId, verificationKeys, out verificationKey))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool FindPublicKeyInKeyRings(long keyId, IEnumerable<PgpPublicKeyRing> publicKeyRings,
 			out PgpPublicKey verificationKey)
 		{

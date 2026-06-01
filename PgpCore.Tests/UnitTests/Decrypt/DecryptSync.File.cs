@@ -675,5 +675,56 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             // Teardown
             testFactory.Teardown();
         }
+
+        // Regression test: DecryptAndVerify must succeed whenever ANY signature in a multi-signature message
+        // was made by one of the supplied verification keys, regardless of the signature's position.
+        [Theory]
+        [InlineData(0)] // only the first signer's public key is supplied
+        [InlineData(1)] // only the second signer's public key is supplied
+        public void DecryptAndVerify_MessageSignedWithMultipleKeysVerifyWithEither_ShouldDecryptAndVerifyMessage(int verifyWithSignerIndex)
+        {
+            // Arrange
+            TestFactory recipientTestFactory = new TestFactory();
+            TestFactory firstSignerTestFactory = new TestFactory();
+            TestFactory secondSignerTestFactory = new TestFactory();
+
+            recipientTestFactory.Arrange(KeyType.Generated, FileType.Known);
+            firstSignerTestFactory.Arrange(KeyType.Generated, FileType.Known);
+            secondSignerTestFactory.Arrange(KeyType.Generated, FileType.Known);
+
+            // Message encrypted to the recipient and signed by both signers (as `gpg -r recipient -u s1 -u s2`).
+            byte[] message = CreateEncryptedAndDoubleSignedMessage(
+                recipientTestFactory.Content,
+                recipientTestFactory.PublicKeyStream,
+                firstSignerTestFactory.PrivateKeyStream, firstSignerTestFactory.Password,
+                secondSignerTestFactory.PrivateKeyStream, secondSignerTestFactory.Password);
+            File.WriteAllBytes(recipientTestFactory.EncryptedContentFileInfo.FullName, message);
+
+            // Only one of the two signers' public keys is supplied for verification.
+            TestFactory verifySignerTestFactory = verifyWithSignerIndex == 0
+                ? firstSignerTestFactory
+                : secondSignerTestFactory;
+            EncryptionKeys decryptAndVerifyKeys = new EncryptionKeys(
+                verifySignerTestFactory.PublicKeyFileInfo,
+                recipientTestFactory.PrivateKeyFileInfo,
+                recipientTestFactory.Password);
+            PGP pgpDecryptAndVerify = new PGP(decryptAndVerifyKeys);
+
+            // Act
+            pgpDecryptAndVerify.DecryptAndVerify(
+                recipientTestFactory.EncryptedContentFileInfo, recipientTestFactory.DecryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                recipientTestFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(recipientTestFactory.DecryptedContentFileInfo.FullName).Should().Be(recipientTestFactory.Content);
+            }
+
+            // Teardown
+            recipientTestFactory.Teardown();
+            firstSignerTestFactory.Teardown();
+            secondSignerTestFactory.Teardown();
+        }
     }
 }
