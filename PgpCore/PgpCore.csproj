@@ -10,10 +10,10 @@
     <PackageProjectUrl>https://github.com/mattosaurus/PgpCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mattosaurus/PgpCore</RepositoryUrl>
     <PackageTags>PGP .NET Core</PackageTags>
-    <Version>7.0.0.0</Version>
+    <Version>7.1.0.0</Version>
     <AssemblyVersion>7.0.0.0</AssemblyVersion>
-    <FileVersion>7.0.0</FileVersion>
-    <PackageReleaseNotes>v7.0.0 - Add support for symmetric encryption and decryption and .NET 10 upgrade</PackageReleaseNotes>
+    <FileVersion>7.1.0</FileVersion>
+    <PackageReleaseNotes>v7.1.0 - Bug fixes</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
