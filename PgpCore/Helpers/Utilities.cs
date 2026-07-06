@@ -379,7 +379,7 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
+			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.UtcNow))
 			{
 				await input.CopyToAsync(pOut);
 				await pOut.FlushAsync();
@@ -394,7 +394,7 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
+			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.UtcNow))
 			{
 				input.CopyTo(pOut);
 				pOut.Flush();

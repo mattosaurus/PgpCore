@@ -248,6 +248,38 @@ namespace PgpCore.Tests.UnitTests.Sign
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
         [InlineData(KeyType.Symmetric)]
+        public async Task ClearSignAsync_SignMessageWithTrailingNewline_ShouldSignAndVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey) { SymmetricKey = testFactory.SymmetricKey };
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+            string contentWithTrailingNewline = "foo\nbar\n";
+
+            // Act
+            string signedContent = await pgpSign.ClearSignAsync(contentWithTrailingNewline);
+            bool verified = await pgpVerify.VerifyClearAsync(signedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                verified.Should().BeTrue();
+                signedContent.Should().Contain("foo");
+                signedContent.Should().Contain("bar");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public async Task ClearSignAsync_SignMessageWithUtf8Characters_ShouldPreserveUtf8(KeyType keyType)
         {
             // Arrange

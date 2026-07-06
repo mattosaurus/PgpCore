@@ -86,10 +86,15 @@ namespace PgpCore
 			if (rawPassPhrase == null)
 				throw new ArgumentNullException(nameof(rawPassPhrase), "Invalid Pass Phrase.");
 			
-			var keyRings = Utilities.ReadAllKeyRings(publicKey.GetStream());
+			List<PgpPublicKeyRing> keyRings;
+			using (Stream publicKeyStream = publicKey.GetStream())
+				keyRings = Utilities.ReadAllKeyRings(publicKeyStream).ToList();
 
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKey.GetStream())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 
 			_passPhrase = rawPassPhrase;
 			InitializeKeys(keyRings);
@@ -133,10 +138,15 @@ namespace PgpCore
 			if (!privateKeyFile.Exists)
 				throw new FileNotFoundException($"Private Key file [{privateKeyFile.FullName}] does not exist.");
 			
-			var keyRings = Utilities.ReadAllKeyRings(publicKeyFile.OpenRead());
+			List<PgpPublicKeyRing> keyRings;
+			using (Stream publicKeyStream = publicKeyFile.OpenRead())
+				keyRings = Utilities.ReadAllKeyRings(publicKeyStream).ToList();
 
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKeyFile.OpenRead())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 			_passPhrase = rawPassPhrase;
 			InitializeKeys(keyRings);
 		}
@@ -183,10 +193,18 @@ namespace PgpCore
 					throw new ArgumentException(nameof(publicKey));
 			}
 				
-			var keyRings = Utilities.ReadAllKeyRings(publicKeyStrings.Select(s => s.GetStream()));
-			
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
+			List<PgpPublicKeyRing> keyRings = new List<PgpPublicKeyRing>();
+			foreach (string publicKey in publicKeyStrings)
+			{
+				using (Stream publicKeyStream = publicKey.GetStream())
+					keyRings.AddRange(Utilities.ReadAllKeyRings(publicKeyStream));
+			}
+
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKey.GetStream())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 			_passPhrase = rawPassPhrase;
 			InitializeKeys(keyRings);
 		}
@@ -236,10 +254,18 @@ namespace PgpCore
 					throw new FileNotFoundException($"Input file [{publicKeyFile.FullName}] does not exist.");
 			}
 			
-			var keyRings = Utilities.ReadAllKeyRings(publicKeys.Select(fileInfo => fileInfo.OpenRead()));
+			List<PgpPublicKeyRing> keyRings = new List<PgpPublicKeyRing>();
+			foreach (FileInfo publicKeyFile in publicKeys)
+			{
+				using (Stream publicKeyStream = publicKeyFile.OpenRead())
+					keyRings.AddRange(Utilities.ReadAllKeyRings(publicKeyStream));
+			}
 
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKeyFile.OpenRead())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 			_passPhrase = rawPassPhrase;
 			InitializeKeys(keyRings);
 		}
@@ -258,9 +284,12 @@ namespace PgpCore
 		{
 			if (string.IsNullOrEmpty(privateKey))
 				throw new ArgumentException("PrivateKey");
-			
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKey.GetStream()));
+
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKey.GetStream())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 			_passPhrase = rawPassPhrase ?? throw new ArgumentNullException(nameof(rawPassPhrase), "Invalid Pass Phrase.");
 			InitializeKeys();
 		}
@@ -278,9 +307,12 @@ namespace PgpCore
 
 			if (!privateKeyFile.Exists)
 				throw new FileNotFoundException($"Private Key file [{privateKeyFile.FullName}] does not exist.");
-			
-			_secretKeys =
-				new Lazy<PgpSecretKeyRingBundle>(() => Utilities.ReadSecretKeyRingBundle(privateKeyFile.OpenRead()));
+
+			_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() =>
+			{
+				using (Stream privateKeyStream = privateKeyFile.OpenRead())
+					return Utilities.ReadSecretKeyRingBundle(privateKeyStream);
+			});
 			_passPhrase = rawPassPhrase ?? throw new ArgumentNullException(nameof(rawPassPhrase), "Invalid Pass Phrase.");
 			InitializeKeys();
 		}
@@ -408,13 +440,15 @@ namespace PgpCore
 			
             try
             {
-                var keyRings = Utilities.ReadAllKeyRings(publicKey.GetStream());
+                List<PgpPublicKeyRing> keyRings;
+                using (Stream publicKeyStream = publicKey.GetStream())
+                    keyRings = Utilities.ReadAllKeyRings(publicKeyStream).ToList();
 
                 InitializeKeys(keyRings);
             }
             catch (Exception ex)
             {
-                throw new PgpException($"Error reading public key file [{publicKey}].", ex);
+                throw new PgpException($"Error reading public key.", ex);
             }
         }
 
@@ -434,7 +468,9 @@ namespace PgpCore
 			
 			try
 			{
-				var keyRings = Utilities.ReadAllKeyRings(publicKeyFile.OpenRead());
+				List<PgpPublicKeyRing> keyRings;
+				using (Stream publicKeyStream = publicKeyFile.OpenRead())
+					keyRings = Utilities.ReadAllKeyRings(publicKeyStream).ToList();
 
 				InitializeKeys(keyRings);
 			}
@@ -461,13 +497,18 @@ namespace PgpCore
 
 			try
 			{
-                var keyRings = Utilities.ReadAllKeyRings(publicKeyStrings.Select(s => s.GetStream()));
+                List<PgpPublicKeyRing> keyRings = new List<PgpPublicKeyRing>();
+                foreach (string publicKey in publicKeyStrings)
+                {
+                    using (Stream publicKeyStream = publicKey.GetStream())
+                        keyRings.AddRange(Utilities.ReadAllKeyRings(publicKeyStream));
+                }
 
                 InitializeKeys(keyRings);
             }
 			catch (Exception ex)
             {
-                throw new PgpException("Error reading public key files.", ex);
+                throw new PgpException("Error reading public keys.", ex);
             }
 		}
 
@@ -492,7 +533,12 @@ namespace PgpCore
 
 			try
 			{
-                var keyRings = Utilities.ReadAllKeyRings(publicKeys.Select(fileInfo => fileInfo.OpenRead()));
+                List<PgpPublicKeyRing> keyRings = new List<PgpPublicKeyRing>();
+                foreach (FileInfo publicKeyFile in publicKeys)
+                {
+                    using (Stream publicKeyStream = publicKeyFile.OpenRead())
+                        keyRings.AddRange(Utilities.ReadAllKeyRings(publicKeyStream));
+                }
 
                 InitializeKeys(keyRings);
             }

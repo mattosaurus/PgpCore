@@ -224,6 +224,7 @@ namespace PgpCore
 				while (streamReader.Peek() >= 0)
 				{
 					string line = await streamReader.ReadLineAsync();
+					if (line == null) continue;
 					byte[] lineByteArray = Encoding.UTF8.GetBytes(line);
 					// Does the line end with whitespace?
 					// Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1

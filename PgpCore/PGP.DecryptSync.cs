@@ -47,6 +47,10 @@ namespace PgpCore
             if (outputStream == null)
                 throw new ArgumentException("OutputStream");
 
+            // A zero-byte input contains no PGP packets; mirror it as zero-byte output.
+            if (inputStream.CanSeek && inputStream.Length - inputStream.Position == 0)
+                return;
+
             PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
 
             PgpObject obj = objFactory.NextPgpObject();

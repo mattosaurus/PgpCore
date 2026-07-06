@@ -49,6 +49,37 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
         [InlineData(KeyType.Symmetric)]
+        public void Decrypt_DecryptZeroByteFile_ShouldWriteEmptyOutput(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+
+            // Create zero-byte encrypted input file
+            testFactory.EncryptedContentFileInfo.Create().Close();
+
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            pgpDecrypt.Decrypt(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().BeEmpty();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public void Decrypt_DecryptEmptyEncryptedMessage_ShouldDecryptMessage(KeyType keyType)
         {
             // Arrange
