@@ -27,6 +27,16 @@ namespace PgpCore
             if (inputStream.CanSeek && inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
+            // Inspection reads the input several times (armor sniff, headers, packet walk), so a
+            // non-seekable stream (e.g. a network stream) must be buffered up front.
+            if (!inputStream.CanSeek)
+            {
+                MemoryStream seekableStream = new MemoryStream();
+                await inputStream.CopyToAsync(seekableStream).ConfigureAwait(false);
+                seekableStream.Position = 0;
+                inputStream = seekableStream;
+            }
+
             bool isArmored = await IsArmoredAsync(inputStream).ConfigureAwait(false);
             Dictionary<string, string> messageHeaders = null;
             

@@ -63,6 +63,17 @@ namespace PgpCore
             if (outputStream == null)
                 outputStream = new MemoryStream();
 
+            // Verification rewinds the input (clear-sign sniff, then packet parsing) and the
+            // BouncyCastle decoder requires a seekable stream, so buffer non-seekable input
+            // (e.g. a network stream) up front.
+            if (!inputStream.CanSeek)
+            {
+                MemoryStream seekableStream = new MemoryStream();
+                await inputStream.CopyToAsync(seekableStream).ConfigureAwait(false);
+                seekableStream.Position = 0;
+                inputStream = seekableStream;
+            }
+
             inputStream.Seek(0, SeekOrigin.Begin);
 
             // Clear-signed messages use a different layout (armored clear text followed by the
