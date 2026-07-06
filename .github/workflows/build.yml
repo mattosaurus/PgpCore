@@ -27,7 +27,7 @@ jobs:
       # the Windows runner's MSYS gpg mishandles Windows --homedir paths and has no gpg-agent.
       run: dotnet-coverage collect "dotnet test --no-build --verbosity normal --filter Category!=Interop" -f xml -o "coverage.xml"
     - name: Ouput Test Coverage Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: coverage
         path: coverage.xml
