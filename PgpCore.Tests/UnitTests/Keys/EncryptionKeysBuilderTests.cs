@@ -111,5 +111,41 @@ namespace PgpCore.Tests.UnitTests.Keys
             // Assert
             act.Should().Throw<InvalidKeyMaterialException>();
         }
+
+        [Fact]
+        public async Task Build_WithCallerStreams_DoesNotDisposeThemAndIsRepeatable()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Generated, FileType.Known);
+
+            using System.IO.MemoryStream publicKeyStream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(testFactory.PublicKey));
+            using System.IO.MemoryStream privateKeyStream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(testFactory.PrivateKey));
+
+            EncryptionKeysBuilder builder = new EncryptionKeysBuilder()
+                .WithPublicKey(publicKeyStream)
+                .WithPrivateKey(privateKeyStream, testFactory.Password);
+
+            // Act - build twice
+            EncryptionKeys first = builder.Build();
+            EncryptionKeys second = builder.Build();
+
+            // Assert - caller streams are not disposed, and repeated builds both succeed
+            using (new AssertionScope())
+            {
+                publicKeyStream.CanRead.Should().BeTrue("the builder must not dispose caller-provided streams");
+                privateKeyStream.CanRead.Should().BeTrue("the builder must not dispose caller-provided streams");
+                first.EncryptKeys.Should().NotBeNull();
+                second.EncryptKeys.Should().NotBeNull();
+            }
+
+            // Round-trip using the built keys to prove the buffered material is intact
+            string encrypted = await new PGP(first).EncryptAsync(testFactory.Content);
+            string decrypted = await new PGP(second).DecryptAsync(encrypted);
+            decrypted.Should().Be(testFactory.Content);
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

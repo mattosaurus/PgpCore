@@ -658,17 +658,22 @@ namespace PgpCore
 			List<object> pgpObjects = new List<object>();
 			Stream decoderStream = PgpUtilities.GetDecoderStream(inputStream);
 
-			bool objectsRead = true;
-			while (objectsRead)
+			// A fresh factory pass can return no objects at an armor-block boundary before the
+			// stream continues into the next block, so tolerate a single empty pass (as DecryptAsync
+			// does) before concluding the stream is exhausted.
+			int consecutiveEmptyPasses = 0;
+			while (consecutiveEmptyPasses < 2)
 			{
-				objectsRead = false;
 				PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(decoderStream);
+				bool objectsRead = false;
 				object pgpObject;
 				while ((pgpObject = pgpObjectFactory.NextPgpObject()) != null)
 				{
 					objectsRead = true;
 					pgpObjects.Add(pgpObject);
 				}
+
+				consecutiveEmptyPasses = objectsRead ? 0 : consecutiveEmptyPasses + 1;
 			}
 
 			return pgpObjects;

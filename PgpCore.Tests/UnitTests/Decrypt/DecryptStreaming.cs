@@ -135,5 +135,57 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             // Teardown
             testFactory.Teardown();
         }
+
+        [Fact]
+        public async Task VerifyAsync_NonSeekableInputStream_ShouldVerify()
+        {
+            // Arrange (#287 - verification over a non-seekable stream)
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey);
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            using MemoryStream signedBuffer = new MemoryStream();
+            using (MemoryStream source = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testFactory.Content)))
+                await pgpSign.SignAsync(source, signedBuffer);
+            signedBuffer.Seek(0, SeekOrigin.Begin);
+
+            // Act - verify from a non-seekable stream
+            bool verified = await pgpVerify.VerifyAsync(new NonSeekableStream(signedBuffer));
+
+            // Assert
+            verified.Should().BeTrue();
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public async Task InspectAsync_NonSeekableInputStream_ShouldReportProperties()
+        {
+            // Arrange (#287 - inspection over a non-seekable stream)
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
+
+            EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
+            PGP pgp = new PGP(encryptionKeys);
+
+            using MemoryStream encryptedBuffer = new MemoryStream();
+            using (MemoryStream source = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testFactory.Content)))
+                await pgp.EncryptAsync(source, encryptedBuffer);
+            encryptedBuffer.Seek(0, SeekOrigin.Begin);
+
+            // Act - inspect from a non-seekable stream
+            var result = await pgp.InspectAsync(new NonSeekableStream(encryptedBuffer));
+
+            // Assert
+            result.IsEncrypted.Should().BeTrue();
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

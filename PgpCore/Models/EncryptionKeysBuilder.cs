@@ -56,7 +56,11 @@ namespace PgpCore
         {
             if (publicKeyStream == null)
                 throw new ArgumentNullException(nameof(publicKeyStream));
-            _publicKeySources.Add(() => publicKeyStream);
+            // Buffer the caller-provided stream now rather than storing it: Build() opens and
+            // disposes each source, so holding the caller's stream would close it unexpectedly and
+            // prevent Build() from being called more than once.
+            byte[] buffer = ReadAllBytes(publicKeyStream);
+            _publicKeySources.Add(() => new MemoryStream(buffer, writable: false));
             return this;
         }
 
@@ -86,7 +90,9 @@ namespace PgpCore
         {
             if (privateKeyStream == null)
                 throw new ArgumentNullException(nameof(privateKeyStream));
-            _privateKeySources.Add(new KeyValuePair<Func<Stream>, byte[]>(() => privateKeyStream, ToRawPassPhrase(passPhrase)));
+            // Buffer the caller-provided stream now; see WithPublicKey(Stream) for why.
+            byte[] buffer = ReadAllBytes(privateKeyStream);
+            _privateKeySources.Add(new KeyValuePair<Func<Stream>, byte[]>(() => new MemoryStream(buffer, writable: false), ToRawPassPhrase(passPhrase)));
             return this;
         }
 
@@ -159,5 +165,15 @@ namespace PgpCore
 
         private static byte[] ToRawPassPhrase(string passPhrase) =>
             Encoding.UTF8.GetBytes(passPhrase ?? string.Empty);
+
+        // Reads the remaining bytes of a caller-provided stream without disposing it.
+        private static byte[] ReadAllBytes(Stream stream)
+        {
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
+        }
     }
 }
