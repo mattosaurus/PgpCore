@@ -36,7 +36,7 @@ namespace PgpCore.Tests.UnitTests.Keys
 
             // Assert - the sign-only key is not a valid encryption choice, so selection fails
             // rather than silently encrypting to the wrong (non-encryption) key.
-            act.Should().Throw<ArgumentException>();
+            act.Should().Throw<NoEncryptionKeyException>();
         }
 
         [Fact]
@@ -87,7 +87,7 @@ namespace PgpCore.Tests.UnitTests.Keys
             Action act = () => Utilities.ReadPublicKey(publicKeyStream);
 
             // Assert
-            act.Should().Throw<ArgumentException>();
+            act.Should().Throw<NoEncryptionKeyException>();
         }
 
         [Fact]

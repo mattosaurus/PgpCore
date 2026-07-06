@@ -98,7 +98,7 @@ namespace PgpCore.Helpers
         public static async Task DrainAsync(Stream inStr)
         {
             byte[] bs = new byte[BufferSize];
-            while (await inStr.ReadAsync(bs, 0, bs.Length) > 0)
+            while (await inStr.ReadAsync(bs, 0, bs.Length).ConfigureAwait(false) > 0)
             {
             }
         }
@@ -106,20 +106,20 @@ namespace PgpCore.Helpers
         public static async Task<byte[]> ReadAllAsync(Stream inStr)
         {
             MemoryStream buf = new MemoryStream();
-            await PipeAllAsync(inStr, buf);
+            await PipeAllAsync(inStr, buf).ConfigureAwait(false);
             return buf.ToArray();
         }
 
         public static async Task<byte[]> ReadAllLimitedAsync(Stream inStr, int limit)
         {
             MemoryStream buf = new MemoryStream();
-            await PipeAllLimitedAsync(inStr, limit, buf);
+            await PipeAllLimitedAsync(inStr, limit, buf).ConfigureAwait(false);
             return buf.ToArray();
         }
 
         public static async Task<int> ReadFullyAsync(Stream inStr, byte[] buf)
         {
-            return await ReadFullyAsync(inStr, buf, 0, buf.Length);
+            return await ReadFullyAsync(inStr, buf, 0, buf.Length).ConfigureAwait(false);
         }
 
         public static async Task<int> ReadFullyAsync(Stream inStr, byte[] buf, int off, int len)
@@ -127,7 +127,7 @@ namespace PgpCore.Helpers
             int totalRead = 0;
             while (totalRead < len)
             {
-                int numRead = await inStr.ReadAsync(buf, off + totalRead, len - totalRead);
+                int numRead = await inStr.ReadAsync(buf, off + totalRead, len - totalRead).ConfigureAwait(false);
                 if (numRead < 1)
                     break;
                 totalRead += numRead;
@@ -139,9 +139,9 @@ namespace PgpCore.Helpers
         {
             byte[] bs = new byte[BufferSize];
             int numRead;
-            while ((numRead = await inStr.ReadAsync(bs, 0, bs.Length)) > 0)
+            while ((numRead = await inStr.ReadAsync(bs, 0, bs.Length).ConfigureAwait(false)) > 0)
             {
-                await outStr.WriteAsync(bs, 0, numRead);
+                await outStr.WriteAsync(bs, 0, numRead).ConfigureAwait(false);
             }
         }
 
@@ -150,12 +150,12 @@ namespace PgpCore.Helpers
             byte[] bs = new byte[BufferSize];
             long total = 0;
             int numRead;
-            while ((numRead = await inStr.ReadAsync(bs, 0, bs.Length)) > 0)
+            while ((numRead = await inStr.ReadAsync(bs, 0, bs.Length).ConfigureAwait(false)) > 0)
             {
                 if (limit - total < numRead)
                     throw new StreamOverflowException("Data Overflow");
                 total += numRead;
-                await outStr.WriteAsync(bs, 0, numRead);
+                await outStr.WriteAsync(bs, 0, numRead).ConfigureAwait(false);
             }
             return total;
         }

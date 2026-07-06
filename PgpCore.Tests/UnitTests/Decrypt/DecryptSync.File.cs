@@ -49,6 +49,37 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
         [InlineData(KeyType.Symmetric)]
+        public void Decrypt_DecryptZeroByteFile_ShouldWriteEmptyOutput(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(keyType, FileType.Known);
+
+            // Create zero-byte encrypted input file
+            testFactory.EncryptedContentFileInfo.Create().Close();
+
+            EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            PGP pgpDecrypt = new PGP(decryptionKeys);
+
+            // Act
+            pgpDecrypt.Decrypt(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.DecryptedContentFileInfo.Exists.Should().BeTrue();
+                File.ReadAllText(testFactory.DecryptedContentFileInfo.FullName).Should().BeEmpty();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
         public void Decrypt_DecryptEmptyEncryptedMessage_ShouldDecryptMessage(KeyType keyType)
         {
             // Arrange
@@ -456,12 +487,12 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             File.WriteAllText(testFactory.ContentFileInfo.FullName, testFactory.Content);
 
             // Act
-            var ex = Assert.Throws<ArgumentException>(() => pgpDecrypt.Decrypt(testFactory.ContentFileInfo, testFactory.DecryptedContentFileInfo));
+            var ex = Assert.Throws<NotEncryptedDataException>(() => pgpDecrypt.Decrypt(testFactory.ContentFileInfo, testFactory.DecryptedContentFileInfo));
 
             // Assert
             using (new AssertionScope())
             {
-                ex.Should().BeAssignableTo<ArgumentException>();
+                ex.Should().BeAssignableTo<NotEncryptedDataException>();
                 ex.Message.Should().StartWith("Failed to detect encrypted content format.");
             }
 
@@ -490,13 +521,13 @@ namespace PgpCore.Tests.UnitTests.Decrypt
 
             // Act
             pgpEncrypt.Encrypt(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
-            var ex = Assert.Throws<ArgumentException>(() => pgpDecrypt.Decrypt(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo));
+            var ex = Assert.Throws<NoDecryptionKeyException>(() => pgpDecrypt.Decrypt(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo));
 
             // Assert
             using (new AssertionScope())
             {
-                ex.Should().BeAssignableTo<ArgumentException>();
-                ex.Message.Should().Be("Decryption key for message not found.");
+                ex.Should().BeAssignableTo<NoDecryptionKeyException>();
+                ex.Message.Should().StartWith("Decryption key for message not found.");
             }
 
             // Teardown

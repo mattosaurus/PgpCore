@@ -14,7 +14,9 @@ namespace PgpCore.Abstractions
         bool Verify(string input, bool throwIfEncrypted = false);
         bool VerifyClear(FileInfo inputFile, FileInfo outputFile = null);
         bool VerifyClear(Stream inputStream, Stream outputStream = null);
-        bool VerifyClear(string input, string output = null);
+        bool VerifyClear(string input);
+        [Obsolete("The output parameter cannot be returned to the caller. Use VerifyAndReadClearArmoredStringAsync/VerifyAndReadClearArmoredString instead.")]
+        bool VerifyClear(string input, string output);
 
         bool VerifyFile(FileInfo inputFile, bool throwIfEncrypted = false);
         bool VerifyStream(Stream inputStream, bool throwIfEncrypted = false);

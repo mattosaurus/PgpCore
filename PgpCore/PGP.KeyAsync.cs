@@ -27,7 +27,7 @@ namespace PgpCore
                 {
                     await Task.Run(() => GenerateKey(publicKeyFileInfo, privateKeyFileInfo, username, password, strength,
                         certainty, armor, emitVersion, keyExpirationInSeconds, signatureExpirationInSeconds,
-                        preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms));
+                        preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms)).ConfigureAwait(false);
                 }
 
         public async Task GenerateKeyAsync(
@@ -47,7 +47,7 @@ namespace PgpCore
         {
             await Task.Run(() => GenerateKey(publicKeyStream, privateKeyStream, username, password, strength,
                 certainty, armor, emitVersion, keyExpirationInSeconds, signatureExpirationInSeconds,
-                preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms));
+                preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms)).ConfigureAwait(false);
         }
     }
 }

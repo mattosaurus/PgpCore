@@ -323,7 +323,7 @@ namespace PgpCore
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
 			using (Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime))
 			{
-				await PipeFileContentsAsync(file, pOut, 4096);
+				await PipeFileContentsAsync(file, pOut, 4096).ConfigureAwait(false);
 			}
 		}
 
@@ -352,7 +352,7 @@ namespace PgpCore
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
 			using (Stream pOut = lData.Open(output, fileType, file.Name, file.LastWriteTime, buffer))
 			{
-				await PipeFileContentsAsync(file, pOut, buffer.Length);
+				await PipeFileContentsAsync(file, pOut, buffer.Length).ConfigureAwait(false);
 			}
 		}
 
@@ -379,10 +379,10 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
+			using (Stream pOut = OpenLiteralDataStream(lData, output, fileType, name, input))
 			{
-				await input.CopyToAsync(pOut);
-				await pOut.FlushAsync();
+				await input.CopyToAsync(pOut).ConfigureAwait(false);
+				await pOut.FlushAsync().ConfigureAwait(false);
 			}
 		}
 
@@ -394,11 +394,85 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.Now))
+			using (Stream pOut = OpenLiteralDataStream(lData, output, fileType, name, input))
 			{
 				input.CopyTo(pOut);
 				pOut.Flush();
 			}
+		}
+
+		/// <summary>
+		/// Serves a single previously-read byte ahead of the wrapped stream's remaining content.
+		/// </summary>
+		private sealed class PrependedByteStream : Stream
+		{
+			private readonly Stream _inner;
+			private int _prependedByte;
+
+			public PrependedByteStream(byte prependedByte, Stream inner)
+			{
+				_prependedByte = prependedByte;
+				_inner = inner;
+			}
+
+			public override bool CanRead => _inner.CanRead;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException();
+			public override long Position
+			{
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
+			}
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (count == 0)
+					return 0;
+
+				if (_prependedByte >= 0)
+				{
+					buffer[offset] = (byte)_prependedByte;
+					_prependedByte = -1;
+					return 1;
+				}
+
+				return _inner.Read(buffer, offset, count);
+			}
+
+			public override int ReadByte()
+			{
+				if (_prependedByte >= 0)
+				{
+					int value = _prependedByte;
+					_prependedByte = -1;
+					return value;
+				}
+
+				return _inner.ReadByte();
+			}
+
+			public override void Flush() => _inner.Flush();
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+		}
+
+		/// <summary>
+		/// Opens a literal data stream, using the known-length packet form for seekable input and
+		/// the buffered (indeterminate-length partial packet) form for non-seekable input such as
+		/// network streams, whose length cannot be queried up front.
+		/// </summary>
+		internal static Stream OpenLiteralDataStream(
+			PgpLiteralDataGenerator generator,
+			Stream output,
+			char fileType,
+			string name,
+			Stream input)
+		{
+			return input.CanSeek
+				? generator.Open(output, fileType, name, input.Length - input.Position, DateTime.UtcNow)
+				: generator.Open(output, fileType, name, DateTime.UtcNow, new byte[0x10000]);
 		}
 
 		/// <summary>
@@ -422,14 +496,14 @@ namespace PgpCore
 					{
 						return FindBestEncryptionKey(kRing);
 					}
-					catch (ArgumentException)
+					catch (NoEncryptionKeyException)
 					{
 						// No suitable encryption key in this key ring, try the next one.
 					}
 				}
 			}
 
-			throw new ArgumentException("Can't find encryption key in key ring.");
+			throw new NoEncryptionKeyException("Can't find encryption key in key ring.");
 		}
 
 		/// <summary>
@@ -479,8 +553,7 @@ namespace PgpCore
 		/// <returns></returns>
 		public static PgpPublicKeyRingBundle ReadPublicKeyRingBundle(Stream publicKeyStream)
 		{
-			using (Stream inputStream = PgpUtilities.GetDecoderStream(publicKeyStream))
-				return new PgpPublicKeyRingBundle(inputStream);
+			return new PgpPublicKeyRingBundle(ReadAllKeyRings(publicKeyStream));
 		}
 
 		/// <summary>
@@ -490,36 +563,138 @@ namespace PgpCore
 		/// <returns></returns>
 		public static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(IEnumerable<Stream> publicKeyStreams)
 		{
-			var publicKeyBundles = publicKeyStreams.Select(ReadPublicKeyRingBundle);
-			return ReadAllKeyRings(publicKeyBundles);
+			return publicKeyStreams.SelectMany(ReadAllKeyRings).ToList();
 		}
 
 		/// <summary>
-		/// Returns all public key rings from a public key stream
+		/// Returns all public key rings from a public key stream.
+		/// Tolerates combined "key pair" style input that also contains secret key material
+		/// (e.g. a public key block and a private key block in the same file). Any secret key
+		/// rings encountered have their public parts extracted so they can be used as public keys.
 		/// </summary>
 		/// <param name="publicKeyStream"></param>
 		/// <returns></returns>
+		/// <exception cref="InvalidKeyMaterialException">When the key material cannot be parsed</exception>
 		public static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(Stream publicKeyStream)
 		{
-			var publicKeyBundles = ReadPublicKeyRingBundle(publicKeyStream);
-			return publicKeyBundles.GetKeyRings().Cast<PgpPublicKeyRing>();
-		}
+			List<PgpPublicKeyRing> publicKeyRings = new List<PgpPublicKeyRing>();
+			List<PgpSecretKeyRing> secretKeyRings = new List<PgpSecretKeyRing>();
 
-		private static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(
-			IEnumerable<PgpPublicKeyRingBundle> publicKeyRingBundles)
-		{
-			return publicKeyRingBundles.SelectMany(bundle => bundle.GetKeyRings().Cast<PgpPublicKeyRing>());
+			try
+			{
+				foreach (object pgpObject in ReadAllPgpObjects(publicKeyStream))
+				{
+					if (pgpObject is PgpPublicKeyRing publicKeyRing)
+						publicKeyRings.Add(publicKeyRing);
+					else if (pgpObject is PgpSecretKeyRing secretKeyRing)
+						secretKeyRings.Add(secretKeyRing);
+					// Any other objects (markers, signatures, etc.) are skipped.
+				}
+			}
+			catch (Exception ex) when (!(ex is PgpCoreException))
+			{
+				throw new InvalidKeyMaterialException("Failed to parse the supplied public key material.", ex);
+			}
+
+			// Derive public key rings from any secret key rings whose public part was not
+			// supplied separately (e.g. a private key passed as public key input).
+			foreach (PgpSecretKeyRing secretKeyRing in secretKeyRings)
+			{
+				long masterKeyId = secretKeyRing.GetPublicKey().KeyId;
+				if (publicKeyRings.All(keyRing => keyRing.GetPublicKey().KeyId != masterKeyId))
+					publicKeyRings.Add(ExtractPublicKeyRing(secretKeyRing));
+			}
+
+			return publicKeyRings;
 		}
 
 		/// <summary>
-		/// Returns the secret key ring bundle from a private key stream
+		/// Returns the secret key ring bundle from a private key stream.
+		/// Tolerates combined "key pair" style input that also contains public key material
+		/// (e.g. a public key block and a private key block in the same file); any non-secret
+		/// objects are skipped.
 		/// </summary>
 		/// <param name="privateKeyStream"></param>
 		/// <returns></returns>
+		/// <exception cref="InvalidKeyMaterialException">When the key material cannot be parsed or contains no secret keys</exception>
 		public static PgpSecretKeyRingBundle ReadSecretKeyRingBundle(Stream privateKeyStream)
 		{
-			using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
-				return new PgpSecretKeyRingBundle(inputStream);
+			List<PgpSecretKeyRing> secretKeyRings = new List<PgpSecretKeyRing>();
+
+			try
+			{
+				foreach (object pgpObject in ReadAllPgpObjects(privateKeyStream))
+				{
+					if (pgpObject is PgpSecretKeyRing secretKeyRing)
+					{
+						long masterKeyId = secretKeyRing.GetPublicKey().KeyId;
+						if (secretKeyRings.All(keyRing => keyRing.GetPublicKey().KeyId != masterKeyId))
+							secretKeyRings.Add(secretKeyRing);
+					}
+					// Public key rings and any other objects are skipped.
+				}
+			}
+			catch (Exception ex) when (!(ex is PgpCoreException))
+			{
+				throw new InvalidKeyMaterialException("Failed to parse the supplied private key material.", ex);
+			}
+
+			if (secretKeyRings.Count == 0)
+				throw new InvalidKeyMaterialException("No PGP secret keys found in the supplied key material.");
+
+			return new PgpSecretKeyRingBundle(secretKeyRings);
+		}
+
+		/// <summary>
+		/// Reads every top level PGP object from the supplied stream. A single stream may contain
+		/// multiple consecutive armor blocks (e.g. a public key block followed by a private key
+		/// block, as produced by concatenating "gpg --export" and "gpg --export-secret-keys"
+		/// output, or by tools such as GoAnywhere PGP Studio). ArmoredInputStream reports
+		/// end-of-stream at each armor block boundary, so a new PgpObjectFactory is constructed
+		/// repeatedly until no further objects can be read.
+		/// </summary>
+		private static List<object> ReadAllPgpObjects(Stream inputStream)
+		{
+			List<object> pgpObjects = new List<object>();
+			Stream decoderStream = PgpUtilities.GetDecoderStream(inputStream);
+
+			// A fresh factory pass can return no objects at an armor-block boundary before the
+			// stream continues into the next block, so tolerate a single empty pass (as DecryptAsync
+			// does) before concluding the stream is exhausted.
+			int consecutiveEmptyPasses = 0;
+			while (consecutiveEmptyPasses < 2)
+			{
+				PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(decoderStream);
+				bool objectsRead = false;
+				object pgpObject;
+				while ((pgpObject = pgpObjectFactory.NextPgpObject()) != null)
+				{
+					objectsRead = true;
+					pgpObjects.Add(pgpObject);
+				}
+
+				consecutiveEmptyPasses = objectsRead ? 0 : consecutiveEmptyPasses + 1;
+			}
+
+			return pgpObjects;
+		}
+
+		/// <summary>
+		/// Builds a public key ring from the public parts of a secret key ring.
+		/// </summary>
+		private static PgpPublicKeyRing ExtractPublicKeyRing(PgpSecretKeyRing secretKeyRing)
+		{
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				foreach (PgpSecretKey secretKey in secretKeyRing.GetSecretKeys())
+					secretKey.PublicKey.Encode(memoryStream);
+
+				foreach (PgpPublicKey extraPublicKey in secretKeyRing.GetExtraPublicKeys())
+					extraPublicKey.Encode(memoryStream);
+
+				memoryStream.Position = 0;
+				return new PgpPublicKeyRing(memoryStream);
+			}
 		}
 
 		/// <summary>
@@ -540,7 +715,7 @@ namespace PgpCore
 
 			PgpPublicKey signingKey = verificationKeys.OrderByDescending(GetSigningScore).FirstOrDefault();
 			if (signingKey == null)
-				throw new ArgumentException("No verification keys in keyring");
+				throw new MissingKeyException("No verification keys in keyring");
 
 			return signingKey;
 		}
@@ -569,7 +744,7 @@ namespace PgpCore
 
 			PgpPublicKey encryptionKey = encryptKeys.OrderByDescending(GetEncryptionScore).FirstOrDefault();
 			if (encryptionKey == null)
-				throw new ArgumentException("No encryption keys in keyring");
+				throw new NoEncryptionKeyException("No encryption keys in keyring");
 			return encryptionKey;
 		}
 
@@ -587,7 +762,7 @@ namespace PgpCore
 				.OrderByDescending(GetSigningScore).ToArray();
 
 			if(!secretKeys.Any())
-				throw new ArgumentException("Could not find any signing keys in keyring");
+				throw new NoSigningKeyException("Could not find any signing keys in keyring");
 
 			return secretKeys.First();
 		}
@@ -684,9 +859,9 @@ namespace PgpCore
 				byte[] buf = new byte[bufSize];
 
 				int len;
-				while ((len = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+				while ((len = await inputStream.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false)) > 0)
 				{
-					await pOut.WriteAsync(buf, 0, len);
+					await pOut.WriteAsync(buf, 0, len).ConfigureAwait(false);
 				}
 			}
 		}
@@ -722,9 +897,18 @@ namespace PgpCore
 		public static Stream GetDecoderStream(
 			Stream inputStream)
 		{
-			// TODO Remove this restriction?
+			// Non-seekable streams (e.g. network streams) cannot be rewound after sniffing, so
+			// peek a single byte and push it back instead. Binary OpenPGP packets always have the
+			// most significant header bit set; anything else is treated as ASCII armor.
 			if (!inputStream.CanSeek)
-				throw new ArgumentException("inputStream must be seek-able", nameof(inputStream));
+			{
+				int firstByte = inputStream.ReadByte();
+				if (firstByte < 0)
+					return inputStream;
+
+				Stream pushbackStream = new PrependedByteStream((byte)firstByte, inputStream);
+				return (firstByte & 0x80) != 0 ? pushbackStream : new ArmoredInputStream(pushbackStream);
+			}
 
 			long markedPos = inputStream.Position;
 

@@ -20,8 +20,8 @@ namespace PgpCore.Extensions
         {
             var stream = new MemoryStream();
             var writer = encoding != null ? new StreamWriter(stream, encoding) : new StreamWriter(stream);
-            await writer.WriteAsync(s);
-            await writer.FlushAsync();
+            await writer.WriteAsync(s).ConfigureAwait(false);
+            await writer.FlushAsync().ConfigureAwait(false);
             stream.Position = 0;
             return stream;
         }

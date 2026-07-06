@@ -22,7 +22,7 @@ namespace PgpCore
         public IEnumerable<long> GetRecipients(FileInfo inputFileInfo)
         {
             if (inputFileInfo == null)
-                throw new ArgumentException("InputFileInfo");
+                throw new ArgumentNullException(nameof(inputFileInfo));
 
             if (!inputFileInfo.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFileInfo.FullName}] not found.");
@@ -39,7 +39,7 @@ namespace PgpCore
         public IEnumerable<long> GetRecipients(Stream inputStream)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
 
             PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
 
@@ -69,7 +69,7 @@ namespace PgpCore
         public IEnumerable<long> GetRecipients(string input)
         {
             if (string.IsNullOrEmpty(input))
-                throw new ArgumentException("Input");
+                throw new ArgumentException($"{nameof(input)} cannot be null or empty.", nameof(input));
 
             using (Stream inputStream = input.GetStream())
                 return GetRecipients(inputStream);

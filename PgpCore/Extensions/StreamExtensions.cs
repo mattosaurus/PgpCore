@@ -17,7 +17,7 @@ namespace PgpCore.Extensions
         internal static async Task<string> GetStringAsync(this Stream inputStream)
         {
             var reader = new StreamReader(inputStream);
-            var output = await reader.ReadToEndAsync();
+            var output = await reader.ReadToEndAsync().ConfigureAwait(false);
             return output;
         }
 
