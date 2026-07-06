@@ -87,7 +87,7 @@ namespace PgpCore
                 name = DefaultFileName;
             if (headers == null)
                 headers = new Dictionary<string, string>();
-            if (inputStream.Position != 0)
+            if (inputStream.CanSeek && inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             if (armor)
@@ -186,7 +186,7 @@ namespace PgpCore
                 throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
             if (headers == null)
                 headers = new Dictionary<string, string>();
-            if (inputStream.Position != 0)
+            if (inputStream.CanSeek && inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             await OutputClearSignedAsync(inputStream, outputStream, headers).ConfigureAwait(false);

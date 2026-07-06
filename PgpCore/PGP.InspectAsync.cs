@@ -24,7 +24,7 @@ namespace PgpCore
         {
             if (inputStream == null)
                 throw new ArgumentNullException(nameof(inputStream));
-            if (inputStream.Position != 0)
+            if (inputStream.CanSeek && inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             bool isArmored = await IsArmoredAsync(inputStream).ConfigureAwait(false);

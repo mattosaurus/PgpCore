@@ -340,6 +340,43 @@ namespace PgpCore.Tests.UnitTests.Interop
 
         [GpgFact]
         [Trait("Category", "Interop")]
+        public void PgpCoreClearSignWithConsecutiveNewlines_GpgVerify_ShouldReportValidSignature()
+        {
+            // Arrange - issue #306: consecutive newlines must not break the clear-sign canonicalization.
+            TestFactory testFactory = new TestFactory();
+            string homeDir = GpgRunner.CreateHomeDir();
+
+            try
+            {
+                testFactory.Arrange(KeyType.Generated, FileType.Known);
+                EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+                PGP pgp = new PGP(signingKeys);
+
+                string contentFilePath = Path.Combine(homeDir, "content.txt");
+                File.WriteAllText(contentFilePath, "foo\n\nbar\n\n");
+                string clearSignedFilePath = Path.Combine(homeDir, "clearsigned.asc");
+
+                // Act
+                pgp.ClearSign(new FileInfo(contentFilePath), new FileInfo(clearSignedFilePath));
+
+                GpgResult importPublic = GpgRunner.Run(homeDir, null,
+                    "--import", testFactory.PublicKeyFileInfo.FullName);
+                GpgResult verify = GpgRunner.Run(homeDir, null,
+                    "--verify", clearSignedFilePath);
+
+                // Assert
+                importPublic.ExitCode.Should().Be(0, "gpg should import the PgpCore public key: {0}", importPublic.Details);
+                verify.ExitCode.Should().Be(0, "gpg should verify the PgpCore clear-signed file: {0}", verify.Details);
+            }
+            finally
+            {
+                GpgRunner.DeleteHomeDir(homeDir);
+                testFactory.Teardown();
+            }
+        }
+
+        [GpgFact]
+        [Trait("Category", "Interop")]
         public void PgpCoreGeneratedKey_GpgImport_ShouldSucceed()
         {
             // Arrange

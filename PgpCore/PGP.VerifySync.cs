@@ -1,6 +1,7 @@
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Models;
+using System;
 using System.IO;
 
 namespace PgpCore
@@ -73,7 +74,8 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        /// <param name="output">String to write the decrypted data to</param>
+        /// <param name="output">Has no effect. C# strings are passed by value, so the verified clear text can never reach the caller through this parameter.</param>
+        [Obsolete("The output parameter cannot be returned to the caller. Use VerifyAndReadClearArmoredStringAsync/VerifyAndReadClearArmoredString instead.")]
         public bool VerifyClear(string input, string output)
         {
             using (Stream inputStream = input.GetStream())

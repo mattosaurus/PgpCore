@@ -64,6 +64,17 @@ namespace PgpCore
                 outputStream = new MemoryStream();
 
             inputStream.Seek(0, SeekOrigin.Begin);
+
+            // Clear-signed messages use a different layout (armored clear text followed by the
+            // signature) that the packet based verification below cannot parse. Detect them up
+            // front and route to the clear signature verification instead.
+            if (IsClearSignedInput(inputStream))
+            {
+                inputStream.Seek(0, SeekOrigin.Begin);
+                return await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
+            }
+
+            inputStream.Seek(0, SeekOrigin.Begin);
             Stream encodedFile = PgpUtilities.GetDecoderStream(inputStream);
             PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
             PgpObject pgpObject = factory.NextPgpObject();
@@ -175,6 +186,44 @@ namespace PgpCore
             outputStream.Seek(0, SeekOrigin.Begin);
 
             return (verified);
+        }
+
+        /// <summary>
+        /// Determines whether the stream contains an armored clear-signed message by peeking at
+        /// its first bytes. The stream position is restored before returning. Returns false for
+        /// non-seekable streams as they cannot be peeked without consuming data.
+        /// </summary>
+        private static bool IsClearSignedInput(Stream inputStream)
+        {
+            if (!inputStream.CanSeek)
+                return false;
+
+            const string clearSignedHeader = "-----BEGIN PGP SIGNED MESSAGE-----";
+
+            long position = inputStream.Position;
+            try
+            {
+                byte[] buffer = new byte[128];
+                int totalRead = 0;
+                int read;
+                while (totalRead < buffer.Length && (read = inputStream.Read(buffer, totalRead, buffer.Length - totalRead)) > 0)
+                    totalRead += read;
+
+                int offset = 0;
+                // Skip a UTF-8 byte order mark if present
+                if (totalRead >= 3 && buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
+                    offset = 3;
+                // Skip leading whitespace
+                while (offset < totalRead && (buffer[offset] == ' ' || buffer[offset] == '\t' || buffer[offset] == '\r' || buffer[offset] == '\n'))
+                    offset++;
+
+                return totalRead - offset >= clearSignedHeader.Length &&
+                    Encoding.ASCII.GetString(buffer, offset, clearSignedHeader.Length) == clearSignedHeader;
+            }
+            finally
+            {
+                inputStream.Position = position;
+            }
         }
 
         /// <summary>
@@ -291,9 +340,11 @@ namespace PgpCore
 
                             line = lineOut.ToArray();
                             await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
-                            // Add missing new line
-                            if (lookAhead != 1)
-                                await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
+                            // Always write the separator back, even after the final line. A trailing
+                            // empty line (consecutive newlines at the end of the message) must keep its
+                            // separator so the hashing pass below sees it and updates the signature with
+                            // the CRLF the signer hashed (RFC 4880 Section 7.1).
+                            await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
                         }
                     }
                     else if (lookAhead != -1)

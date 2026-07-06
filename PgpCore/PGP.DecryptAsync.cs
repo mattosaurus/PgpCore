@@ -54,33 +54,73 @@ namespace PgpCore
             if (inputStream.CanSeek && inputStream.Length - inputStream.Position == 0)
                 return;
 
-            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+            // Input produced by chunked/appended encryption is a concatenation of complete PGP
+            // messages (possibly in successive armor blocks); decrypt each in turn.
+            Stream decoderStream = Utilities.GetDecoderStream(inputStream);
+            bool anyMessageProcessed = false;
+            int consecutiveEmptyPasses = 0;
 
-            // the first object might be a PGP marker packet.
-            PgpEncryptedDataList enc = null;
-            PgpObject message = null;
-
-            try
+            while (true)
             {
-                PgpObject obj = objFactory.NextPgpObject();
+                // A fresh factory is required to cross armor block boundaries: ArmoredInputStream
+                // reports end-of-stream at each boundary but continues into the next block on
+                // subsequent reads.
+                PgpObjectFactory objFactory = new PgpObjectFactory(decoderStream);
 
-                if (obj is PgpEncryptedDataList dataList)
-                    enc = dataList;
-                else if (obj is PgpCompressedData compressedData)
-                    message = compressedData;
-                else
-                    enc = objFactory.NextPgpObject() as PgpEncryptedDataList;
-            }
-            catch (IOException ex)
-            {
-                // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
-                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
+                // the first object might be a PGP marker packet.
+                PgpEncryptedDataList enc = null;
+                PgpObject message = null;
+
+                try
+                {
+                    PgpObject obj = objFactory.NextPgpObject();
+
+                    if (obj == null)
+                    {
+                        // One empty pass can just be an armor block boundary; two in a row
+                        // means the stream is exhausted.
+                        consecutiveEmptyPasses++;
+                        if (consecutiveEmptyPasses >= 2 || !anyMessageProcessed)
+                            break;
+                        continue;
+                    }
+
+                    consecutiveEmptyPasses = 0;
+
+                    if (obj is PgpEncryptedDataList dataList)
+                        enc = dataList;
+                    else if (obj is PgpCompressedData compressedData)
+                        message = compressedData;
+                    else
+                        enc = objFactory.NextPgpObject() as PgpEncryptedDataList;
+                }
+                catch (IOException ex)
+                {
+                    if (anyMessageProcessed)
+                        break; // tolerate trailing non-message data after valid messages
+
+                    // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
+                    throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
+                }
+
+                // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
+                if (enc == null && message == null)
+                {
+                    if (anyMessageProcessed)
+                        break;
+                    throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
+                }
+
+                await DecryptMessageAsync(enc, message, outputStream).ConfigureAwait(false);
+                anyMessageProcessed = true;
             }
 
-            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
-            if (enc == null && message == null)
+            if (!anyMessageProcessed)
                 throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
+        }
 
+        private async Task DecryptMessageAsync(PgpEncryptedDataList enc, PgpObject message, Stream outputStream)
+        {
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
                 // decrypt
@@ -166,7 +206,7 @@ namespace PgpCore
                     {
                         if (encryptedDataAsymmetric.IsIntegrityProtected())
                         {
-                            if (!encryptedDataAsymmetric.Verify())
+                            if (!encryptedDataAsymmetric.Verify() && !IgnoreIntegrityCheckFailure)
                             {
                                 throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
@@ -176,7 +216,7 @@ namespace PgpCore
                     {
                         if (encryptedDataSymmetric.IsIntegrityProtected())
                         {
-                            if (!encryptedDataSymmetric.Verify())
+                            if (!encryptedDataSymmetric.Verify() && !IgnoreIntegrityCheckFailure)
                             {
                                 throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
@@ -248,7 +288,7 @@ namespace PgpCore
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
         public async Task DecryptAndVerifyAsync(Stream inputStream, Stream outputStream)
         {
-            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+            PgpObjectFactory objFactory = new PgpObjectFactory(Utilities.GetDecoderStream(inputStream));
 
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList encryptedDataList = null;
@@ -403,7 +443,7 @@ namespace PgpCore
                     {
                         if (encryptedDataAsymmetric.IsIntegrityProtected())
                         {
-                            if (!encryptedDataAsymmetric.Verify())
+                            if (!encryptedDataAsymmetric.Verify() && !IgnoreIntegrityCheckFailure)
                             {
                                 throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
@@ -413,7 +453,7 @@ namespace PgpCore
                     {
                         if (encryptedDataSymmetric.IsIntegrityProtected())
                         {
-                            if (!encryptedDataSymmetric.Verify())
+                            if (!encryptedDataSymmetric.Verify() && !IgnoreIntegrityCheckFailure)
                             {
                                 throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }

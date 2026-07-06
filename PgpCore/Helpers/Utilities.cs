@@ -379,7 +379,7 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.UtcNow))
+			using (Stream pOut = OpenLiteralDataStream(lData, output, fileType, name, input))
 			{
 				await input.CopyToAsync(pOut).ConfigureAwait(false);
 				await pOut.FlushAsync().ConfigureAwait(false);
@@ -394,11 +394,85 @@ namespace PgpCore
 			bool oldFormat)
 		{
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
-			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.UtcNow))
+			using (Stream pOut = OpenLiteralDataStream(lData, output, fileType, name, input))
 			{
 				input.CopyTo(pOut);
 				pOut.Flush();
 			}
+		}
+
+		/// <summary>
+		/// Serves a single previously-read byte ahead of the wrapped stream's remaining content.
+		/// </summary>
+		private sealed class PrependedByteStream : Stream
+		{
+			private readonly Stream _inner;
+			private int _prependedByte;
+
+			public PrependedByteStream(byte prependedByte, Stream inner)
+			{
+				_prependedByte = prependedByte;
+				_inner = inner;
+			}
+
+			public override bool CanRead => _inner.CanRead;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException();
+			public override long Position
+			{
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
+			}
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (count == 0)
+					return 0;
+
+				if (_prependedByte >= 0)
+				{
+					buffer[offset] = (byte)_prependedByte;
+					_prependedByte = -1;
+					return 1;
+				}
+
+				return _inner.Read(buffer, offset, count);
+			}
+
+			public override int ReadByte()
+			{
+				if (_prependedByte >= 0)
+				{
+					int value = _prependedByte;
+					_prependedByte = -1;
+					return value;
+				}
+
+				return _inner.ReadByte();
+			}
+
+			public override void Flush() => _inner.Flush();
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+		}
+
+		/// <summary>
+		/// Opens a literal data stream, using the known-length packet form for seekable input and
+		/// the buffered (indeterminate-length partial packet) form for non-seekable input such as
+		/// network streams, whose length cannot be queried up front.
+		/// </summary>
+		internal static Stream OpenLiteralDataStream(
+			PgpLiteralDataGenerator generator,
+			Stream output,
+			char fileType,
+			string name,
+			Stream input)
+		{
+			return input.CanSeek
+				? generator.Open(output, fileType, name, input.Length - input.Position, DateTime.UtcNow)
+				: generator.Open(output, fileType, name, DateTime.UtcNow, new byte[0x10000]);
 		}
 
 		/// <summary>
@@ -818,9 +892,18 @@ namespace PgpCore
 		public static Stream GetDecoderStream(
 			Stream inputStream)
 		{
-			// TODO Remove this restriction?
+			// Non-seekable streams (e.g. network streams) cannot be rewound after sniffing, so
+			// peek a single byte and push it back instead. Binary OpenPGP packets always have the
+			// most significant header bit set; anything else is treated as ASCII armor.
 			if (!inputStream.CanSeek)
-				throw new ArgumentException("inputStream must be seek-able", nameof(inputStream));
+			{
+				int firstByte = inputStream.ReadByte();
+				if (firstByte < 0)
+					return inputStream;
+
+				Stream pushbackStream = new PrependedByteStream((byte)firstByte, inputStream);
+				return (firstByte & 0x80) != 0 ? pushbackStream : new ArmoredInputStream(pushbackStream);
+			}
 
 			long markedPos = inputStream.Position;
 

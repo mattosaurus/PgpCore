@@ -39,6 +39,14 @@ namespace PgpCore
 
 		public bool AddVersionHeader { get; set; } = true;
 
+		/// <summary>
+		/// When true, decrypt operations tolerate a failed modification detection (MDC) integrity
+		/// check instead of throwing <see cref="MessageIntegrityException"/>. Equivalent to
+		/// gpg --ignore-mdc-error. Leave false unless you must read legacy data from senders that
+		/// produce invalid MDC packets, as it disables tamper detection.
+		/// </summary>
+		public bool IgnoreIntegrityCheckFailure { get; set; } = false;
+
 		#region Constructor
 
 		public PGP()
@@ -57,22 +65,10 @@ namespace PgpCore
 
 		private async Task OutputEncryptedAsync(FileInfo inputFile, Stream outputStream, bool withIntegrityCheck, string name, bool oldFormat)
 		{
-			using (Stream encryptedOut = ChainEncryptedOut(outputStream, withIntegrityCheck))
+			using (FileStream inputFileStream = inputFile.OpenRead())
 			{
-				using (Stream compressedOut = ChainCompressedOut(encryptedOut))
-				{
-					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-					using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
-					{
-						using (FileStream inputFileStream = inputFile.OpenRead())
-						{
-							await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream,
-								signatureGenerator).ConfigureAwait(false);
-						}
-					}
-					await compressedOut.FlushAsync().ConfigureAwait(false);
-				}
-				await encryptedOut.FlushAsync().ConfigureAwait(false);
+				await OutputEncryptedAsync(inputFileStream, outputStream, withIntegrityCheck,
+					name ?? inputFile.Name, oldFormat).ConfigureAwait(false);
 			}
 		}
 
@@ -86,8 +82,12 @@ namespace PgpCore
 					PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
 					using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
 					{
-						await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator).ConfigureAwait(false);
+						await WriteOutputAndSignAsync(literalOut, inputStream, signatureGenerator).ConfigureAwait(false);
 					}
+					// The signature packet must follow the completed literal data packet; with
+					// buffered (partial-length) literal packets the terminator is only written
+					// when literalOut is disposed, so encode after the using block.
+					signatureGenerator.Generate().Encode(compressedOut);
 					await compressedOut.FlushAsync().ConfigureAwait(false);
 				}
 				await encryptedOut.FlushAsync().ConfigureAwait(false);
@@ -100,17 +100,9 @@ namespace PgpCore
 
 		private async Task OutputSignedAsync(FileInfo inputFile, Stream outputStream, string name, bool oldFormat)
 		{
-			using (Stream compressedOut = ChainCompressedOut(outputStream))
+			using (FileStream inputFileStream = inputFile.OpenRead())
 			{
-				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
-				using (Stream literalOut = ChainLiteralOut(compressedOut, inputFile, name, oldFormat))
-				{
-					using (FileStream inputFileStream = inputFile.OpenRead())
-					{
-						await WriteOutputAndSignAsync(compressedOut, literalOut, inputFileStream, signatureGenerator).ConfigureAwait(false);
-					}
-				}
-				await compressedOut.FlushAsync().ConfigureAwait(false);
+				await OutputSignedAsync(inputFileStream, outputStream, name ?? inputFile.Name, oldFormat).ConfigureAwait(false);
 			}
 		}
 
@@ -122,8 +114,11 @@ namespace PgpCore
 				PgpSignatureGenerator signatureGenerator = InitSignatureGenerator(compressedOut);
 				using (Stream literalOut = ChainLiteralOut(compressedOut, inputStream, name, oldFormat))
 				{
-					await WriteOutputAndSignAsync(compressedOut, literalOut, inputStream, signatureGenerator).ConfigureAwait(false);
+					await WriteOutputAndSignAsync(literalOut, inputStream, signatureGenerator).ConfigureAwait(false);
 				}
+				// See OutputEncryptedAsync: the signature must be encoded after the literal data
+				// packet is completed by disposing literalOut.
+				signatureGenerator.Generate().Encode(compressedOut);
 				await compressedOut.FlushAsync().ConfigureAwait(false);
 			}
 		}
@@ -183,22 +178,7 @@ namespace PgpCore
 
 		#region WriteOutputAndSign
 
-		private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, FileStream inputFileStream,
-			PgpSignatureGenerator signatureGenerator)
-		{
-			int length;
-			byte[] buf = new byte[BufferSize];
-			while ((length = await inputFileStream.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false)) > 0)
-			{
-				await literalOut.WriteAsync(buf, 0, length).ConfigureAwait(false);
-				signatureGenerator.Update(buf, 0, length);
-			}
-
-			await literalOut.FlushAsync().ConfigureAwait(false);
-			signatureGenerator.Generate().Encode(compressedOut);
-		}
-
-		private async Task WriteOutputAndSignAsync(Stream compressedOut, Stream literalOut, Stream inputStream,
+		private async Task WriteOutputAndSignAsync(Stream literalOut, Stream inputStream,
 			PgpSignatureGenerator signatureGenerator)
 		{
 			int length;
@@ -210,7 +190,6 @@ namespace PgpCore
 			}
 
 			await literalOut.FlushAsync().ConfigureAwait(false);
-			signatureGenerator.Generate().Encode(compressedOut);
 		}
 
 		#endregion WriteOutputAndSign
@@ -267,8 +246,7 @@ namespace PgpCore
 		private Stream ChainLiteralOut(Stream compressedOut, Stream inputStream, string name, bool oldFormat)
 		{
 			PgpLiteralDataGenerator pgpLiteralDataGenerator = new PgpLiteralDataGenerator(oldFormat);
-			return pgpLiteralDataGenerator.Open(compressedOut, FileTypeToChar(), name, inputStream.Length,
-				DateTime.UtcNow);
+			return Utilities.OpenLiteralDataStream(pgpLiteralDataGenerator, compressedOut, FileTypeToChar(), name, inputStream);
 		}
 
 		#endregion ChainLiteralOut

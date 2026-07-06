@@ -72,6 +72,37 @@ namespace PgpCore.Tests.UnitTests.Verify
         }
 
         [Theory]
+        // Issue #274 - clear-signed input passed to the plain Verify methods should be detected
+        // and routed to clear signature verification instead of failing to parse.
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
+        public async Task VerifyAsync_VerifyClearSignedMessage_ShouldRouteToClearVerification(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo) { SymmetricKey = testFactory.SymmetricKey };
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            // Act
+            string signedContent = await pgpSign.ClearSignAsync(testFactory.Content);
+            bool verified = await pgpVerify.VerifyAsync(signedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                verified.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         [InlineData(KeyType.Generated)]
         [InlineData(KeyType.Known)]
         [InlineData(KeyType.KnownGpg)]
