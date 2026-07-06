@@ -290,5 +290,131 @@ namespace PgpCore.Tests.UnitTests.Keys
                 }
             }
         }
+
+        [Fact]
+        public async Task GenerateKeyAsync_WithEdDsaAlgorithm_ShouldSignAndVerifyRoundTrip()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP { PublicKeyAlgorithm = PublicKeyAlgorithmTag.EdDsa };
+
+            // Act
+            await pgp.GenerateKeyAsync(
+                testFactory.PublicKeyFileInfo,
+                testFactory.PrivateKeyFileInfo,
+                testFactory.UserName,
+                testFactory.Password
+                );
+
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            string signedContent = await pgpSign.SignAsync(testFactory.Content);
+            bool verified = await pgpVerify.VerifyAsync(signedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.PublicKeyFileInfo.Exists.Should().BeTrue();
+                testFactory.PrivateKeyFileInfo.Exists.Should().BeTrue();
+
+                using (Stream publicKeyStream = testFactory.PublicKeyFileInfo.OpenRead())
+                {
+                    PgpPublicKeyRingBundle bundle = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(publicKeyStream));
+                    PgpPublicKey masterKey = GetMasterKey(bundle);
+                    masterKey.Should().NotBeNull();
+                    masterKey.Algorithm.Should().Be(PublicKeyAlgorithmTag.EdDsa);
+                }
+
+                verified.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public async Task GenerateKeyAsync_WithECDsaAlgorithm_ShouldSignAndVerifyRoundTrip()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP { PublicKeyAlgorithm = PublicKeyAlgorithmTag.ECDsa };
+
+            // Act
+            await pgp.GenerateKeyAsync(
+                testFactory.PublicKeyFileInfo,
+                testFactory.PrivateKeyFileInfo,
+                testFactory.UserName,
+                testFactory.Password
+                );
+
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            string signedContent = await pgpSign.SignAsync(testFactory.Content);
+            bool verified = await pgpVerify.VerifyAsync(signedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                testFactory.PublicKeyFileInfo.Exists.Should().BeTrue();
+                testFactory.PrivateKeyFileInfo.Exists.Should().BeTrue();
+
+                using (Stream publicKeyStream = testFactory.PublicKeyFileInfo.OpenRead())
+                {
+                    PgpPublicKeyRingBundle bundle = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(publicKeyStream));
+                    PgpPublicKey masterKey = GetMasterKey(bundle);
+                    masterKey.Should().NotBeNull();
+                    masterKey.Algorithm.Should().Be(PublicKeyAlgorithmTag.ECDsa);
+                }
+
+                verified.Should().BeTrue();
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public async Task GenerateKeyAsync_WithUnsupportedAlgorithm_ShouldThrowNotSupportedException()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP { PublicKeyAlgorithm = PublicKeyAlgorithmTag.DiffieHellman };
+
+            // Act
+            Func<Task> act = async () => await pgp.GenerateKeyAsync(
+                testFactory.PublicKeyFileInfo,
+                testFactory.PrivateKeyFileInfo,
+                testFactory.UserName,
+                testFactory.Password
+                );
+
+            // Assert
+            await act.Should().ThrowAsync<NotSupportedException>();
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        private static PgpPublicKey GetMasterKey(PgpPublicKeyRingBundle bundle)
+        {
+            foreach (PgpPublicKeyRing keyRing in bundle.GetKeyRings())
+            {
+                foreach (PgpPublicKey key in keyRing.GetPublicKeys())
+                {
+                    if (key.IsMasterKey)
+                        return key;
+                }
+            }
+            return null;
+        }
     }
 }

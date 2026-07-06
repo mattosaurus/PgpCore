@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <Description>.NET Standard class library for using PGP</Description>
     <Authors>mattosaurus</Authors>
     <Company />
@@ -72,6 +73,12 @@
     <Compile Update="PGP.SignSync.cs">
       <DependentUpon>PGP.cs</DependentUpon>
     </Compile>
+    <Compile Update="PGP.SignDetachedAsync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="PGP.SignDetachedSync.cs">
+      <DependentUpon>PGP.cs</DependentUpon>
+    </Compile>
     <Compile Update="PGP.VerifyAsync.cs">
       <DependentUpon>PGP.cs</DependentUpon>
     </Compile>
@@ -110,6 +117,12 @@
       <DependentUpon>IPGP.cs</DependentUpon>
     </Compile>
     <Compile Update="Abstractions\IPGP.SignSync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.DetachedSignAsync.cs">
+      <DependentUpon>IPGP.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Abstractions\IPGP.DetachedSignSync.cs">
       <DependentUpon>IPGP.cs</DependentUpon>
     </Compile>
     <Compile Update="Abstractions\IPGP.VerifyAsync.cs">

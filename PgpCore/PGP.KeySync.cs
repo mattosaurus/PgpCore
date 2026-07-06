@@ -95,11 +95,11 @@ namespace PgpCore
                     SymmetricKeyAlgorithm, SymmetricKeyAlgorithmTag.TripleDes
                 });
 
-            IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
+            PgpKeyPair masterKey = GenerateMasterKeyPair(strength, certainty);
 
-            kpg.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(0x13), new SecureRandom(), strength, certainty));
-
-            PgpKeyPair masterKey = new PgpKeyPair(PublicKeyAlgorithm, kpg.GenerateKeyPair(), DateTime.UtcNow);
+            // EdDSA/ECDSA self-certifications require SHA-256+, so promote a SHA-1 certification hash for those
+            // algorithms. RSA (and any explicitly stronger hash) is left unchanged.
+            HashAlgorithmTag certificationHashAlgorithm = GetCertificationHashAlgorithm(preferredHashAlgorithmTags[0]);
 
             PgpSignatureSubpacketGenerator signHashGen = new PgpSignatureSubpacketGenerator();
             signHashGen.SetKeyFlags(false, PgpKeyFlags.CanCertify | PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage | PgpKeyFlags.CanSign);
@@ -115,9 +115,9 @@ namespace PgpCore
                 masterKey,
                 username,
                 SymmetricKeyAlgorithm,
-                preferredHashAlgorithmTags[0],
+                certificationHashAlgorithm,
                 password.ToCharArray(),
-                preferredHashAlgorithmTags[0] == HashAlgorithmTag.Sha1,
+                certificationHashAlgorithm == HashAlgorithmTag.Sha1,
                 signHashGen.Generate(),
                 null,
                 new SecureRandom());

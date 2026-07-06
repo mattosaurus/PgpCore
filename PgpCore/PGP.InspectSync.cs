@@ -171,32 +171,6 @@ namespace PgpCore
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
         public PgpInspectResult Inspect(string input) => InspectAsync(input).GetAwaiter().GetResult();
 
-        private Dictionary<string, string> GetMessageHeaders(Stream inputStream)
-        {
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-
-            StreamReader reader = new StreamReader(inputStream);
-            string line;
-
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (line.StartsWith("-----"))
-                {
-                    break;
-                }
-
-                int colonIndex = line.IndexOf(':');
-                if (colonIndex != -1)
-                {
-                    string key = line.Substring(0, colonIndex).Trim();
-                    string value = line.Substring(colonIndex + 1).Trim();
-                    headers[key] = value;
-                }
-            }
-
-            return headers;
-        }
-
         private bool IsArmored(byte[] data)
         {
             if (data[0] == 0x2D && data[1] == 0x2D && data[2] == 0x2D && data[3] == 0x2D && data[4] == 0x2D && data[5] == 0x42 && data[6] == 0x45 && data[7] == 0x47 && data[8] == 0x49 && data[9] == 0x4E && data[10] == 0x20 && data[11] == 0x50 && data[12] == 0x47 && data[13] == 0x50 && data[14] == 0x20 && data[15] == 0x4D && data[16] == 0x45 && data[17] == 0x53 && data[18] == 0x53 && data[19] == 0x41 && data[20] == 0x47 && data[21] == 0x45 && data[22] == 0x2D && data[23] == 0x2D && data[24] == 0x2D && data[25] == 0x2D)
@@ -207,14 +181,6 @@ namespace PgpCore
             {
                 return false;
             }
-        }
-
-        private bool IsArmored(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-            byte[] headerBytes = new byte[26];
-            stream.Read(headerBytes, 0, 26);
-            return IsArmored(headerBytes);
         }
     }
 }
