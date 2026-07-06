@@ -92,7 +92,9 @@ namespace PgpCore.Tests
             {
                 // Create keys
                 case KeyType.Generated:
-                    pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
+                    // Use a smaller key than the library default to keep the broad test matrix fast;
+                    // the default strength is exercised separately by the GenerateKey tests.
+                    pgp.GenerateKey(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password, strength: 1024);
                     break;
                 case KeyType.Symmetric:
                     _symmetricKey = Encoding.UTF8.GetBytes(Constants.PASSWORD1);
@@ -154,7 +156,9 @@ namespace PgpCore.Tests
             {
                 // Create keys
                 case KeyType.Generated:
-                    await pgp.GenerateKeyAsync(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password);
+                    // Use a smaller key than the library default to keep the broad test matrix fast;
+                    // the default strength is exercised separately by the GenerateKey tests.
+                    await pgp.GenerateKeyAsync(PublicKeyFileInfo, PrivateKeyFileInfo, UserName, Password, strength: 1024);
                     break;
                 case KeyType.Symmetric:
                     _symmetricKey = Encoding.UTF8.GetBytes(Constants.PASSWORD1);

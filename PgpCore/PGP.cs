@@ -17,15 +17,12 @@ namespace PgpCore
 {
 	public partial class PGP : IPGP
 	{
-		public static PGP Instance => _instance ?? (_instance = new PGP());
-		private static PGP _instance;
-
 		private const int BufferSize = 0x10000;
 		private const string DefaultFileName = "name";
 
-		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Uncompressed;
+		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Zip;
 
-		public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.TripleDes;
+		public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.Aes256;
 
 		public int PgpSignatureType { get; set; } = PgpSignature.DefaultCertification;
 
@@ -33,7 +30,7 @@ namespace PgpCore
 
 		public PGPFileType FileType { get; set; } = PGPFileType.Binary;
 
-		public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha1;
+		public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha256;
 
 		public IEncryptionKeys EncryptionKeys { get; private set; }
 

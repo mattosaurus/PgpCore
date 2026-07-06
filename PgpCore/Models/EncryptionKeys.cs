@@ -20,9 +20,7 @@ namespace PgpCore
 		public IEnumerable<PgpPublicKey> VerificationKeys => _verificationKeys.Value;
 		public PgpPrivateKey SigningPrivateKey => _signingPrivateKey.Value;
 		public PgpSecretKey SigningSecretKey => _signingSecretKey.Value;
-		public IEnumerable<PgpPublicKey> PublicKeys => EncryptKeys;
 		public PgpPublicKey MasterKey => _masterKey.Value;
-		public PgpPublicKey PublicKey => EncryptKeys.FirstOrDefault();
 		public PgpPrivateKey PrivateKey => SigningPrivateKey;
 		public PgpSecretKey SecretKey => SigningSecretKey;
 		public PgpSecretKeyRingBundle SecretKeys => _secretKeys.Value;

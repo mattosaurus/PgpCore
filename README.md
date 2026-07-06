@@ -20,7 +20,30 @@ using PgpCore;
 * BouncyCastle.Cryptography (>= 2.4.0)
 
 # Usage
-This is intended for usage in projects [targeting .NET Standard 2.0](https://dotnet.microsoft.com/platform/dotnet-standard#versions).
+PgpCore targets both .NET Standard 2.0 (for broad compatibility with .NET Framework and older .NET Core) and .NET 10.
+
+# Upgrading to v8.0
+Version 8.0 hardens the cryptographic defaults and removes long-deprecated members. These are breaking changes — review the following before upgrading:
+
+**Changed defaults** (only affects code that relied on the old defaults without setting them explicitly):
+
+| Setting | Old default | New default |
+| --- | --- | --- |
+| `SymmetricKeyAlgorithm` | `TripleDes` | `Aes256` |
+| `HashAlgorithmTag` | `Sha1` | `Sha256` |
+| `CompressionAlgorithm` | `Uncompressed` | `Zip` |
+| `GenerateKey` `strength` | `1024` | `3072` |
+| `GenerateKey` `certainty` | `8` | `24` |
+
+To reproduce the old behaviour, set the properties explicitly, e.g. `new PGP(keys) { SymmetricKeyAlgorithm = SymmetricKeyAlgorithmTag.TripleDes, HashAlgorithmTag = HashAlgorithmTag.Sha1, CompressionAlgorithm = CompressionAlgorithmTag.Uncompressed }`. Data produced with the new defaults remains readable by any modern OpenPGP implementation (including GnuPG).
+
+**Removed members:**
+* `IEncryptionKeys.PublicKey` / `EncryptionKeys.PublicKey` → use `MasterKey` or `EncryptKeys.FirstOrDefault()`.
+* `IEncryptionKeys.PublicKeys` / `EncryptionKeys.PublicKeys` → use `EncryptKeys`.
+* `VerifyClear(string input, string output)` → use `VerifyAndReadClearArmoredString(string input)` (the removed overload could never return its output).
+* `PGP.Instance` static singleton → construct a `PGP` instance directly (the mutable singleton with settable algorithm properties was not thread-safe).
+
+**Exceptions:** operations now throw specific exception types deriving from `PgpCoreException` (e.g. `IncorrectPassphraseException`, `NoDecryptionKeyException`, `NotEncryptedDataException`, `MessageIntegrityException`) instead of generic `ArgumentException` / BouncyCastle `PgpException`. `PgpCoreException` now derives from `System.Exception` (in v7.x it derived from BouncyCastle's `PgpException`); update any `catch (PgpException)` blocks that relied on the old hierarchy.
 
 # Azure Function Example
 If you want a (basic) example of how you can use an Azure Function to encrypt/decrypt from Azure Blob Storage I've created a sample project [here](https://github.com/mattosaurus/PgpEncrypt).
@@ -564,24 +587,22 @@ string encryptedSignedContent = await pgp.DecryptAndVerifyAsync("String to decry
 The PGP object contains a variety of settings properties that can be used to determine how files are encrypted.
 ### CompressionAlgorithm
 The compression algorithm to be used on the message. This is applied prior to encryption, either to the message or the signed message.
-- Uncompressed - **Default**
-- Zip
+- Uncompressed
+- Zip - **Default**
 - ZLib
 - BZip2
 ### SymmetricKeyAlgorithm
 The private key encryption algorithm.
-> Although TripleDes is the default, it is outdated and being [discouraged by security institutions like NIST](https://en.wikipedia.org/wiki/Triple_DES). Aes is recommended.
-
 - Null
 - Idea
-- TripleDes - **Default**
+- TripleDes
 - Cast5
 - Blowfish
 - Safer
 - Des
 - Aes128
 - Aes192
-- Aes256
+- Aes256 - **Default**
 - Twofish
 - Camellia128
 - Camellia192
@@ -622,13 +643,13 @@ Encoding to be used for the output file.
 ### HashAlgorithmTag
 The hash algorithm to be used by the signature.
 - MD5
-- Sha1 - **Default**
+- Sha1
 - RipeMD160
 - DoubleSha
 - MD2
 - Tiger192
 - Haval5pass160
-- Sha256
+- Sha256 - **Default**
 - Sha384
 - Sha512
 - Sha224

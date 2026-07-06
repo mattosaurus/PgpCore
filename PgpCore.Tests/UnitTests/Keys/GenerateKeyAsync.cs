@@ -51,7 +51,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
-                    publicKey.BitStrength.Should().Be(1024);
+                    publicKey.BitStrength.Should().Be(3072);
                 }
 
             }
@@ -73,7 +73,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                                 k.Should().NotBeNull();
                                 k.IsSigningKey.Should().BeTrue();
                                 k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.TripleDes);
+                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                             }
                         }
                     }
@@ -142,7 +142,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                                 k.Should().NotBeNull();
                                 k.IsSigningKey.Should().BeTrue();
                                 k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.TripleDes);
+                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                             }
                         }
                     }
@@ -190,7 +190,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
-                    publicKey.BitStrength.Should().Be(1024);
+                    publicKey.BitStrength.Should().Be(3072);
                 }
 
             }
@@ -212,7 +212,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                                 k.Should().NotBeNull();
                                 k.IsSigningKey.Should().BeTrue();
                                 k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.TripleDes);
+                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                             }
                         }
                     }
@@ -260,7 +260,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
-                    publicKey.BitStrength.Should().Be(1024);
+                    publicKey.BitStrength.Should().Be(3072);
                     publicKey.GetValidSeconds().Should().Be(60);
                 }
 
@@ -283,7 +283,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                                 k.Should().NotBeNull();
                                 k.IsSigningKey.Should().BeTrue();
                                 k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.TripleDes);
+                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                             }
                         }
                     }

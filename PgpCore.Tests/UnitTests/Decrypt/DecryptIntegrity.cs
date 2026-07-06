@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Org.BouncyCastle.Bcpg;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -20,7 +21,9 @@ namespace PgpCore.Tests.UnitTests.Decrypt
 
             EncryptionKeys encryptionKeys = new EncryptionKeys(testFactory.PublicKey);
             EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password);
-            PGP pgpEncrypt = new PGP(encryptionKeys);
+            // Disable compression so the encrypted payload ends with the literal data and its MDC
+            // trailer at a predictable offset, letting the tail flip below corrupt the MDC only.
+            PGP pgpEncrypt = new PGP(encryptionKeys) { CompressionAlgorithm = CompressionAlgorithmTag.Uncompressed };
             PGP pgpDecrypt = new PGP(decryptionKeys);
 
             using MemoryStream input = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(testFactory.Content));
