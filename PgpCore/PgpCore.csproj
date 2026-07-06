@@ -14,7 +14,7 @@
     <Version>8.0.0.0</Version>
     <AssemblyVersion>8.0.0.0</AssemblyVersion>
     <FileVersion>8.0.0</FileVersion>
-    <PackageReleaseNotes>v8.0.0 - Secure defaults (AES-256, SHA-256, ZIP compression), stronger 3072-bit key generation with encryption subkeys, typed exceptions, removal of obsolete members. See CHANGELOG/README migration guide.</PackageReleaseNotes>
+    <PackageReleaseNotes>v8.0.0 - Secure defaults (AES-256, SHA-256, ZIP compression), stronger 3072-bit key generation with encryption subkeys, typed exceptions, removal of obsolete members. See README migration guide.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
