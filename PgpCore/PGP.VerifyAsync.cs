@@ -25,9 +25,9 @@ namespace PgpCore
         public async Task<bool> VerifyAsync(FileInfo inputFile, FileInfo outputFile = null, bool throwIfEncrypted = false)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
 
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
@@ -81,7 +81,7 @@ namespace PgpCore
             {
                 if (throwIfEncrypted)
                 {
-                    throw new ArgumentException("Input is encrypted. Decrypt the input first.");
+                    throw new ArgumentException("Input is encrypted. Decrypt the input first.", nameof(inputStream));
                 }
                 PgpPublicKeyEncryptedData publicKeyEncryptedData = Utilities.ExtractPublicKey(dataList);
                 var keyIdToVerify = publicKeyEncryptedData.KeyId;
@@ -232,7 +232,7 @@ namespace PgpCore
         public async Task<bool> VerifyClearAsync(FileInfo inputFile, FileInfo outputFile = null)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (EncryptionKeys == null)
                 throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
 
@@ -262,11 +262,11 @@ namespace PgpCore
         public async Task<bool> VerifyClearAsync(Stream inputStream, Stream outputStream = null)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             if (EncryptionKeys == null)
                 throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
             if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+                throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             bool verified;
 

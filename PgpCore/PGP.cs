@@ -336,9 +336,9 @@ namespace PgpCore
 			bool emitVersion)
 		{
 			if (secretOut == null)
-				throw new ArgumentException("secretOut");
+				throw new ArgumentNullException(nameof(secretOut));
 			if (publicOut == null)
-				throw new ArgumentException("publicOut");
+				throw new ArgumentNullException(nameof(publicOut));
 
 			ArmoredOutputStream secretOutArmored;
 			if (armor)

@@ -328,7 +328,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Func<Task> act = async () => await pgpDecrypt.DecryptAsync(testFactory.Content);
-                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message.StartsWith("Failed to detect encrypted content format."));
+                    await act.Should().ThrowAsync<NotEncryptedDataException>().Where(e => e.Message.StartsWith("Failed to detect encrypted content format."));
                 }
             }
 
@@ -363,7 +363,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Func<Task> act = async () => await pgpDecrypt.DecryptAsync(encrypted);
-                    await act.Should().ThrowAsync<ArgumentException>().Where(e => e.Message == "Decryption key for message not found.");
+                    await act.Should().ThrowAsync<NoDecryptionKeyException>().Where(e => e.Message.StartsWith("Decryption key for message not found."));
                 }
             }
 

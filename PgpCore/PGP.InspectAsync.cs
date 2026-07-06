@@ -23,9 +23,9 @@ namespace PgpCore
         public async Task<PgpInspectResult> InspectAsync(Stream inputStream)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+                throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             bool isArmored = await IsArmoredAsync(inputStream).ConfigureAwait(false);
             Dictionary<string, string> messageHeaders = null;
@@ -52,7 +52,7 @@ namespace PgpCore
         public async Task<PgpInspectResult> InspectAsync(FileInfo inputFile)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
@@ -70,7 +70,7 @@ namespace PgpCore
         public async Task<PgpInspectResult> InspectAsync(string input)
         {
             if (string.IsNullOrEmpty(input))
-                throw new ArgumentException("Input");
+                throw new ArgumentException($"{nameof(input)} cannot be null or empty.", nameof(input));
 
             using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             {

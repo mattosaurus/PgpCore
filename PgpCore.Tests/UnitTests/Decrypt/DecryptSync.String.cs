@@ -360,7 +360,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Action act = () => pgpDecrypt.Decrypt(testFactory.Content);
-                    act.Should().Throw<ArgumentException>().Where(e => e.Message.StartsWith("Failed to detect encrypted content format."));
+                    act.Should().Throw<NotEncryptedDataException>().Where(e => e.Message.StartsWith("Failed to detect encrypted content format."));
                 }
             }
 
@@ -396,7 +396,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using (Stream outputStream = testFactory.DecryptedContentFileInfo.Create())
                 {
                     Action act = () => pgpDecrypt.Decrypt(encrypted);
-                    act.Should().Throw<ArgumentException>().Where(e => e.Message == "Decryption key for message not found.");
+                    act.Should().Throw<NoDecryptionKeyException>().Where(e => e.Message.StartsWith("Decryption key for message not found."));
                 }
             }
 

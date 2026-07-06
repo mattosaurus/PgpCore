@@ -489,12 +489,12 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             File.WriteAllText(testFactory.ContentFileInfo.FullName, testFactory.Content);
 
             // Act
-            var ex = await Assert.ThrowsAsync<ArgumentException>(async () => await pgpDecrypt.DecryptAsync(testFactory.ContentFileInfo, testFactory.DecryptedContentFileInfo));
+            var ex = await Assert.ThrowsAsync<NotEncryptedDataException>(async () => await pgpDecrypt.DecryptAsync(testFactory.ContentFileInfo, testFactory.DecryptedContentFileInfo));
 
             // Assert
             using (new AssertionScope())
             {
-                ex.Should().BeAssignableTo<ArgumentException>();
+                ex.Should().BeAssignableTo<NotEncryptedDataException>();
                 ex.Message.Should().StartWith("Failed to detect encrypted content format.");
             }
 
@@ -523,13 +523,13 @@ namespace PgpCore.Tests.UnitTests.Decrypt
 
             // Act
             await pgpEncrypt.EncryptAsync(testFactory.ContentFileInfo, testFactory.EncryptedContentFileInfo);
-            var ex = await Assert.ThrowsAsync<ArgumentException>(async () => await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo));
+            var ex = await Assert.ThrowsAsync<NoDecryptionKeyException>(async () => await pgpDecrypt.DecryptAsync(testFactory.EncryptedContentFileInfo, testFactory.DecryptedContentFileInfo));
 
             // Assert
             using (new AssertionScope())
             {
-                ex.Should().BeAssignableTo<ArgumentException>();
-                ex.Message.Should().Be("Decryption key for message not found.");
+                ex.Should().BeAssignableTo<NoDecryptionKeyException>();
+                ex.Message.Should().StartWith("Decryption key for message not found.");
             }
 
             // Teardown

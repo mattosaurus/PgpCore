@@ -422,14 +422,14 @@ namespace PgpCore
 					{
 						return FindBestEncryptionKey(kRing);
 					}
-					catch (ArgumentException)
+					catch (NoEncryptionKeyException)
 					{
 						// No suitable encryption key in this key ring, try the next one.
 					}
 				}
 			}
 
-			throw new ArgumentException("Can't find encryption key in key ring.");
+			throw new NoEncryptionKeyException("Can't find encryption key in key ring.");
 		}
 
 		/// <summary>
@@ -540,7 +540,7 @@ namespace PgpCore
 
 			PgpPublicKey signingKey = verificationKeys.OrderByDescending(GetSigningScore).FirstOrDefault();
 			if (signingKey == null)
-				throw new ArgumentException("No verification keys in keyring");
+				throw new MissingKeyException("No verification keys in keyring");
 
 			return signingKey;
 		}
@@ -569,7 +569,7 @@ namespace PgpCore
 
 			PgpPublicKey encryptionKey = encryptKeys.OrderByDescending(GetEncryptionScore).FirstOrDefault();
 			if (encryptionKey == null)
-				throw new ArgumentException("No encryption keys in keyring");
+				throw new NoEncryptionKeyException("No encryption keys in keyring");
 			return encryptionKey;
 		}
 
@@ -587,7 +587,7 @@ namespace PgpCore
 				.OrderByDescending(GetSigningScore).ToArray();
 
 			if(!secretKeys.Any())
-				throw new ArgumentException("Could not find any signing keys in keyring");
+				throw new NoSigningKeyException("Could not find any signing keys in keyring");
 
 			return secretKeys.First();
 		}

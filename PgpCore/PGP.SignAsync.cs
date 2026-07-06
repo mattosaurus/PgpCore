@@ -31,11 +31,11 @@ namespace PgpCore
             bool oldFormat = false)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (outputFile == null)
-                throw new ArgumentException("OutputFile");
+                throw new ArgumentNullException(nameof(outputFile));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
             if (string.IsNullOrEmpty(name))
                 name = Path.GetFileName(inputFile.Name);
             if (headers == null)
@@ -76,11 +76,11 @@ namespace PgpCore
             bool oldFormat = false)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             if (outputStream == null)
-                throw new ArgumentException("OutputStream");
+                throw new ArgumentNullException(nameof(outputStream));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
             if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
                 name = Path.GetFileName(fileStream.Name);
             else if (string.IsNullOrEmpty(name))
@@ -88,7 +88,7 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
             if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+                throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             if (armor)
             {
@@ -150,11 +150,11 @@ namespace PgpCore
             IDictionary<string, string> headers = null)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (outputFile == null)
-                throw new ArgumentException("OutputFile");
+                throw new ArgumentNullException(nameof(outputFile));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
@@ -179,15 +179,15 @@ namespace PgpCore
             IDictionary<string, string> headers = null)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             if (outputStream == null)
-                throw new ArgumentException("OutputStream");
+                throw new ArgumentNullException(nameof(outputStream));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
             if (headers == null)
                 headers = new Dictionary<string, string>();
             if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
+                throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             await OutputClearSignedAsync(inputStream, outputStream, headers).ConfigureAwait(false);
         }

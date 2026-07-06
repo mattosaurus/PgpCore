@@ -30,9 +30,9 @@ namespace PgpCore
             SymmetricKeyAlgorithmTag[] preferredSymmetricKeyAlgorithms = null)
         {
             if (publicKeyFileInfo == null)
-                throw new ArgumentException("PublicKeyFileInfo");
+                throw new ArgumentNullException(nameof(publicKeyFileInfo));
             if (privateKeyFileInfo == null)
-                throw new ArgumentException("PrivateKeyFileInfo");
+                throw new ArgumentNullException(nameof(privateKeyFileInfo));
 
             using (Stream pubs = publicKeyFileInfo.Create())
             using (Stream pris = privateKeyFileInfo.Create())

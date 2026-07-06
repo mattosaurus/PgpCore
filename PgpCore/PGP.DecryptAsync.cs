@@ -4,7 +4,9 @@ using PgpCore.Extensions;
 using PgpCore.Helpers;
 using PgpCore.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PgpCore
@@ -21,9 +23,9 @@ namespace PgpCore
         public async Task DecryptAsync(FileInfo inputFile, FileInfo outputFile)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (outputFile == null)
-                throw new ArgumentException("OutputFile");
+                throw new ArgumentNullException(nameof(outputFile));
             if (EncryptionKeys == null)
                 throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
 
@@ -44,9 +46,9 @@ namespace PgpCore
         public async Task DecryptAsync(Stream inputStream, Stream outputStream)
         {
             if (inputStream == null)
-                throw new ArgumentException("InputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             if (outputStream == null)
-                throw new ArgumentException("OutputStream");
+                throw new ArgumentNullException(nameof(outputStream));
 
             // A zero-byte input contains no PGP packets; mirror it as zero-byte output.
             if (inputStream.CanSeek && inputStream.Length - inputStream.Position == 0)
@@ -54,18 +56,26 @@ namespace PgpCore
 
             PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
 
-            PgpObject obj = objFactory.NextPgpObject();
-
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList enc = null;
             PgpObject message = null;
 
-            if (obj is PgpEncryptedDataList dataList)
-                enc = dataList;
-            else if (obj is PgpCompressedData compressedData)
-                message = compressedData;
-            else
-                enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
+            try
+            {
+                PgpObject obj = objFactory.NextPgpObject();
+
+                if (obj is PgpEncryptedDataList dataList)
+                    enc = dataList;
+                else if (obj is PgpCompressedData compressedData)
+                    message = compressedData;
+                else
+                    enc = objFactory.NextPgpObject() as PgpEncryptedDataList;
+            }
+            catch (IOException ex)
+            {
+                // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
+                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
+            }
 
             // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
             if (enc == null && message == null)
@@ -77,20 +87,23 @@ namespace PgpCore
                 PgpPrivateKey privateKey = null;
                 PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
                 PgpPbeEncryptedData encryptedDataSymmetric = null;
-                
+
                 if (enc != null)
                 {
+                    List<long> messageKeyIds = new List<long>();
+
                     foreach (PgpEncryptedData encryptedData in enc.GetEncryptedDataObjects())
                     {
                         if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                         {
+                            messageKeyIds.Add(publicKeyEncryptedData.KeyId);
                             privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
 
                             if (privateKey != null)
                             {
                                 encryptedDataAsymmetric = publicKeyEncryptedData;
                                 break;
-                            }   
+                            }
                         }
 
                         if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
@@ -109,10 +122,11 @@ namespace PgpCore
                     {
                         clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
                     }
-                    
+
                     if (clear == null)
-                        throw new ArgumentException("Decryption key for message not found.");
-                    
+                        throw new NoDecryptionKeyException(
+                            $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
+
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 
                     message = plainFact.NextPgpObject();
@@ -211,11 +225,11 @@ namespace PgpCore
         public async Task DecryptAndVerifyAsync(FileInfo inputFile, FileInfo outputFile)
         {
             if (inputFile == null)
-                throw new ArgumentException("InputFile");
+                throw new ArgumentNullException(nameof(inputFile));
             if (outputFile == null)
-                throw new ArgumentException("OutputFile");
+                throw new ArgumentNullException(nameof(outputFile));
             if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
+                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
 
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
@@ -236,18 +250,26 @@ namespace PgpCore
         {
             PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
 
-            PgpObject obj = objFactory.NextPgpObject();
-
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList encryptedDataList = null;
             PgpObject message = null;
 
-            if (obj is PgpEncryptedDataList dataList)
-                encryptedDataList = dataList;
-            else if (obj is PgpCompressedData compressedData)
-                message = compressedData;
-            else
-                encryptedDataList = (PgpEncryptedDataList)objFactory.NextPgpObject();
+            try
+            {
+                PgpObject obj = objFactory.NextPgpObject();
+
+                if (obj is PgpEncryptedDataList dataList)
+                    encryptedDataList = dataList;
+                else if (obj is PgpCompressedData compressedData)
+                    message = compressedData;
+                else
+                    encryptedDataList = objFactory.NextPgpObject() as PgpEncryptedDataList;
+            }
+            catch (IOException ex)
+            {
+                // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
+                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
+            }
 
             // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
             if (encryptedDataList == null && message == null)
@@ -262,17 +284,20 @@ namespace PgpCore
                 
                 if (encryptedDataList != null)
                 {
+                    List<long> messageKeyIds = new List<long>();
+
                     foreach (PgpEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
                     {
                         if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                         {
+                            messageKeyIds.Add(publicKeyEncryptedData.KeyId);
                             privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
 
                             if (privateKey != null)
                             {
                                 encryptedDataAsymmetric = publicKeyEncryptedData;
                                 break;
-                            }   
+                            }
                         }
 
                         if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
@@ -291,10 +316,11 @@ namespace PgpCore
                     {
                         clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
                     }
-                    
+
                     if (clear == null)
-                        throw new ArgumentException("Decryption key for message not found.");
-                    
+                        throw new NoDecryptionKeyException(
+                            $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
+
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);
 
                     message = plainFact.NextPgpObject();
