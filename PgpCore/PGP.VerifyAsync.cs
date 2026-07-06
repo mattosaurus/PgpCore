@@ -36,7 +36,7 @@ namespace PgpCore
             {
                 using (Stream inputStream = inputFile.OpenRead())
                 {
-                    return await VerifyAsync(inputStream, null, throwIfEncrypted);
+                    return await VerifyAsync(inputStream, null, throwIfEncrypted).ConfigureAwait(false);
                 }
             }
             else
@@ -44,7 +44,7 @@ namespace PgpCore
                 using (Stream inputStream = inputFile.OpenRead())
                 using (Stream outputStream = outputFile.OpenWrite())
                 {
-                    return await VerifyAsync(inputStream, outputStream, throwIfEncrypted);
+                    return await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
                 }
             }
         }
@@ -171,7 +171,7 @@ namespace PgpCore
             else
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
-            await outputStream.FlushAsync();
+            await outputStream.FlushAsync().ConfigureAwait(false);
             outputStream.Seek(0, SeekOrigin.Begin);
 
             return (verified);
@@ -184,39 +184,39 @@ namespace PgpCore
         /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
         public async Task<bool> VerifyAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             {
-                return await VerifyAsync(inputStream, null, throwIfEncrypted);
+                return await VerifyAsync(inputStream, null, throwIfEncrypted).ConfigureAwait(false);
             }
         }
 
-        public async Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false) => await VerifyAsync(inputFile, null, throwIfEncrypted);
+        public async Task<bool> VerifyFileAsync(FileInfo inputFile, bool throwIfEncrypted = false) => await VerifyAsync(inputFile, null, throwIfEncrypted).ConfigureAwait(false);
 
-        public async Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false) => await VerifyAsync(inputStream, null, throwIfEncrypted);
+        public async Task<bool> VerifyStreamAsync(Stream inputStream, bool throwIfEncrypted = false) => await VerifyAsync(inputStream, null, throwIfEncrypted).ConfigureAwait(false);
 
-        public async Task<bool> VerifyArmoredStringAsync(string input, bool throwIfEncrypted = false) => await VerifyAsync(input, throwIfEncrypted);
+        public async Task<bool> VerifyArmoredStringAsync(string input, bool throwIfEncrypted = false) => await VerifyAsync(input, throwIfEncrypted).ConfigureAwait(false);
 
         public async Task<VerificationResult> VerifyAndReadSignedFileAsync(FileInfo inputFile, bool throwIfEncrypted = false)
         {
             using (Stream inputStream = inputFile.OpenRead())
-                return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted);
+                return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted).ConfigureAwait(false);
         }
 
         public async Task<VerificationResult> VerifyAndReadSignedStreamAsync(Stream inputStream, bool throwIfEncrypted = false)
         {
             using (Stream outputStream = new MemoryStream())
             {
-                bool verified = await VerifyAsync(inputStream, outputStream, throwIfEncrypted);
+                bool verified = await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
 
-                return new VerificationResult(verified, await outputStream.GetStringAsync());
+                return new VerificationResult(verified, await outputStream.GetStringAsync().ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             {
-                return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted);
+                return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted).ConfigureAwait(false);
             }
         }
 
@@ -240,7 +240,7 @@ namespace PgpCore
             {
                 using (Stream inputStream = inputFile.OpenRead())
                 {
-                    return await VerifyClearAsync(inputStream, null);
+                    return await VerifyClearAsync(inputStream, null).ConfigureAwait(false);
                 }
             }
             else
@@ -248,7 +248,7 @@ namespace PgpCore
                 using (Stream inputStream = inputFile.OpenRead())
                 using (Stream outputStream = outputFile.OpenWrite())
                 {
-                    return await VerifyClearAsync(inputStream, outputStream);
+                    return await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
                 }
             }   
         }
@@ -282,24 +282,24 @@ namespace PgpCore
                     if (lookAhead != -1 && armoredInputStream.IsClearText())
                     {
                         var line = lineOut.ToArray();
-                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
-                        await outStream.WriteAsync(lineSep, 0, lineSep.Length);
+                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
+                        await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
 
                         while (lookAhead != -1 && armoredInputStream.IsClearText())
                         {
                             lookAhead = ReadInputLine(lineOut, lookAhead, armoredInputStream);
 
                             line = lineOut.ToArray();
-                            await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
+                            await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
                             // Add missing new line
                             if (lookAhead != 1)
-                                await outStream.WriteAsync(lineSep, 0, lineSep.Length);
+                                await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
                         }
                     }
                     else if (lookAhead != -1)
                     {
                         var line = lineOut.ToArray();
-                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line));
+                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
                     }
 
                     // Get public key from correctly positioned stream and initialise for verification
@@ -332,7 +332,7 @@ namespace PgpCore
                 if (outputStream != null)
                 {
                     outStream.Position = 0;
-                    await outStream.CopyToAsync(outputStream);
+                    await outStream.CopyToAsync(outputStream).ConfigureAwait(false);
                 }
             }
 
@@ -345,38 +345,38 @@ namespace PgpCore
         /// <param name="input">Clear signed string to be verified</param>
         public async Task<bool> VerifyClearAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
-                return await VerifyClearAsync(inputStream, null);
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+                return await VerifyClearAsync(inputStream, null).ConfigureAwait(false);
         }
 
-        public async Task<bool> VerifyClearFileAsync(FileInfo inputFile) => await VerifyClearAsync(inputFile, null);
+        public async Task<bool> VerifyClearFileAsync(FileInfo inputFile) => await VerifyClearAsync(inputFile, null).ConfigureAwait(false);
 
-        public async Task<bool> VerifyClearStreamAsync(Stream inputStream) => await VerifyClearAsync(inputStream, null);
+        public async Task<bool> VerifyClearStreamAsync(Stream inputStream) => await VerifyClearAsync(inputStream, null).ConfigureAwait(false);
 
-        public async Task<bool> VerifyClearArmoredStringAsync(string input) => await VerifyClearAsync(input);
+        public async Task<bool> VerifyClearArmoredStringAsync(string input) => await VerifyClearAsync(input).ConfigureAwait(false);
 
         public async Task<VerificationResult> VerifyAndReadClearFileAsync(FileInfo inputFile)
         {
             using (Stream inputStream = inputFile.OpenRead())
-                return await VerifyAndReadClearStreamAsync(inputStream);
+                return await VerifyAndReadClearStreamAsync(inputStream).ConfigureAwait(false);
         }
 
         public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream)
         {
             using (Stream outputStream = new MemoryStream())
             {
-                bool verified = await VerifyClearAsync(inputStream, outputStream);
+                bool verified = await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Position = 0;
 
-                return new VerificationResult(verified, await outputStream.GetStringAsync());
+                return new VerificationResult(verified, await outputStream.GetStringAsync().ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             {
-                return await VerifyAndReadClearStreamAsync(inputStream);
+                return await VerifyAndReadClearStreamAsync(inputStream).ConfigureAwait(false);
             }
         }
 

@@ -27,11 +27,11 @@ namespace PgpCore
             if (inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream");
 
-            bool isArmored = await IsArmoredAsync(inputStream);
+            bool isArmored = await IsArmoredAsync(inputStream).ConfigureAwait(false);
             Dictionary<string, string> messageHeaders = null;
             
             if (isArmored)
-                messageHeaders = await GetMessageHeadersAsync(inputStream);
+                messageHeaders = await GetMessageHeadersAsync(inputStream).ConfigureAwait(false);
 
             PgpInspectBaseResult pgpInspectBaseResult = GetPgpInspectBaseResult(inputStream);
 
@@ -57,7 +57,7 @@ namespace PgpCore
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
             using (FileStream inputStream = inputFile.OpenRead())
-                return await InspectAsync(inputStream);
+                return await InspectAsync(inputStream).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace PgpCore
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException("Input");
 
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             {
-                return await InspectAsync(inputStream);
+                return await InspectAsync(inputStream).ConfigureAwait(false);
             }
         }
 
@@ -82,7 +82,7 @@ namespace PgpCore
         {
             stream.Seek(0, SeekOrigin.Begin);
             byte[] headerBytes = new byte[26];
-            await stream.ReadAsync(headerBytes, 0, 26);
+            await stream.ReadAsync(headerBytes, 0, 26).ConfigureAwait(false);
             return IsArmored(headerBytes);
         }
 
@@ -93,7 +93,7 @@ namespace PgpCore
             StreamReader reader = new StreamReader(inputStream);
             string line;
 
-            while ((line = await reader.ReadLineAsync()) != null)
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
             {
                 if (line.StartsWith("-----"))
                 {

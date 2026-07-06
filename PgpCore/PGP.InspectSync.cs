@@ -1,6 +1,5 @@
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
-using Org.BouncyCastle.Utilities.Zlib;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -8,11 +7,6 @@ using PgpCore.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace PgpCore
 {
@@ -25,27 +19,7 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PgpInspectResult Inspect(Stream inputStream)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
-
-            bool isArmored = IsArmored(inputStream);
-            Dictionary<string, string> messageHeaders = null;
-            
-            if (isArmored)
-                messageHeaders = GetMessageHeaders(inputStream);
-
-            PgpInspectBaseResult pgpInspectBaseResult = GetPgpInspectBaseResult(inputStream);
-
-            return new PgpInspectResult(
-                pgpInspectBaseResult,
-                isArmored,
-                messageHeaders
-                );
-        }
+        public PgpInspectResult Inspect(Stream inputStream) => InspectAsync(inputStream).GetAwaiter().GetResult();
 
         private PgpInspectBaseResult GetPgpInspectBaseResult(Stream inputStream)
         {
@@ -169,16 +143,7 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PgpInspectResult Inspect(FileInfo inputFile)
-        {
-            if (inputFile == null)
-                throw new ArgumentException("InputFile");
-            if (!inputFile.Exists)
-                throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
-
-            using (FileStream inputStream = inputFile.OpenRead())
-                return Inspect(inputStream);
-        }
+        public PgpInspectResult Inspect(FileInfo inputFile) => InspectAsync(inputFile).GetAwaiter().GetResult();
 
         /// <summary>
         /// Inspect an arbitrary PGP message returning information about the message
@@ -187,16 +152,7 @@ namespace PgpCore
         /// <returns>Returns an object containing details of the provided PGP message</returns>
         /// <exception cref="ArgumentException">Exception returned if input argument is invalid</exception>
         /// <exception cref="PgpException">Exception returned if the input is not a PGP object</exception>
-        public PgpInspectResult Inspect(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                throw new ArgumentException("Input");
-
-            using (Stream inputStream = input.GetStream())
-            {
-                return Inspect(inputStream);
-            }
-        }
+        public PgpInspectResult Inspect(string input) => InspectAsync(input).GetAwaiter().GetResult();
 
         private Dictionary<string, string> GetMessageHeaders(Stream inputStream)
         {

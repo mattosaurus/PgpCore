@@ -323,7 +323,7 @@ namespace PgpCore
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
 			using (Stream pOut = lData.Open(output, fileType, file.Name, file.Length, file.LastWriteTime))
 			{
-				await PipeFileContentsAsync(file, pOut, 4096);
+				await PipeFileContentsAsync(file, pOut, 4096).ConfigureAwait(false);
 			}
 		}
 
@@ -352,7 +352,7 @@ namespace PgpCore
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
 			using (Stream pOut = lData.Open(output, fileType, file.Name, file.LastWriteTime, buffer))
 			{
-				await PipeFileContentsAsync(file, pOut, buffer.Length);
+				await PipeFileContentsAsync(file, pOut, buffer.Length).ConfigureAwait(false);
 			}
 		}
 
@@ -381,8 +381,8 @@ namespace PgpCore
 			PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator(oldFormat);
 			using (Stream pOut = lData.Open(output, fileType, name, input.Length, DateTime.UtcNow))
 			{
-				await input.CopyToAsync(pOut);
-				await pOut.FlushAsync();
+				await input.CopyToAsync(pOut).ConfigureAwait(false);
+				await pOut.FlushAsync().ConfigureAwait(false);
 			}
 		}
 
@@ -684,9 +684,9 @@ namespace PgpCore
 				byte[] buf = new byte[bufSize];
 
 				int len;
-				while ((len = await inputStream.ReadAsync(buf, 0, buf.Length)) > 0)
+				while ((len = await inputStream.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false)) > 0)
 				{
-					await pOut.WriteAsync(buf, 0, len);
+					await pOut.WriteAsync(buf, 0, len).ConfigureAwait(false);
 				}
 			}
 		}

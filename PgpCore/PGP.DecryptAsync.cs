@@ -32,7 +32,7 @@ namespace PgpCore
 
             using (Stream inputStream = inputFile.OpenRead())
             using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAsync(inputStream, outStream);
+                await DecryptAsync(inputStream, outStream).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace PgpCore
 
             // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
             if (enc == null && message == null)
-                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
+                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
 
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
@@ -134,19 +134,19 @@ namespace PgpCore
                         message = objectFactory.NextPgpObject();
                         var literalData = (PgpLiteralData)message;
                         Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream);
+                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
                     }
                     else
                     {
                         PgpLiteralData literalData = (PgpLiteralData)message;
                         Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream);
+                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
                     }
                 }
                 else if (message is PgpLiteralData literalData)
                 {
                     Stream unc = literalData.GetInputStream();
-                    await StreamHelper.PipeAllAsync(unc, outputStream);
+                    await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
 
                     if (encryptedDataAsymmetric != null)
                     {
@@ -154,7 +154,7 @@ namespace PgpCore
                         {
                             if (!encryptedDataAsymmetric.Verify())
                             {
-                                throw new PgpException("Message failed integrity check.");
+                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
                         }
                     }
@@ -164,7 +164,7 @@ namespace PgpCore
                         {
                             if (!encryptedDataSymmetric.Verify())
                             {
-                                throw new PgpException("Message failed integrity check.");
+                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
                         }
                     }
@@ -182,20 +182,20 @@ namespace PgpCore
         /// <param name="input">PGP encrypted string</param>
         public async Task<string> DecryptAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
-                await DecryptAsync(inputStream, outputStream);
+                await DecryptAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync();
+                return await outputStream.GetStringAsync().ConfigureAwait(false);
             }
         }
 
-        public async Task DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) => await DecryptAsync(inputFile, outputFile);
+        public async Task DecryptFileAsync(FileInfo inputFile, FileInfo outputFile) => await DecryptAsync(inputFile, outputFile).ConfigureAwait(false);
 
-        public async Task DecryptStreamAsync(Stream inputStream, Stream outputStream) => await DecryptAsync(inputStream, outputStream);
+        public async Task DecryptStreamAsync(Stream inputStream, Stream outputStream) => await DecryptAsync(inputStream, outputStream).ConfigureAwait(false);
 
-        public async Task<string> DecryptArmoredStringAsync(string input) => await DecryptAsync(input);
+        public async Task<string> DecryptArmoredStringAsync(string input) => await DecryptAsync(input).ConfigureAwait(false);
 
         #endregion DecryptAsync
 
@@ -222,7 +222,7 @@ namespace PgpCore
 
             using (Stream inputStream = inputFile.OpenRead())
             using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAndVerifyAsync(inputStream, outStream);
+                await DecryptAndVerifyAsync(inputStream, outStream).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace PgpCore
 
             // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
             if (encryptedDataList == null && message == null)
-                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
+                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
 
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
@@ -361,7 +361,7 @@ namespace PgpCore
                         message = objectFactory.NextPgpObject();
                         var literalData = (PgpLiteralData)message;
                         Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream);
+                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
                     }
                     else
                     {
@@ -371,7 +371,7 @@ namespace PgpCore
                 else if (message is PgpLiteralData literalData)
                 {
                     Stream unc = literalData.GetInputStream();
-                    await StreamHelper.PipeAllAsync(unc, outputStream);
+                    await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
 
                     if (encryptedDataAsymmetric != null)
                     {
@@ -379,7 +379,7 @@ namespace PgpCore
                         {
                             if (!encryptedDataAsymmetric.Verify())
                             {
-                                throw new PgpException("Message failed integrity check.");
+                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
                         }
                     }
@@ -389,7 +389,7 @@ namespace PgpCore
                         {
                             if (!encryptedDataSymmetric.Verify())
                             {
-                                throw new PgpException("Message failed integrity check.");
+                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
                             }
                         }
                     }
@@ -407,20 +407,20 @@ namespace PgpCore
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
         public async Task<string> DecryptAndVerifyAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync())
+            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
-                await DecryptAndVerifyAsync(inputStream, outputStream);
+                await DecryptAndVerifyAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync();
+                return await outputStream.GetStringAsync().ConfigureAwait(false);
             }
         }
 
-        public async Task DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) => await DecryptAndVerifyAsync(inputFile, outputFile);
+        public async Task DecryptFileAndVerifyAsync(FileInfo inputFile, FileInfo outputFile) => await DecryptAndVerifyAsync(inputFile, outputFile).ConfigureAwait(false);
 
-        public async Task DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream) => await DecryptAndVerifyAsync(inputStream, outputStream);
+        public async Task DecryptStreamAndVerifyAsync(Stream inputStream, Stream outputStream) => await DecryptAndVerifyAsync(inputStream, outputStream).ConfigureAwait(false);
 
-        public async Task<string> DecryptArmoredStringAndVerifyAsync(string input) => await DecryptAndVerifyAsync(input);
+        public async Task<string> DecryptArmoredStringAndVerifyAsync(string input) => await DecryptAndVerifyAsync(input).ConfigureAwait(false);
 
         #endregion DecryptAndVerifyAsync
     }

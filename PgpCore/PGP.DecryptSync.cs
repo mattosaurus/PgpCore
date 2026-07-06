@@ -1,9 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
-using PgpCore.Extensions;
-using PgpCore.Helpers;
-using PgpCore.Models;
-using System;
 using System.IO;
 
 namespace PgpCore
@@ -17,22 +12,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFile">PGP encrypted data file</param>
         /// <param name="outputFile">Output PGP decrypted file</param>
-        public void Decrypt(FileInfo inputFile, FileInfo outputFile)
-        {
-            if (inputFile == null)
-                throw new ArgumentException("InputFile");
-            if (outputFile == null)
-                throw new ArgumentException("OutputFile");
-            if (EncryptionKeys == null)
-                throw new ArgumentNullException(nameof(EncryptionKeys), "Encryption Key not found.");
-
-            if (!inputFile.Exists)
-                throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
-
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                Decrypt(inputStream, outStream);
-        }
+        public void Decrypt(FileInfo inputFile, FileInfo outputFile) => DecryptAsync(inputFile, outputFile).GetAwaiter().GetResult();
 
         /// <summary>
         /// PGP decrypt a given stream.
@@ -40,155 +20,13 @@ namespace PgpCore
         /// <param name="inputStream">PGP encrypted data stream</param>
         /// <param name="outputStream">Output PGP decrypted stream</param>
         /// <returns></returns>
-        public void Decrypt(Stream inputStream, Stream outputStream)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (outputStream == null)
-                throw new ArgumentException("OutputStream");
-
-            // A zero-byte input contains no PGP packets; mirror it as zero-byte output.
-            if (inputStream.CanSeek && inputStream.Length - inputStream.Position == 0)
-                return;
-
-            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
-
-            PgpObject obj = objFactory.NextPgpObject();
-
-            // the first object might be a PGP marker packet.
-            PgpEncryptedDataList enc = null;
-            PgpObject message = null;
-
-            if (obj is PgpEncryptedDataList dataList)
-                enc = dataList;
-            else if (obj is PgpCompressedData compressedData)
-                message = compressedData;
-            else
-                enc = (PgpEncryptedDataList)objFactory.NextPgpObject();
-
-            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
-            if (enc == null && message == null)
-                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
-
-            using (CompositeDisposable disposables = new CompositeDisposable())
-            {
-                // decrypt
-                PgpPrivateKey privateKey = null;
-                PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
-                PgpPbeEncryptedData encryptedDataSymmetric = null;
-                
-                if (enc != null)
-                {
-                    foreach (PgpEncryptedData encryptedData in enc.GetEncryptedDataObjects())
-                    {
-                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
-                        {
-                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
-
-                            if (privateKey != null)
-                            {
-                                encryptedDataAsymmetric = publicKeyEncryptedData;
-                                break;
-                            }   
-                        }
-
-                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
-                        {
-                            encryptedDataSymmetric = passwordEncryptedData;
-                        }
-                    }
-
-                    Stream clear = null;
-
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
-                    }
-                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
-                    {
-                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
-                    }
-                    
-                    if (clear == null)
-                        throw new ArgumentException("Decryption key for message not found.");
-
-                    PgpObjectFactory plainFact = new PgpObjectFactory(clear);
-
-                    message = plainFact.NextPgpObject();
-
-                    if (message is PgpOnePassSignatureList || message is PgpSignatureList)
-                    {
-                        message = plainFact.NextPgpObject();
-                    }
-                }
-
-                if (message is PgpCompressedData pgpCompressedData)
-                {
-                    Stream compDataIn = pgpCompressedData.GetDataStream().DisposeWith(disposables);
-                    PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
-                    message = objectFactory.NextPgpObject();
-
-                    if (message is PgpOnePassSignatureList || message is PgpSignatureList)
-                    {
-                        message = objectFactory.NextPgpObject();
-                        PgpLiteralData literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        StreamHelper.PipeAll(unc, outputStream);
-                    }
-                    else
-                    {
-                        PgpLiteralData literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        StreamHelper.PipeAll(unc, outputStream);
-                    }
-                }
-                else if (message is PgpLiteralData literalData)
-                {
-                    Stream unc = literalData.GetInputStream();
-                    StreamHelper.PipeAll(unc, outputStream);
-
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        if (encryptedDataAsymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataAsymmetric.Verify())
-                            {
-                                throw new PgpException("Message failed integrity check.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (encryptedDataSymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataSymmetric.Verify())
-                            {
-                                throw new PgpException("Message failed integrity check.");
-                            }
-                        }
-                    }
-                }
-                else if (message is PgpOnePassSignatureList)
-                    throw new PgpException("Encrypted message contains a signed message - not literal data.");
-                else
-                    throw new PgpException("Message is not a simple encrypted file.");
-            }
-        }
+        public void Decrypt(Stream inputStream, Stream outputStream) => DecryptAsync(inputStream, outputStream).GetAwaiter().GetResult();
 
         /// <summary>
         /// PGP decrypt a given string.
         /// </summary>
         /// <param name="input">PGP encrypted string</param>
-        public string Decrypt(string input)
-        {
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                Decrypt(inputStream, outputStream);
-                outputStream.Seek(0, SeekOrigin.Begin);
-                return outputStream.GetString();
-            }
-        }
+        public string Decrypt(string input) => DecryptAsync(input).GetAwaiter().GetResult();
 
         public string DecryptArmoredString(string input) => Decrypt(input);
         public void DecryptFile(FileInfo inputFile, FileInfo outputFile) => Decrypt(inputFile, outputFile);
@@ -200,218 +38,29 @@ namespace PgpCore
 
         /// <summary>
         /// PGP decrypt and verify a given file.
-        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message.
         /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="inputFile">PGP encrypted data file path to be decrypted and verified</param>
         /// <param name="outputFile">Output PGP decrypted and verified file</param>
-        public void DecryptAndVerify(FileInfo inputFile, FileInfo outputFile)
-        {
-            if (inputFile == null)
-                throw new ArgumentException("InputFile");
-            if (outputFile == null)
-                throw new ArgumentException("OutputFile");
-            if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
-
-            if (!inputFile.Exists)
-                throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
-
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                DecryptAndVerify(inputStream, outStream);
-        }
+        public void DecryptAndVerify(FileInfo inputFile, FileInfo outputFile) => DecryptAndVerifyAsync(inputFile, outputFile).GetAwaiter().GetResult();
 
         /// <summary>
         /// PGP decrypt and verify a given file.
-        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message.
         /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="inputStream">PGP encrypted data stream to be decrypted and verified</param>
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
-        public void DecryptAndVerify(Stream inputStream, Stream outputStream)
-        {
-            PgpObjectFactory objFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
-
-            PgpObject obj = objFactory.NextPgpObject();
-
-            // the first object might be a PGP marker packet.
-            PgpEncryptedDataList encryptedDataList = null;
-            PgpObject message = null;
-
-            if (obj is PgpEncryptedDataList dataList)
-                encryptedDataList = dataList;
-            else if (obj is PgpCompressedData compressedData)
-                message = compressedData;
-            else
-                encryptedDataList = (PgpEncryptedDataList)objFactory.NextPgpObject();
-
-            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
-            if (encryptedDataList == null && message == null)
-                throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
-
-            using (CompositeDisposable disposables = new CompositeDisposable())
-            {
-                // decrypt
-                PgpPrivateKey privateKey = null;
-                PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
-                PgpPbeEncryptedData encryptedDataSymmetric = null;
-                
-                if (encryptedDataList != null)
-                {
-                    foreach (PgpEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
-                    {
-                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
-                        {
-                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
-
-                            if (privateKey != null)
-                            {
-                                encryptedDataAsymmetric = publicKeyEncryptedData;
-                                break;
-                            }   
-                        }
-
-                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
-                        {
-                            encryptedDataSymmetric = passwordEncryptedData;
-                        }
-                    }
-
-                    Stream clear = null;
-
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
-                    }
-                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
-                    {
-                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
-                    }
-                    
-                    if (clear == null)
-                        throw new ArgumentException("Decryption key for message not found.");
-
-                    PgpObjectFactory plainFact = new PgpObjectFactory(clear);
-
-                    message = plainFact.NextPgpObject();
-
-                    if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-                    {
-                        // A message may carry multiple signatures (e.g. signed with several keys). This is a
-                        // key-id presence check, not a cryptographic signature verification: it confirms that
-                        // at least one signature was made by a key id matching one of the supplied
-                        // verification keys, regardless of the signature's position in the list.
-                        bool signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = plainFact.NextPgpObject();
-                    }
-                    else if (message is PgpSignatureList pgpSignatureList)
-                    {
-                        bool signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = plainFact.NextPgpObject();
-                    }
-                    else if (!(message is PgpCompressedData))
-                        throw new PgpException("File was not signed.");
-                }
-
-                if (message is PgpCompressedData cData)
-                {
-                    Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
-                    PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
-                    message = objectFactory.NextPgpObject();
-
-                    bool isSigned = true;
-                    bool signerKeyFound = false;
-
-                    // A message may carry multiple signatures (e.g. signed with several keys). This is a
-                    // key-id presence check, not a cryptographic signature verification: it confirms that at
-                    // least one signature was made by a key id matching one of the supplied verification keys,
-                    // regardless of the signature's position in the list.
-                    if (message is PgpSignatureList pgpSignatureList)
-                    {
-                        signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                    }
-                    else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-                    {
-                        signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                    }
-                    else
-                    {
-                        isSigned = false;
-                    }
-
-                    if (isSigned)
-                    {
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = objectFactory.NextPgpObject();
-                        var literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        StreamHelper.PipeAll(unc, outputStream);
-                    }
-                    else
-                    {
-                        throw new PgpException("File was not signed.");
-                    }
-                }
-                else if (message is PgpLiteralData literalData)
-                {
-                    Stream unc = literalData.GetInputStream();
-                    StreamHelper.PipeAll(unc, outputStream);
-
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        if (encryptedDataAsymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataAsymmetric.Verify())
-                            {
-                                throw new PgpException("Message failed integrity check.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (encryptedDataSymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataSymmetric.Verify())
-                            {
-                                throw new PgpException("Message failed integrity check.");
-                            }
-                        }
-                    }
-                }
-                else
-                    throw new PgpException("File was not signed.");
-            }
-        }
+        public void DecryptAndVerify(Stream inputStream, Stream outputStream) => DecryptAndVerifyAsync(inputStream, outputStream).GetAwaiter().GetResult();
 
         /// <summary>
         /// PGP decrypt and verify a given string.
-        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message. 
+        /// This method will only work with a file that was encrypted and signed using an EncryptAndSign method as in this case the signature will be included within the encrypted message.
         /// It will not work with a file that was signed and encrypted separately in a 2 step process.
         /// </summary>
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
-        public string DecryptAndVerify(string input)
-        {
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                DecryptAndVerify(inputStream, outputStream);
-                outputStream.Seek(0, SeekOrigin.Begin);
-                return outputStream.GetString();
-            }
-        }
+        public string DecryptAndVerify(string input) => DecryptAndVerifyAsync(input).GetAwaiter().GetResult();
 
         public string DecryptArmoredStringAndVerify(string input) => DecryptAndVerify(input);
 

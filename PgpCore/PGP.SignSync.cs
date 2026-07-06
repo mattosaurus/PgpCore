@@ -1,11 +1,6 @@
-using Org.BouncyCastle.Bcpg;
 using PgpCore.Abstractions;
-using PgpCore.Extensions;
-using PgpCore.Helpers;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace PgpCore
 {
@@ -28,35 +23,7 @@ namespace PgpCore
             bool armor = true,
             string name = null,
             IDictionary<string, string> headers = null,
-            bool oldFormat = false)
-        {
-            if (inputFile == null)
-                throw new ArgumentException("InputFile");
-            if (outputFile == null)
-                throw new ArgumentException("OutputFile");
-            if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
-            if (string.IsNullOrEmpty(name))
-                name = Path.GetFileName(inputFile.Name);
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            if (!inputFile.Exists)
-                throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
-
-            using (Stream outputStream = outputFile.OpenWrite())
-            {
-                if (armor)
-                {
-                    using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
-                    {
-                        OutputSigned(inputFile, armoredOutputStream, name, oldFormat);
-                    }
-                }
-                else
-                    OutputSigned(inputFile, outputStream, name, oldFormat);
-            }
-        }
+            bool oldFormat = false) => SignAsync(inputFile, outputFile, armor, name, headers, oldFormat).GetAwaiter().GetResult();
 
         /// <summary>
         /// Sign the stream pointed to by unencryptedFileInfo and
@@ -73,33 +40,7 @@ namespace PgpCore
             bool armor = true,
             string name = null,
             IDictionary<string, string> headers = null,
-            bool oldFormat = false)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (outputStream == null)
-                throw new ArgumentException("OutputStream");
-            if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
-            if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
-            if (string.IsNullOrEmpty(name) && inputStream is FileStream fileStream)
-                name = Path.GetFileName(fileStream.Name);
-            else if (string.IsNullOrEmpty(name))
-                name = DefaultFileName;
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            if (armor)
-            {
-                using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
-                {
-                    OutputSigned(inputStream, armoredOutputStream, name, oldFormat);
-                }
-            }
-            else
-                OutputSigned(inputStream, outputStream, name, oldFormat);
-        }
+            bool oldFormat = false) => SignAsync(inputStream, outputStream, armor, name, headers, oldFormat).GetAwaiter().GetResult();
 
         /// <summary>
         /// Sign the string
@@ -112,21 +53,7 @@ namespace PgpCore
             string input,
             string name = null,
             IDictionary<string, string> headers = null,
-            bool oldFormat = false)
-        {
-            if (string.IsNullOrEmpty(name))
-                name = DefaultFileName;
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                Sign(inputStream, outputStream, true, name, headers, oldFormat);
-                outputStream.Seek(0, SeekOrigin.Begin);
-                return outputStream.GetString();
-            }
-        }
+            bool oldFormat = false) => SignAsync(input, name, headers, oldFormat).GetAwaiter().GetResult();
 
         public void SignFile(FileInfo inputFile, FileInfo outputFile, bool armor = true, string name = null, IDictionary<string, string> headers = null, bool oldFormat = false) => Sign(inputFile, outputFile, armor, name, headers, oldFormat);
 
@@ -147,25 +74,7 @@ namespace PgpCore
         public void ClearSign(
             FileInfo inputFile,
             FileInfo outputFile,
-            IDictionary<string, string> headers = null)
-        {
-            if (inputFile == null)
-                throw new ArgumentException("InputFile");
-            if (outputFile == null)
-                throw new ArgumentException("OutputFile");
-            if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            if (!inputFile.Exists)
-                throw new FileNotFoundException($"Input file [{inputFile.Name}] does not exist.");
-
-            using (Stream outputStream = outputFile.OpenWrite())
-            {
-                OutputClearSigned(inputFile, outputStream, headers);
-            }
-        }
+            IDictionary<string, string> headers = null) => ClearSignAsync(inputFile, outputFile, headers).GetAwaiter().GetResult();
 
         /// <summary>
         /// Clear sign the provided stream
@@ -176,21 +85,7 @@ namespace PgpCore
         public void ClearSign(
             Stream inputStream,
             Stream outputStream,
-            IDictionary<string, string> headers = null)
-        {
-            if (inputStream == null)
-                throw new ArgumentException("InputStream");
-            if (outputStream == null)
-                throw new ArgumentException("OutputStream");
-            if (EncryptionKeys == null)
-                throw new ArgumentException("EncryptionKeys");
-            if (inputStream.Position != 0)
-                throw new ArgumentException("inputStream should be at start of stream");
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            OutputClearSigned(inputStream, outputStream, headers);
-        }
+            IDictionary<string, string> headers = null) => ClearSignAsync(inputStream, outputStream, headers).GetAwaiter().GetResult();
 
         /// <summary>
         /// Clear sign the provided string
@@ -199,19 +94,7 @@ namespace PgpCore
         /// <param name="headers">Optional headers to be added to the output</param>
         public string ClearSign(
             string input,
-            IDictionary<string, string> headers = null)
-        {
-            if (headers == null)
-                headers = new Dictionary<string, string>();
-
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                ClearSign(inputStream, outputStream, headers);
-                outputStream.Seek(0, SeekOrigin.Begin);
-                return outputStream.GetString();
-            }
-        }
+            IDictionary<string, string> headers = null) => ClearSignAsync(input, headers).GetAwaiter().GetResult();
 
         public void ClearSignFile(FileInfo inputFile, FileInfo outputFile, IDictionary<string, string> headers = null) => ClearSign(inputFile, outputFile, headers);
 

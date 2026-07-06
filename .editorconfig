@@ -1,0 +1,5 @@
+root = true
+
+[*.cs]
+# Require ConfigureAwait(false) in library code
+dotnet_diagnostic.CA2007.severity = warning
