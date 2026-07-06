@@ -7,6 +7,7 @@ using PgpCore.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace PgpCore
 {
@@ -71,10 +72,14 @@ namespace PgpCore
                 if (enc != null)
                 {
                     isEncrypted = true;
-                    foreach (PgpPublicKeyEncryptedData publicKeyEncryptedData in enc.GetEncryptedDataObjects())
+                    bool hasSecretKeys = EncryptionKeys?.SecretKeys != null;
+
+                    foreach (PgpPublicKeyEncryptedData publicKeyEncryptedData in enc.GetEncryptedDataObjects().OfType<PgpPublicKeyEncryptedData>())
                     {
                         isIntegrityProtected = publicKeyEncryptedData.IsIntegrityProtected();
-                        privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
+
+                        if (hasSecretKeys)
+                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
 
                         if (privateKey != null)
                         {
@@ -85,7 +90,19 @@ namespace PgpCore
                     }
 
                     if (privateKey == null)
-                        throw new ArgumentException("Decryption key for message not found.");
+                    {
+                        // Without a matching private key the encrypted container cannot be opened;
+                        // report only the properties visible from the outer packets.
+                        return new PgpInspectBaseResult(
+                            isCompressed,
+                            isEncrypted,
+                            isIntegrityProtected,
+                            isSigned,
+                            symmetricKeyAlgorithm,
+                            null,
+                            DateTime.MinValue
+                            );
+                    }
 
                     Stream clear = pbe.GetDataStream(privateKey).DisposeWith(disposables);
                     PgpObjectFactory plainFact = new PgpObjectFactory(clear);

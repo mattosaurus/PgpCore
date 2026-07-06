@@ -13,3 +13,15 @@ jobs:
     needs: build
     uses: ./.github/workflows/analyze.yml
     secrets: inherit
+  interop:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Show gpg version
+      run: gpg --version
+    - name: Run gpg interop tests
+      run: dotnet test PgpCore.Tests/PgpCore.Tests.csproj --filter "Category=Interop" --logger "console;verbosity=normal"

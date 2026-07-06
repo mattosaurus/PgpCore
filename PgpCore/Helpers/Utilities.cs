@@ -479,8 +479,7 @@ namespace PgpCore
 		/// <returns></returns>
 		public static PgpPublicKeyRingBundle ReadPublicKeyRingBundle(Stream publicKeyStream)
 		{
-			using (Stream inputStream = PgpUtilities.GetDecoderStream(publicKeyStream))
-				return new PgpPublicKeyRingBundle(inputStream);
+			return new PgpPublicKeyRingBundle(ReadAllKeyRings(publicKeyStream));
 		}
 
 		/// <summary>
@@ -490,36 +489,133 @@ namespace PgpCore
 		/// <returns></returns>
 		public static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(IEnumerable<Stream> publicKeyStreams)
 		{
-			var publicKeyBundles = publicKeyStreams.Select(ReadPublicKeyRingBundle);
-			return ReadAllKeyRings(publicKeyBundles);
+			return publicKeyStreams.SelectMany(ReadAllKeyRings).ToList();
 		}
 
 		/// <summary>
-		/// Returns all public key rings from a public key stream
+		/// Returns all public key rings from a public key stream.
+		/// Tolerates combined "key pair" style input that also contains secret key material
+		/// (e.g. a public key block and a private key block in the same file). Any secret key
+		/// rings encountered have their public parts extracted so they can be used as public keys.
 		/// </summary>
 		/// <param name="publicKeyStream"></param>
 		/// <returns></returns>
+		/// <exception cref="InvalidKeyMaterialException">When the key material cannot be parsed</exception>
 		public static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(Stream publicKeyStream)
 		{
-			var publicKeyBundles = ReadPublicKeyRingBundle(publicKeyStream);
-			return publicKeyBundles.GetKeyRings().Cast<PgpPublicKeyRing>();
-		}
+			List<PgpPublicKeyRing> publicKeyRings = new List<PgpPublicKeyRing>();
+			List<PgpSecretKeyRing> secretKeyRings = new List<PgpSecretKeyRing>();
 
-		private static IEnumerable<PgpPublicKeyRing> ReadAllKeyRings(
-			IEnumerable<PgpPublicKeyRingBundle> publicKeyRingBundles)
-		{
-			return publicKeyRingBundles.SelectMany(bundle => bundle.GetKeyRings().Cast<PgpPublicKeyRing>());
+			try
+			{
+				foreach (object pgpObject in ReadAllPgpObjects(publicKeyStream))
+				{
+					if (pgpObject is PgpPublicKeyRing publicKeyRing)
+						publicKeyRings.Add(publicKeyRing);
+					else if (pgpObject is PgpSecretKeyRing secretKeyRing)
+						secretKeyRings.Add(secretKeyRing);
+					// Any other objects (markers, signatures, etc.) are skipped.
+				}
+			}
+			catch (Exception ex) when (!(ex is PgpCoreException))
+			{
+				throw new InvalidKeyMaterialException("Failed to parse the supplied public key material.", ex);
+			}
+
+			// Derive public key rings from any secret key rings whose public part was not
+			// supplied separately (e.g. a private key passed as public key input).
+			foreach (PgpSecretKeyRing secretKeyRing in secretKeyRings)
+			{
+				long masterKeyId = secretKeyRing.GetPublicKey().KeyId;
+				if (publicKeyRings.All(keyRing => keyRing.GetPublicKey().KeyId != masterKeyId))
+					publicKeyRings.Add(ExtractPublicKeyRing(secretKeyRing));
+			}
+
+			return publicKeyRings;
 		}
 
 		/// <summary>
-		/// Returns the secret key ring bundle from a private key stream
+		/// Returns the secret key ring bundle from a private key stream.
+		/// Tolerates combined "key pair" style input that also contains public key material
+		/// (e.g. a public key block and a private key block in the same file); any non-secret
+		/// objects are skipped.
 		/// </summary>
 		/// <param name="privateKeyStream"></param>
 		/// <returns></returns>
+		/// <exception cref="InvalidKeyMaterialException">When the key material cannot be parsed or contains no secret keys</exception>
 		public static PgpSecretKeyRingBundle ReadSecretKeyRingBundle(Stream privateKeyStream)
 		{
-			using (Stream inputStream = PgpUtilities.GetDecoderStream(privateKeyStream))
-				return new PgpSecretKeyRingBundle(inputStream);
+			List<PgpSecretKeyRing> secretKeyRings = new List<PgpSecretKeyRing>();
+
+			try
+			{
+				foreach (object pgpObject in ReadAllPgpObjects(privateKeyStream))
+				{
+					if (pgpObject is PgpSecretKeyRing secretKeyRing)
+					{
+						long masterKeyId = secretKeyRing.GetPublicKey().KeyId;
+						if (secretKeyRings.All(keyRing => keyRing.GetPublicKey().KeyId != masterKeyId))
+							secretKeyRings.Add(secretKeyRing);
+					}
+					// Public key rings and any other objects are skipped.
+				}
+			}
+			catch (Exception ex) when (!(ex is PgpCoreException))
+			{
+				throw new InvalidKeyMaterialException("Failed to parse the supplied private key material.", ex);
+			}
+
+			if (secretKeyRings.Count == 0)
+				throw new InvalidKeyMaterialException("No PGP secret keys found in the supplied key material.");
+
+			return new PgpSecretKeyRingBundle(secretKeyRings);
+		}
+
+		/// <summary>
+		/// Reads every top level PGP object from the supplied stream. A single stream may contain
+		/// multiple consecutive armor blocks (e.g. a public key block followed by a private key
+		/// block, as produced by concatenating "gpg --export" and "gpg --export-secret-keys"
+		/// output, or by tools such as GoAnywhere PGP Studio). ArmoredInputStream reports
+		/// end-of-stream at each armor block boundary, so a new PgpObjectFactory is constructed
+		/// repeatedly until no further objects can be read.
+		/// </summary>
+		private static List<object> ReadAllPgpObjects(Stream inputStream)
+		{
+			List<object> pgpObjects = new List<object>();
+			Stream decoderStream = PgpUtilities.GetDecoderStream(inputStream);
+
+			bool objectsRead = true;
+			while (objectsRead)
+			{
+				objectsRead = false;
+				PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(decoderStream);
+				object pgpObject;
+				while ((pgpObject = pgpObjectFactory.NextPgpObject()) != null)
+				{
+					objectsRead = true;
+					pgpObjects.Add(pgpObject);
+				}
+			}
+
+			return pgpObjects;
+		}
+
+		/// <summary>
+		/// Builds a public key ring from the public parts of a secret key ring.
+		/// </summary>
+		private static PgpPublicKeyRing ExtractPublicKeyRing(PgpSecretKeyRing secretKeyRing)
+		{
+			using (MemoryStream memoryStream = new MemoryStream())
+			{
+				foreach (PgpSecretKey secretKey in secretKeyRing.GetSecretKeys())
+					secretKey.PublicKey.Encode(memoryStream);
+
+				foreach (PgpPublicKey extraPublicKey in secretKeyRing.GetExtraPublicKeys())
+					extraPublicKey.Encode(memoryStream);
+
+				memoryStream.Position = 0;
+				return new PgpPublicKeyRing(memoryStream);
+			}
 		}
 
 		/// <summary>

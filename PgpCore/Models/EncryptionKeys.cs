@@ -39,6 +39,10 @@ namespace PgpCore
 
 		private readonly byte[] _passPhrase;
 
+		// Set only when the keys were assembled from multiple private-key sources that may each
+		// carry a different passphrase. Maps a secret key id to the passphrase for its source.
+		private readonly Func<long, byte[]> _passPhraseResolver;
+
 		private Lazy<IEnumerable<PgpPublicKey>> _encryptKeys;
 		private Lazy<IEnumerable<PgpPublicKey>> _verificationKeys;
 		private Lazy<PgpPublicKey> _masterKey;
@@ -397,6 +401,37 @@ namespace PgpCore
 
 		#endregion Stream Constructors (Multiple Public + Private)
 
+		#region Builder Constructor
+
+		/// <summary>
+		/// Assembles keys from pre-parsed material. Used by <see cref="EncryptionKeysBuilder"/> to
+		/// support multiple public and private key sources (each private source potentially carrying
+		/// its own passphrase) and an explicit preferred encryption key.
+		/// </summary>
+		internal EncryptionKeys(
+			IReadOnlyCollection<PgpPublicKeyRing> publicKeyRings,
+			PgpSecretKeyRingBundle secretKeys,
+			Func<long, byte[]> passPhraseResolver,
+			byte[] symmetricKey,
+			long? preferredEncryptionKeyId)
+		{
+			SymmetricKey = symmetricKey;
+			_passPhraseResolver = passPhraseResolver;
+
+			if (secretKeys != null)
+				_secretKeys = new Lazy<PgpSecretKeyRingBundle>(() => secretKeys);
+
+			if (publicKeyRings != null && publicKeyRings.Count > 0)
+				InitializeKeys(publicKeyRings);
+			else
+				InitializeKeys();
+
+			if (preferredEncryptionKeyId.HasValue && publicKeyRings != null && publicKeyRings.Count > 0)
+				UseEncryptionKey(preferredEncryptionKeyId.Value);
+		}
+
+		#endregion Builder Constructor
+
 		#region Symmetric Key Only Constructor
 
 		/// <summary>
@@ -634,9 +669,10 @@ namespace PgpCore
 
 		private PgpPrivateKey ExtractPrivateKey(PgpSecretKey secretKey)
 		{
+			byte[] passPhrase = _passPhraseResolver != null ? _passPhraseResolver(secretKey.KeyId) : _passPhrase;
 			try
 			{
-				return secretKey.ExtractPrivateKeyRaw(_passPhrase);
+				return secretKey.ExtractPrivateKeyRaw(passPhrase);
 			}
 			catch (PgpException ex) when (ex.Message != null && ex.Message.IndexOf("checksum mismatch", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
@@ -675,8 +711,16 @@ namespace PgpCore
 					Utilities.FindMasterKey(keyRings.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
 					keyRings.Select(Utilities.FindBestEncryptionKey).ToArray());
+				// Include every key in each ring so signatures made by any subkey can be matched
+				// by key id, while keeping the best verification key first for consumers that
+				// only look at the primary key.
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					keyRings.Select(Utilities.FindBestVerificationKey).ToArray());
+					keyRings.SelectMany(keyRing =>
+					{
+						PgpPublicKey bestKey = Utilities.FindBestVerificationKey(keyRing);
+						return new[] { bestKey }.Concat(
+							keyRing.GetPublicKeys().Cast<PgpPublicKey>().Where(key => key.KeyId != bestKey.KeyId));
+					}).ToArray());
 			}
 
 			if (_secretKeys != null)
