@@ -90,16 +90,16 @@ namespace PgpCore
             PgpObjectFactory factory = new PgpObjectFactory(encodedFile);
             PgpObject pgpObject = factory.NextPgpObject();
 
-            if (pgpObject is PgpCompressedData)
+            // A signed message is wrapped in a compression packet whenever compression is enabled
+            // (the default). Unwrap it so the inner one-pass-signature / signature packet drives
+            // verification, rather than mistaking the compressed container for encrypted data.
+            if (pgpObject is PgpCompressedData compressedData)
             {
-                PgpPublicKeyEncryptedData publicKeyEncryptedData = Utilities.ExtractPublicKeyEncryptedData(encodedFile);
-
-                // Verify against public key ID and that of any sub keys
-                var keyIdToVerify = publicKeyEncryptedData.KeyId;
-                verified = Utilities.FindPublicKey(keyIdToVerify, EncryptionKeys.VerificationKeys,
-                    out PgpPublicKey _);
+                factory = new PgpObjectFactory(compressedData.GetDataStream());
+                pgpObject = factory.NextPgpObject();
             }
-            else if (pgpObject is PgpEncryptedDataList dataList)
+
+            if (pgpObject is PgpEncryptedDataList dataList)
             {
                 if (throwIfEncrypted)
                 {

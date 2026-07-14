@@ -17,15 +17,12 @@ namespace PgpCore
 {
 	public partial class PGP : IPGP
 	{
-		public static PGP Instance => _instance ?? (_instance = new PGP());
-		private static PGP _instance;
-
 		private const int BufferSize = 0x10000;
 		private const string DefaultFileName = "name";
 
-		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Uncompressed;
+		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Zip;
 
-		public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.TripleDes;
+		public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.Aes256;
 
 		public int PgpSignatureType { get; set; } = PgpSignature.DefaultCertification;
 
@@ -33,7 +30,7 @@ namespace PgpCore
 
 		public PGPFileType FileType { get; set; } = PGPFileType.Binary;
 
-		public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha1;
+		public HashAlgorithmTag HashAlgorithmTag { get; set; } = HashAlgorithmTag.Sha256;
 
 		public IEncryptionKeys EncryptionKeys { get; private set; }
 
@@ -142,6 +139,7 @@ namespace PgpCore
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
 
+				bool anyLineWritten = false;
 				while (streamReader.Peek() >= 0)
 				{
 					string line = await streamReader.ReadLineAsync().ConfigureAwait(false);
@@ -159,12 +157,25 @@ namespace PgpCore
 					armoredOutputStream.Write((byte)'\r');
 					armoredOutputStream.Write((byte)'\n');
 
+					anyLineWritten = true;
+
 					// Update signature with line breaks unless we're on the last line
 					if (streamReader.Peek() >= 0)
 					{
 						pgpSignatureGenerator.Update((byte)'\r');
 						pgpSignatureGenerator.Update((byte)'\n');
 					}
+				}
+
+				// Empty content still needs a single (empty) cleartext line. Without one the armor has
+				// an empty cleartext region that BouncyCastle's ArmoredInputStream cannot parse on the
+				// way back in (VerifyClear throws "invalid header encountered"). gpg emits exactly this
+				// empty line when clear-signing an empty file, so matching it keeps interop intact. The
+				// signature is left covering zero canonical bytes, which is correct for a lone empty line.
+				if (!anyLineWritten)
+				{
+					armoredOutputStream.Write((byte)'\r');
+					armoredOutputStream.Write((byte)'\n');
 				}
 
 				armoredOutputStream.EndClearText();

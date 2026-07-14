@@ -19,10 +19,6 @@ namespace PgpCore.Abstractions
         PgpPrivateKey SigningPrivateKey { get; }
         PgpSecretKey SigningSecretKey { get; }
         PgpPublicKey MasterKey { get; }
-        [Obsolete("This property is obsolete and will be removed in a future release. Use the MasterKey or EncryptKeys.FirstOrDefault() properties instead.")]
-        PgpPublicKey PublicKey { get; }
-        [Obsolete("This property is obsolete and will be removed in a future release. Use the MasterKey and EncryptKeys properties instead.")]
-        IEnumerable<PgpPublicKey> PublicKeys { get; }
         PgpPrivateKey PrivateKey { get; }
         PgpSecretKey SecretKey { get; }
         PgpSecretKeyRingBundle SecretKeys { get; }

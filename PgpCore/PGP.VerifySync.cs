@@ -70,25 +70,6 @@ namespace PgpCore
         /// <param name="input">Clear signed string to be verified</param>
         public bool VerifyClear(string input) => VerifyClearAsync(input).GetAwaiter().GetResult();
 
-        /// <summary>
-        /// PGP verify a given string.
-        /// </summary>
-        /// <param name="input">Plain string to be verified</param>
-        /// <param name="output">Has no effect. C# strings are passed by value, so the verified clear text can never reach the caller through this parameter.</param>
-        [Obsolete("The output parameter cannot be returned to the caller. Use VerifyAndReadClearArmoredStringAsync/VerifyAndReadClearArmoredString instead.")]
-        public bool VerifyClear(string input, string output)
-        {
-            using (Stream inputStream = input.GetStream())
-            using (Stream outputStream = new MemoryStream())
-            {
-                bool verified = VerifyClear(inputStream, outputStream);
-
-                outputStream.Seek(0, SeekOrigin.Begin);
-                output = outputStream.GetString();
-                return verified;
-            }
-        }
-
         public bool VerifyClearFile(FileInfo inputFile) => VerifyClear(inputFile, null);
 
         public bool VerifyClearStream(Stream inputStream) => VerifyClear(inputStream, null);

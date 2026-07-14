@@ -377,6 +377,44 @@ namespace PgpCore.Tests.UnitTests.Interop
 
         [GpgFact]
         [Trait("Category", "Interop")]
+        public void PgpCoreClearSignEmptyContent_GpgVerify_ShouldReportValidSignature()
+        {
+            // Arrange - empty content must still produce a clear-signed message gpg can verify. The
+            // signer emits a single empty cleartext line (matching gpg's own behaviour for empty files).
+            TestFactory testFactory = new TestFactory();
+            string homeDir = GpgRunner.CreateHomeDir();
+
+            try
+            {
+                testFactory.Arrange(KeyType.Generated, FileType.Known);
+                EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+                PGP pgp = new PGP(signingKeys);
+
+                string contentFilePath = Path.Combine(homeDir, "content.txt");
+                File.WriteAllText(contentFilePath, string.Empty);
+                string clearSignedFilePath = Path.Combine(homeDir, "clearsigned.asc");
+
+                // Act
+                pgp.ClearSign(new FileInfo(contentFilePath), new FileInfo(clearSignedFilePath));
+
+                GpgResult importPublic = GpgRunner.Run(homeDir, null,
+                    "--import", testFactory.PublicKeyFileInfo.FullName);
+                GpgResult verify = GpgRunner.Run(homeDir, null,
+                    "--verify", clearSignedFilePath);
+
+                // Assert
+                importPublic.ExitCode.Should().Be(0, "gpg should import the PgpCore public key: {0}", importPublic.Details);
+                verify.ExitCode.Should().Be(0, "gpg should verify the PgpCore clear-signed empty file: {0}", verify.Details);
+            }
+            finally
+            {
+                GpgRunner.DeleteHomeDir(homeDir);
+                testFactory.Teardown();
+            }
+        }
+
+        [GpgFact]
+        [Trait("Category", "Interop")]
         public void PgpCoreGeneratedKey_GpgImport_ShouldSucceed()
         {
             // Arrange

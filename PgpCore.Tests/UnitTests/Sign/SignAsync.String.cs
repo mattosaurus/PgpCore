@@ -276,6 +276,40 @@ namespace PgpCore.Tests.UnitTests.Sign
         }
 
         [Theory]
+        [InlineData(KeyType.Generated)]
+        [InlineData(KeyType.Known)]
+        [InlineData(KeyType.KnownGpg)]
+        [InlineData(KeyType.Symmetric)]
+        // Empty content must survive the ClearSign -> VerifyClear round trip. The signer has to emit a
+        // single empty cleartext line (as gpg does) so the armor has a non-empty cleartext region;
+        // otherwise VerifyClear throws "invalid header encountered".
+        public async Task ClearSignAsync_SignEmptyMessage_ShouldSignAndVerify(KeyType keyType)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            await testFactory.ArrangeAsync(keyType, FileType.Known);
+            EncryptionKeys signingKeys = new EncryptionKeys(testFactory.PrivateKey, testFactory.Password) { SymmetricKey = testFactory.SymmetricKey };
+            EncryptionKeys verificationKeys = new EncryptionKeys(testFactory.PublicKey) { SymmetricKey = testFactory.SymmetricKey };
+            PGP pgpSign = new PGP(signingKeys);
+            PGP pgpVerify = new PGP(verificationKeys);
+
+            // Act
+            string signedContent = await pgpSign.ClearSignAsync(string.Empty);
+            bool verified = await pgpVerify.VerifyClearAsync(signedContent);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                verified.Should().BeTrue();
+                signedContent.Should().Contain("BEGIN PGP SIGNED MESSAGE");
+                signedContent.Should().Contain("BEGIN PGP SIGNATURE");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Theory]
         // Issue #306 - consecutive newlines anywhere in the message must survive the
         // ClearSign -> VerifyClear round trip.
         [InlineData(KeyType.Generated, "foo\nbar\n\n")]
