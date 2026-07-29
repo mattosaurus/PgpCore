@@ -52,6 +52,31 @@ namespace PgpCore.Tests.UnitTests
         }
 
         /// <summary>
+        /// Wraps a stream and reports CanSeek false, like a NetworkStream. Reading Position or Length, or
+        /// seeking, throws just as it would on a genuinely forward-only stream.
+        /// </summary>
+        public sealed class NonSeekableStream : Stream
+        {
+            private readonly Stream _inner;
+            public NonSeekableStream(Stream inner) => _inner = inner;
+
+            public override bool CanRead => _inner.CanRead;
+            public override bool CanSeek => false;
+            public override bool CanWrite => _inner.CanWrite;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() => _inner.Flush();
+            public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => _inner.Write(buffer, offset, count);
+        }
+
+        /// <summary>
         /// Asserts that a generated key records a sensible creation time - not in the future, and recent
         /// rather than an epoch or otherwise bogus value.
         /// <para>

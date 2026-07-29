@@ -151,5 +151,65 @@ namespace PgpCore.Tests.UnitTests.Keys
 
             return keyRingGen.GeneratePublicKeyRing();
         }
+
+        [Fact]
+        public void UseEncryptionKey_WithAKeyIdInTheKeyRing_ShouldSelectThatKey()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            EncryptionKeys keys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+            long encryptionKeyId = keys.EncryptKeys.First().KeyId;
+
+            // Act
+            keys.UseEncryptionKey(encryptionKeyId);
+
+            // Assert
+            keys.PublicKeyRings.Should().OnlyContain(ring =>
+                ring.PreferredEncryptionKey != null && ring.PreferredEncryptionKey.KeyId == encryptionKeyId);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void UseEncryptionKey_WithAKeyIdThatIsNotInTheKeyRing_ShouldThrow()
+        {
+            // Arrange - silently ignoring the request meant encryption continued with the automatically
+            // chosen key, so a caller pinning a specific key had no way to know it had not been honoured.
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Known, FileType.Known);
+            EncryptionKeys keys = new EncryptionKeys(testFactory.PublicKeyFileInfo);
+
+            // Act
+            Action act = () => keys.UseEncryptionKey(0x0123456789ABCDEF);
+
+            // Assert
+            act.Should().Throw<MissingKeyException>()
+                .Which.Message.Should().Contain("123456789ABCDEF");
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        [Fact]
+        public void UseEncryptionKey_WithNoPublicKeyMaterial_ShouldThrow()
+        {
+            // Arrange - a symmetric-only EncryptionKeys has no key rings to search at all.
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange(KeyType.Symmetric, FileType.Known);
+            EncryptionKeys keys = new EncryptionKeysBuilder()
+                .WithSymmetricKey(testFactory.SymmetricKey)
+                .Build();
+
+            // Act
+            Action act = () => keys.UseEncryptionKey(0x0123456789ABCDEF);
+
+            // Assert
+            act.Should().Throw<MissingKeyException>();
+
+            // Teardown
+            testFactory.Teardown();
+        }
     }
 }

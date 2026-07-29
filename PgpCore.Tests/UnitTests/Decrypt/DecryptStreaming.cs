@@ -12,29 +12,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
     /// </summary>
     public class DecryptStreaming : TestBase
     {
-        /// <summary>
-        /// Wraps a stream and reports CanSeek false, like a NetworkStream.
-        /// </summary>
-        private sealed class NonSeekableStream : Stream
-        {
-            private readonly Stream _inner;
-            public NonSeekableStream(Stream inner) => _inner = inner;
-
-            public override bool CanRead => _inner.CanRead;
-            public override bool CanSeek => false;
-            public override bool CanWrite => _inner.CanWrite;
-            public override long Length => throw new System.NotSupportedException();
-            public override long Position
-            {
-                get => throw new System.NotSupportedException();
-                set => throw new System.NotSupportedException();
-            }
-            public override void Flush() => _inner.Flush();
-            public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
-            public override long Seek(long offset, SeekOrigin origin) => throw new System.NotSupportedException();
-            public override void SetLength(long value) => throw new System.NotSupportedException();
-            public override void Write(byte[] buffer, int offset, int count) => _inner.Write(buffer, offset, count);
-        }
+        // NonSeekableStream lives on TestBase so the verify tests can use it too.
 
         [Theory]
         [InlineData(true)]

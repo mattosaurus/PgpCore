@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg.Sig;
-using PgpCore.Helpers;
 using PgpCore.Extensions;
 
 namespace PgpCore
@@ -679,9 +678,6 @@ namespace PgpCore
 			return pgpObjects;
 		}
 
-		/// <summary>
-		/// Builds a public key ring from the public parts of a secret key ring.
-		/// </summary>
 		/// <summary>
 		/// Builds the public key ring corresponding to a secret key ring. A secret key ring carries its own
 		/// public key material, so this allows public keys to be derived when only a private key is supplied.
