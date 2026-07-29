@@ -38,8 +38,9 @@ namespace PgpCore.Tests.UnitTests.Recipient
 
                 using (Stream publicKeyStream = testFactory.PublicKeyFileInfo.OpenRead())
                 {
-                    PgpPublicKey publicKey = ReadPublicKey(publicKeyStream);
-                    recipients.Single().Should().Be(publicKey.KeyId);
+                    // Encryption targets the ring's encryption key, which for a generated key is the
+                    // subkey rather than the master (#285).
+                    recipients.Single().Should().BeOneOf(ReadPublicKeyIds(publicKeyStream));
                 }
             }
 
@@ -70,17 +71,19 @@ namespace PgpCore.Tests.UnitTests.Recipient
                 recipients.Should().NotBeEmpty();
                 recipients.Should().HaveCount(2);
 
+                // One recipient per key ring, each being that ring's encryption key - the subkey for a
+                // generated key rather than the master (#285).
+                long[] firstRingKeyIds;
+                long[] secondRingKeyIds;
+
                 using (Stream publicKeyStream = testFactory1.PublicKeyFileInfo.OpenRead())
-                {
-                    PgpPublicKey publicKey = ReadPublicKey(publicKeyStream);
-                    recipients.Should().Contain(publicKey.KeyId);
-                }
+                    firstRingKeyIds = ReadPublicKeyIds(publicKeyStream);
 
                 using (Stream publicKeyStream = testFactory2.PublicKeyFileInfo.OpenRead())
-                {
-                    PgpPublicKey publicKey = ReadPublicKey(publicKeyStream);
-                    recipients.Should().Contain(publicKey.KeyId);
-                }
+                    secondRingKeyIds = ReadPublicKeyIds(publicKeyStream);
+
+                recipients.Should().ContainSingle(id => firstRingKeyIds.Contains(id));
+                recipients.Should().ContainSingle(id => secondRingKeyIds.Contains(id));
             }
 
             // Teardown

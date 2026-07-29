@@ -1,4 +1,6 @@
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Org.BouncyCastle.Bcpg;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -442,6 +444,77 @@ namespace PgpCore.Tests.UnitTests.Interop
             {
                 GpgRunner.DeleteHomeDir(homeDir);
                 testFactory.Teardown();
+            }
+        }
+
+        /// <summary>
+        /// GenerateKey emits a certify/sign master key plus an encryption subkey (#285). gpg is the
+        /// authority on whether that subkey - and in particular the X25519 subkey paired with an Ed25519
+        /// master - is encoded correctly, so each supported algorithm is imported into gpg, used by gpg to
+        /// encrypt, and then decrypted back with PgpCore.
+        /// </summary>
+        [GpgFact]
+        [Trait("Category", "Interop")]
+        public void PgpCoreGeneratedKeyWithSubKey_GpgEncrypt_PgpCoreShouldDecrypt()
+        {
+            foreach (PublicKeyAlgorithmTag algorithm in new[]
+                     {
+                         PublicKeyAlgorithmTag.RsaGeneral,
+                         PublicKeyAlgorithmTag.EdDsa,
+                         PublicKeyAlgorithmTag.ECDsa,
+                     })
+            {
+                TestFactory testFactory = new TestFactory();
+                string homeDir = GpgRunner.CreateHomeDir();
+
+                try
+                {
+                    testFactory.Arrange();
+
+                    PGP pgpGenerate = new PGP { PublicKeyAlgorithm = algorithm };
+                    pgpGenerate.GenerateKey(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo,
+                        testFactory.UserName, testFactory.Password, strength: 2048, certainty: 12);
+
+                    string plainPath = Path.Combine(testFactory.ContentDirectory, "interop-plain.txt");
+                    string encryptedPath = Path.Combine(testFactory.ContentDirectory, "interop-encrypted.asc");
+                    const string expected = "gpg encrypted to a PgpCore subkey";
+                    File.WriteAllText(plainPath, expected);
+
+                    // Act
+                    GpgResult importPublic = GpgRunner.Run(homeDir, null,
+                        "--import", testFactory.PublicKeyFileInfo.FullName);
+                    GpgResult listKeys = GpgRunner.Run(homeDir, null, "--list-keys");
+                    GpgResult encrypt = GpgRunner.Run(homeDir, null,
+                        "--armor", "--recipient", testFactory.UserName,
+                        "--output", encryptedPath, "--encrypt", plainPath);
+
+                    // Assert
+                    using (new AssertionScope())
+                    {
+                        importPublic.ExitCode.Should().Be(0,
+                            "gpg should import the {0} public key: {1}", algorithm, importPublic.Details);
+                        listKeys.StdOut.Should().Contain("sub",
+                            "gpg should report an encryption subkey for the {0} key: {1}", algorithm, listKeys.Details);
+                        encrypt.ExitCode.Should().Be(0,
+                            "gpg should encrypt to the {0} encryption subkey: {1}", algorithm, encrypt.Details);
+                    }
+
+                    if (encrypt.ExitCode == 0)
+                    {
+                        string decryptedPath = Path.Combine(testFactory.ContentDirectory, "interop-decrypted.txt");
+                        EncryptionKeys decryptionKeys = new EncryptionKeys(testFactory.PrivateKeyFileInfo, testFactory.Password);
+                        PGP pgpDecrypt = new PGP(decryptionKeys);
+                        pgpDecrypt.DecryptFile(new FileInfo(encryptedPath), new FileInfo(decryptedPath));
+
+                        File.ReadAllText(decryptedPath).Trim().Should().Be(expected,
+                            "PgpCore should decrypt what gpg encrypted to the {0} subkey", algorithm);
+                    }
+                }
+                finally
+                {
+                    GpgRunner.DeleteHomeDir(homeDir);
+                    testFactory.Teardown();
+                }
             }
         }
     }

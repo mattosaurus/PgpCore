@@ -50,6 +50,24 @@ namespace PgpCore.Tests.UnitTests
             }
         }
 
+        /// <summary>
+        /// Returns every public key id in the supplied key material. Generated keys are a master key plus
+        /// an encryption subkey, so a message may legitimately be encrypted to either (#285).
+        /// </summary>
+        public static long[] ReadPublicKeyIds(Stream inputStream)
+        {
+            List<long> keyIds = new List<long>();
+            PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(inputStream));
+            foreach (PgpPublicKeyRing kRing in pgpPub.GetKeyRings())
+            {
+                foreach (PgpPublicKey k in kRing.GetPublicKeys())
+                {
+                    keyIds.Add(k.KeyId);
+                }
+            }
+            return keyIds.ToArray();
+        }
+
         public static PgpPublicKey ReadPublicKey(Stream inputStream)
         {
             PgpPublicKeyRingBundle pgpPub = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(inputStream));

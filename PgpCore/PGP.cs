@@ -317,10 +317,15 @@ namespace PgpCore
 			return PgpLiteralData.Binary;
 		}
 
-		private void ExportKeyPair(
+		/// <summary>
+		/// Writes a generated key as complete secret and public key rings. Exporting a single key pair
+		/// would silently drop the encryption subkey that accompanies the master key (GitHub issue #285).
+		/// </summary>
+		private void ExportKeyRing(
 			Stream secretOut,
 			Stream publicOut,
-			PgpSecretKey secretKey,
+			PgpSecretKeyRing secretKeyRing,
+			PgpPublicKeyRing publicKeyRing,
 			bool armor,
 			bool emitVersion)
 		{
@@ -328,6 +333,10 @@ namespace PgpCore
 				throw new ArgumentNullException(nameof(secretOut));
 			if (publicOut == null)
 				throw new ArgumentNullException(nameof(publicOut));
+			if (secretKeyRing == null)
+				throw new ArgumentNullException(nameof(secretKeyRing));
+			if (publicKeyRing == null)
+				throw new ArgumentNullException(nameof(publicKeyRing));
 
 			ArmoredOutputStream secretOutArmored;
 			if (armor)
@@ -345,7 +354,7 @@ namespace PgpCore
 				secretOutArmored = null;
 			}
 
-			secretKey.Encode(secretOut);
+			secretKeyRing.Encode(secretOut);
 
 			secretOutArmored?.Dispose();
 
@@ -365,9 +374,7 @@ namespace PgpCore
 				publicOutArmored = null;
 			}
 
-			PgpPublicKey key = secretKey.PublicKey;
-
-			key.Encode(publicOut);
+			publicKeyRing.Encode(publicOut);
 
 			publicOutArmored?.Dispose();
 		}
