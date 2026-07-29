@@ -640,11 +640,6 @@ namespace PgpCore
 		}
 
 		/// <summary>
-		/// This method will try to find the key with the given keyId in a key ring and set it as the preferred key.
-		/// If it cannot find the key, it will not change the preferred key.
-		/// </summary>
-		/// <param name="keyId">The keyId to find.</param>
-		/// <summary>
 		/// Selects the key with the given key id as the encryption key for every supplied public key ring.
 		/// </summary>
 		/// <param name="keyId">Key id of the encryption key to use.</param>
