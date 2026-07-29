@@ -13,6 +13,11 @@ namespace PgpCore
 {
     public partial class PGP : IDecryptAsync
     {
+        private const string NotEncryptedDataMessage = "Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.";
+
+        /// <summary>Size of the buffer used to hash literal data while verifying a signature.</summary>
+        private const int VerificationBufferSize = 16 * 1024;
+
         #region DecryptAsync
 
         /// <summary>
@@ -54,8 +59,18 @@ namespace PgpCore
             if (inputStream.CanSeek && inputStream.Length - inputStream.Position == 0)
                 return;
 
-            // Input produced by chunked/appended encryption is a concatenation of complete PGP
-            // messages (possibly in successive armor blocks); decrypt each in turn.
+            await ProcessMessagesAsync(inputStream, outputStream, DecryptMessageAsync).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Invokes <paramref name="processMessageAsync"/> for every complete PGP message in
+        /// <paramref name="inputStream"/>. Input produced by chunked or appended encryption is a
+        /// concatenation of complete PGP messages (possibly in successive armor blocks), so stopping
+        /// after the first message would silently discard the remainder of the data.
+        /// </summary>
+        private async Task ProcessMessagesAsync(Stream inputStream, Stream outputStream,
+            Func<PgpEncryptedDataList, PgpObject, Stream, Task> processMessageAsync)
+        {
             Stream decoderStream = Utilities.GetDecoderStream(inputStream);
             bool anyMessageProcessed = false;
             int consecutiveEmptyPasses = 0;
@@ -100,7 +115,7 @@ namespace PgpCore
                         break; // tolerate trailing non-message data after valid messages
 
                     // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
-                    throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
+                    throw new NotEncryptedDataException(NotEncryptedDataMessage, ex);
                 }
 
                 // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
@@ -108,15 +123,15 @@ namespace PgpCore
                 {
                     if (anyMessageProcessed)
                         break;
-                    throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
+                    throw new NotEncryptedDataException(NotEncryptedDataMessage);
                 }
 
-                await DecryptMessageAsync(enc, message, outputStream).ConfigureAwait(false);
+                await processMessageAsync(enc, message, outputStream).ConfigureAwait(false);
                 anyMessageProcessed = true;
             }
 
             if (!anyMessageProcessed)
-                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
+                throw new NotEncryptedDataException(NotEncryptedDataMessage);
         }
 
         private async Task DecryptMessageAsync(PgpEncryptedDataList enc, PgpObject message, Stream outputStream)
@@ -288,40 +303,27 @@ namespace PgpCore
         /// <param name="outputStream">Output PGP decrypted and verified stream</param>
         public async Task DecryptAndVerifyAsync(Stream inputStream, Stream outputStream)
         {
-            PgpObjectFactory objFactory = new PgpObjectFactory(Utilities.GetDecoderStream(inputStream));
+            if (inputStream == null)
+                throw new ArgumentNullException(nameof(inputStream));
+            if (outputStream == null)
+                throw new ArgumentNullException(nameof(outputStream));
 
-            // the first object might be a PGP marker packet.
-            PgpEncryptedDataList encryptedDataList = null;
-            PgpObject message = null;
+            await ProcessMessagesAsync(inputStream, outputStream, DecryptAndVerifyMessageAsync).ConfigureAwait(false);
+        }
 
-            try
-            {
-                PgpObject obj = objFactory.NextPgpObject();
-
-                if (obj is PgpEncryptedDataList dataList)
-                    encryptedDataList = dataList;
-                else if (obj is PgpCompressedData compressedData)
-                    message = compressedData;
-                else
-                    encryptedDataList = objFactory.NextPgpObject() as PgpEncryptedDataList;
-            }
-            catch (IOException ex)
-            {
-                // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
-                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.", ex);
-            }
-
-            // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
-            if (encryptedDataList == null && message == null)
-                throw new NotEncryptedDataException("Failed to detect encrypted content format. The input does not appear to be PGP encrypted data - it may be plain text, signed-only, or clear-signed content.");
-
+        private async Task DecryptAndVerifyMessageAsync(PgpEncryptedDataList encryptedDataList, PgpObject message, Stream outputStream)
+        {
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
                 // decrypt
                 PgpPrivateKey privateKey = null;
                 PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
                 PgpPbeEncryptedData encryptedDataSymmetric = null;
-                
+
+                // Factory that produced the current message; the signature and literal data packets that
+                // follow have to be read from the same factory.
+                PgpObjectFactory factory = null;
+
                 if (encryptedDataList != null)
                 {
                     List<long> messageKeyIds = new List<long>();
@@ -361,107 +363,184 @@ namespace PgpCore
                         throw new NoDecryptionKeyException(
                             $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
 
-                    PgpObjectFactory plainFact = new PgpObjectFactory(clear);
-
-                    message = plainFact.NextPgpObject();
-
-                    if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-                    {
-                        // A message may carry multiple signatures (e.g. signed with several keys). This is a
-                        // key-id presence check, not a cryptographic signature verification: it confirms that
-                        // at least one signature was made by a key id matching one of the supplied
-                        // verification keys, regardless of the signature's position in the list.
-                        bool signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = plainFact.NextPgpObject();
-                    }
-                    else if (message is PgpSignatureList pgpSignatureList)
-                    {
-                        bool signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = plainFact.NextPgpObject();
-                    }
-                    else if (!(message is PgpCompressedData))
-                        throw new PgpException("File was not signed.");
+                    factory = new PgpObjectFactory(clear);
+                    message = factory.NextPgpObject();
                 }
 
-                if (message is PgpCompressedData cData)
+                if (message is PgpCompressedData compressedData)
                 {
-                    Stream compDataIn = cData.GetDataStream().DisposeWith(disposables);
-                    PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
-                    message = objectFactory.NextPgpObject();
-
-                    bool isSigned = true;
-                    bool signerKeyFound = false;
-
-                    // A message may carry multiple signatures (e.g. signed with several keys). This is a
-                    // key-id presence check, not a cryptographic signature verification: it confirms that at
-                    // least one signature was made by a key id matching one of the supplied verification keys,
-                    // regardless of the signature's position in the list.
-                    if (message is PgpSignatureList pgpSignatureList)
-                    {
-                        signerKeyFound = Utilities.FindPublicKey(pgpSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                    }
-                    else if (message is PgpOnePassSignatureList pgpOnePassSignatureList)
-                    {
-                        signerKeyFound = Utilities.FindPublicKey(pgpOnePassSignatureList,
-                            EncryptionKeys.VerificationKeys, out PgpPublicKey _);
-                    }
-                    else
-                    {
-                        isSigned = false;
-                    }
-
-                    if (isSigned)
-                    {
-                        if (signerKeyFound == false)
-                            throw new PgpException("Failed to verify file.");
-
-                        message = objectFactory.NextPgpObject();
-                        var literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        throw new PgpException("File was not signed.");
-                    }
+                    Stream compDataIn = compressedData.GetDataStream().DisposeWith(disposables);
+                    factory = new PgpObjectFactory(compDataIn);
+                    message = factory.NextPgpObject();
                 }
-                else if (message is PgpLiteralData literalData)
-                {
-                    Stream unc = literalData.GetInputStream();
-                    await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
 
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        if (encryptedDataAsymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataAsymmetric.Verify() && !IgnoreIntegrityCheckFailure)
-                            {
-                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (encryptedDataSymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataSymmetric.Verify() && !IgnoreIntegrityCheckFailure)
-                            {
-                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
-                            }
-                        }
-                    }
-                }
+                if (factory == null)
+                    throw new PgpException("File was not signed.");
+
+                // The signature is verified cryptographically against the literal data as it is written
+                // out, so a signature made by an unrelated key - or over different content - fails here.
+                if (message is PgpOnePassSignatureList onePassSignatureList)
+                    await VerifyOnePassSignedDataAsync(onePassSignatureList, factory, outputStream).ConfigureAwait(false);
+                else if (message is PgpSignatureList signatureList)
+                    await VerifySignedDataAsync(signatureList, factory, outputStream).ConfigureAwait(false);
                 else
                     throw new PgpException("File was not signed.");
+
+                // The modification detection code trails the literal data, so this can only be checked
+                // once the data above has been fully consumed.
+                VerifyMessageIntegrity(encryptedDataAsymmetric, encryptedDataSymmetric);
+            }
+        }
+
+        /// <summary>
+        /// Returns the supplied verification key that made a signature with <paramref name="keyId"/>, or
+        /// null when it was not supplied. The key id must match exactly: a signature can only be verified
+        /// with the key that produced it, so the looser matching in
+        /// <see cref="Utilities.FindPublicKey(long, System.Collections.Generic.IEnumerable{PgpPublicKey}, out PgpPublicKey)"/>
+        /// (which also matches keys merely carrying a signature by that key id) is not usable here.
+        /// </summary>
+        private PgpPublicKey FindSigningKey(long keyId)
+        {
+            return EncryptionKeys.VerificationKeys?.FirstOrDefault(key => key.KeyId == keyId);
+        }
+
+        /// <summary>
+        /// Verifies a one-pass signed message, writing the literal data to <paramref name="outputStream"/>
+        /// as it is hashed. A message may carry several signatures (e.g. signed with multiple keys), so the
+        /// first one-pass signature whose key id matches a supplied verification key is used.
+        /// </summary>
+        /// <exception cref="PgpException">
+        /// When no supplied verification key made any of the signatures, when the expected packets are
+        /// missing, or when the signature does not verify against the data.
+        /// </exception>
+        private async Task VerifyOnePassSignedDataAsync(PgpOnePassSignatureList onePassSignatureList,
+            PgpObjectFactory factory, Stream outputStream)
+        {
+            PgpOnePassSignature onePassSignature = null;
+            PgpPublicKey verificationKey = null;
+
+            for (int i = 0; i < onePassSignatureList.Count; i++)
+            {
+                verificationKey = FindSigningKey(onePassSignatureList[i].KeyId);
+
+                if (verificationKey != null)
+                {
+                    onePassSignature = onePassSignatureList[i];
+                    break;
+                }
+            }
+
+            if (onePassSignature == null)
+                throw new PgpException("Failed to verify file.");
+
+            if (!(factory.NextPgpObject() is PgpLiteralData literalData))
+                throw new PgpException("Encrypted message contains a signed message - not literal data.");
+
+            onePassSignature.InitVerify(verificationKey);
+
+            Stream literalStream = literalData.GetInputStream();
+            byte[] buffer = new byte[VerificationBufferSize];
+            int bytesRead;
+
+            while ((bytesRead = await literalStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+            {
+                onePassSignature.Update(buffer, 0, bytesRead);
+                await outputStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+            }
+
+            if (!(factory.NextPgpObject() is PgpSignatureList signatureList))
+                throw new PgpException("Failed to verify file.");
+
+            // Verify only the signature matching the selected one-pass signature. Verify finalizes the
+            // stateful digest, so attempting a non-matching signature first would corrupt it and make the
+            // correct signature fail.
+            bool verified = false;
+
+            for (int i = 0; i < signatureList.Count; i++)
+            {
+                if (signatureList[i].KeyId == onePassSignature.KeyId)
+                {
+                    verified = onePassSignature.Verify(signatureList[i]);
+                    break;
+                }
+            }
+
+            if (!verified)
+                throw new PgpException("Failed to verify file.");
+        }
+
+        /// <summary>
+        /// Verifies a message whose signature precedes the literal data, writing the literal data to
+        /// <paramref name="outputStream"/> as it is hashed.
+        /// </summary>
+        /// <exception cref="PgpException">
+        /// When no supplied verification key made any of the signatures, when the expected packets are
+        /// missing, or when the signature does not verify against the data.
+        /// </exception>
+        private async Task VerifySignedDataAsync(PgpSignatureList signatureList, PgpObjectFactory factory,
+            Stream outputStream)
+        {
+            PgpSignature signature = null;
+            PgpPublicKey verificationKey = null;
+
+            for (int i = 0; i < signatureList.Count; i++)
+            {
+                verificationKey = FindSigningKey(signatureList[i].KeyId);
+
+                if (verificationKey != null)
+                {
+                    signature = signatureList[i];
+                    break;
+                }
+            }
+
+            if (signature == null)
+                throw new PgpException("Failed to verify file.");
+
+            if (!(factory.NextPgpObject() is PgpLiteralData literalData))
+                throw new PgpException("Encrypted message contains a signed message - not literal data.");
+
+            signature.InitVerify(verificationKey);
+
+            Stream literalStream = literalData.GetInputStream();
+            byte[] buffer = new byte[VerificationBufferSize];
+            int bytesRead;
+
+            while ((bytesRead = await literalStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+            {
+                signature.Update(buffer, 0, bytesRead);
+                await outputStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+            }
+
+            if (!signature.Verify())
+                throw new PgpException("Failed to verify file.");
+        }
+
+        /// <summary>
+        /// Checks the modification detection code of an encrypted message, honouring
+        /// <see cref="IgnoreIntegrityCheckFailure"/>. Must be called only after the decrypted data has
+        /// been fully read.
+        /// </summary>
+        private void VerifyMessageIntegrity(PgpPublicKeyEncryptedData encryptedDataAsymmetric,
+            PgpPbeEncryptedData encryptedDataSymmetric)
+        {
+            if (encryptedDataAsymmetric != null)
+            {
+                if (encryptedDataAsymmetric.IsIntegrityProtected()
+                    && !encryptedDataAsymmetric.Verify()
+                    && !IgnoreIntegrityCheckFailure)
+                {
+                    throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
+                }
+            }
+            else if (encryptedDataSymmetric != null)
+            {
+                if (encryptedDataSymmetric.IsIntegrityProtected()
+                    && !encryptedDataSymmetric.Verify()
+                    && !IgnoreIntegrityCheckFailure)
+                {
+                    throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
+                }
             }
         }
 
