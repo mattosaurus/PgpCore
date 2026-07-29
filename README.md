@@ -681,3 +681,11 @@ The hash algorithm to be used by the signature.
 - Sha384
 - Sha512
 - Sha224
+
+During `GenerateKey` this value is also used for the key's self-certification, where some algorithms
+require a minimum digest size: 256 bits for `EdDsa` and `ECDsa`, and at least the subgroup size for `Dsa`
+(256 bits above 1024-bit keys, otherwise 160). If the requested hash is shorter than the key algorithm
+requires, SHA-256 is used for the certification instead — a shorter digest would produce a
+self-certification that other implementations may reject, and some combinations (`MD5` with `ECDsa` or
+`Dsa`) cannot be signed by BouncyCastle at all. RSA keys have no such requirement and always use the
+requested hash.

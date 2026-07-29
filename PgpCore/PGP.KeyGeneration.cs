@@ -176,23 +176,97 @@ namespace PgpCore
         }
 
         /// <summary>
-        /// Returns the hash algorithm to use for the master key's self-certification.
-        /// EdDSA and ECDSA signatures require SHA-256 or stronger; SHA-1 produces an invalid key/signing failure.
-        /// The same applies to DSA keys large enough to use a 256 bit subgroup, where SHA-1 is too short.
-        /// For those algorithms this promotes a SHA-1 certification hash to SHA-256, while leaving RSA (and any
-        /// explicitly requested stronger hash) untouched.
+        /// Returns the hash algorithm to use for the master key's self-certification, substituting SHA-256
+        /// when the requested digest is too short for the key algorithm.
+        /// <para>
+        /// EdDSA and ECDSA over P-256 require a digest of at least 256 bits (RFC 9580 and RFC 6637), and DSA
+        /// requires a digest at least as long as its subgroup - 256 bits for the large-parameter keys
+        /// generated above <see cref="MaximumLegacyDsaStrength"/>, 160 bits otherwise (FIPS 186-4). A shorter
+        /// digest yields a self-certification that other implementations may reject, and for digests with no
+        /// registered signer combination (MD5 with ECDSA or DSA, for example) BouncyCastle fails outright with
+        /// "Signer MD5withECDSA not recognised". Comparing digest sizes covers every such digest rather than
+        /// only SHA-1, which an earlier revision special-cased.
+        /// </para>
+        /// RSA imposes no digest size requirement, so a requested hash is always honoured for RSA keys.
         /// </summary>
         private HashAlgorithmTag GetCertificationHashAlgorithm(HashAlgorithmTag requestedHash, int strength)
         {
-            bool requiresStrongHash =
-                PublicKeyAlgorithm == PublicKeyAlgorithmTag.EdDsa ||
-                PublicKeyAlgorithm == PublicKeyAlgorithmTag.ECDsa ||
-                (PublicKeyAlgorithm == PublicKeyAlgorithmTag.Dsa && strength > MaximumLegacyDsaStrength);
+            int requiredBitLength = GetRequiredCertificationHashBitLength(strength);
 
-            if (requiresStrongHash && requestedHash == HashAlgorithmTag.Sha1)
-                return HashAlgorithmTag.Sha256;
+            if (requiredBitLength == 0)
+                return requestedHash;
 
-            return requestedHash;
+            return GetHashAlgorithmBitLength(requestedHash) >= requiredBitLength
+                ? requestedHash
+                : HashAlgorithmTag.Sha256;
+        }
+
+        /// <summary>
+        /// Returns the minimum certification digest size, in bits, demanded by the configured
+        /// <see cref="PublicKeyAlgorithm"/>, or 0 when the algorithm imposes no requirement.
+        /// </summary>
+        private int GetRequiredCertificationHashBitLength(int strength)
+        {
+            switch (PublicKeyAlgorithm)
+            {
+                // Ed25519 and the fixed NIST P-256 curve used for ECDSA both require 256 bits.
+                case PublicKeyAlgorithmTag.EdDsa:
+                case PublicKeyAlgorithmTag.ECDsa:
+                    return 256;
+
+                // DSA needs a digest at least as long as its subgroup q.
+                case PublicKeyAlgorithmTag.Dsa:
+                    return strength > MaximumLegacyDsaStrength ? LargeDsaSubgroupSize : 160;
+
+                default:
+                    return 0;
+            }
+        }
+
+        /// <summary>
+        /// Returns the output size, in bits, of an OpenPGP hash algorithm, or 0 for algorithms that are
+        /// reserved, unknown, or unsupported - which are treated as too short so that a usable digest is
+        /// substituted rather than failing during signing.
+        /// </summary>
+        private static int GetHashAlgorithmBitLength(HashAlgorithmTag hashAlgorithm)
+        {
+            switch (hashAlgorithm)
+            {
+                case HashAlgorithmTag.MD5:
+                case HashAlgorithmTag.MD2:
+                case HashAlgorithmTag.MD4:
+                    return 128;
+
+                case HashAlgorithmTag.Sha1:
+                case HashAlgorithmTag.RipeMD160:
+                case HashAlgorithmTag.Haval5pass160:
+                    return 160;
+
+                case HashAlgorithmTag.Tiger192:
+                    return 192;
+
+                case HashAlgorithmTag.Sha224:
+                case HashAlgorithmTag.Sha3_224:
+                    return 224;
+
+                case HashAlgorithmTag.Sha256:
+                case HashAlgorithmTag.Sha3_256:
+                case HashAlgorithmTag.Sha3_256_Old:
+                case HashAlgorithmTag.SM3:
+                    return 256;
+
+                case HashAlgorithmTag.Sha384:
+                case HashAlgorithmTag.Sha3_384:
+                    return 384;
+
+                case HashAlgorithmTag.Sha512:
+                case HashAlgorithmTag.Sha3_512:
+                case HashAlgorithmTag.Sha3_512_Old:
+                    return 512;
+
+                default:
+                    return 0;
+            }
         }
     }
 }

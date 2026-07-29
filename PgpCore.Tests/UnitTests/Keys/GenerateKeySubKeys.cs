@@ -167,6 +167,114 @@ namespace PgpCore.Tests.UnitTests.Keys
             testFactory.Teardown();
         }
 
+        /// <summary>
+        /// Returns the hash algorithm actually used for the master key's self-certification.
+        /// </summary>
+        private static HashAlgorithmTag GetSelfCertificationHash(FileInfo publicKeyFile)
+        {
+            using Stream publicKeyStream = publicKeyFile.OpenRead();
+            PgpPublicKeyRingBundle bundle = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(publicKeyStream));
+            PgpPublicKey master = bundle.GetKeyRings().Cast<PgpPublicKeyRing>().Single()
+                .GetPublicKeys().Cast<PgpPublicKey>().Single(k => k.IsMasterKey);
+            string userId = master.GetUserIds().Cast<string>().First();
+            return master.GetSignaturesForId(userId).Cast<PgpSignature>().First().HashAlgorithm;
+        }
+
+        /// <summary>
+        /// Digests shorter than the key algorithm requires must be replaced. EdDSA and ECDSA P-256 need 256
+        /// bits, and DSA needs at least its subgroup size, so anything shorter produces a self-certification
+        /// other implementations may reject - and for MD5 with ECDSA or DSA, BouncyCastle cannot sign at all.
+        /// </summary>
+        public static TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag> ShortCertificationHashes =>
+            new TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag>
+            {
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha224 },
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha1 },
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.MD5 },
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.RipeMD160 },
+                { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha224 },
+                { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha1 },
+                { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.MD5 },
+                // DSA above the legacy limit uses a 256 bit subgroup, so 224 bits is too short.
+                { PublicKeyAlgorithmTag.Dsa, 2048, HashAlgorithmTag.Sha224 },
+                { PublicKeyAlgorithmTag.Dsa, 2048, HashAlgorithmTag.Sha1 },
+                // A 1024 bit DSA key has a 160 bit subgroup, so only digests below that are replaced.
+                { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.MD5 },
+                // Reserved and unsupported digests have no usable size and are replaced rather than
+                // being allowed to fail during signing.
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.DoubleSha },
+            };
+
+        [Theory]
+        [MemberData(nameof(ShortCertificationHashes))]
+        public async Task GenerateKeyAsync_CertificationHashTooShortForAlgorithm_ShouldUseSha256(
+            PublicKeyAlgorithmTag algorithm, int strength, HashAlgorithmTag requestedHash)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP { PublicKeyAlgorithm = algorithm, HashAlgorithmTag = requestedHash };
+
+            // Act
+            await pgp.GenerateKeyAsync(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo,
+                testFactory.UserName, testFactory.Password, strength: strength, certainty: 12);
+
+            // Assert
+            using (new AssertionScope())
+            {
+                GetSelfCertificationHash(testFactory.PublicKeyFileInfo).Should().Be(HashAlgorithmTag.Sha256);
+
+                // The substitution has to leave a working key behind, not just a well-formed one.
+                EncryptionKeys keys = new EncryptionKeys(testFactory.PublicKeyFileInfo,
+                    testFactory.PrivateKeyFileInfo, testFactory.Password);
+                PGP roundTrip = new PGP(keys);
+                string decrypted = await roundTrip.DecryptAndVerifyAsync(
+                    await roundTrip.EncryptAndSignAsync("short hash round trip"));
+                decrypted.Trim().Should().Be("short hash round trip");
+            }
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
+        /// <summary>
+        /// Digests that satisfy the algorithm's requirement must be honoured rather than silently upgraded.
+        /// </summary>
+        public static TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag> AcceptableCertificationHashes =>
+            new TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag>
+            {
+                // RSA imposes no digest size requirement at all.
+                { PublicKeyAlgorithmTag.RsaGeneral, 1024, HashAlgorithmTag.Sha224 },
+                { PublicKeyAlgorithmTag.RsaGeneral, 1024, HashAlgorithmTag.Sha1 },
+                // 160 bits is sufficient for a 1024 bit DSA key's 160 bit subgroup.
+                { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.Sha1 },
+                { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.Sha224 },
+                // Stronger than required is always kept.
+                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha512 },
+                { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha384 },
+            };
+
+        [Theory]
+        [MemberData(nameof(AcceptableCertificationHashes))]
+        public async Task GenerateKeyAsync_CertificationHashLongEnoughForAlgorithm_ShouldBeHonoured(
+            PublicKeyAlgorithmTag algorithm, int strength, HashAlgorithmTag requestedHash)
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            testFactory.Arrange();
+            PGP pgp = new PGP { PublicKeyAlgorithm = algorithm, HashAlgorithmTag = requestedHash };
+
+            // Act
+            await pgp.GenerateKeyAsync(testFactory.PublicKeyFileInfo, testFactory.PrivateKeyFileInfo,
+                testFactory.UserName, testFactory.Password, strength: strength, certainty: 12);
+
+            // Assert
+            GetSelfCertificationHash(testFactory.PublicKeyFileInfo).Should().Be(requestedHash);
+
+            // Teardown
+            testFactory.Teardown();
+        }
+
         [Fact]
         public async Task GenerateKeyAsync_EncryptionOnlyMasterAlgorithm_ShouldThrowNotSupported()
         {
