@@ -644,12 +644,29 @@ namespace PgpCore
 		/// If it cannot find the key, it will not change the preferred key.
 		/// </summary>
 		/// <param name="keyId">The keyId to find.</param>
+		/// <summary>
+		/// Selects the key with the given key id as the encryption key for every supplied public key ring.
+		/// </summary>
+		/// <param name="keyId">Key id of the encryption key to use.</param>
+		/// <exception cref="MissingKeyException">
+		/// When no supplied key ring contains an encryption key with that id. Without this the call
+		/// silently did nothing and encryption continued with the automatically chosen key.
+		/// </exception>
 		public void UseEncryptionKey(long keyId)
 		{
-			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in PublicKeyRings)
+			bool keyFound = false;
+
+			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in PublicKeyRings ?? Enumerable.Empty<PgpPublicKeyRingWithPreferredKey>())
 			{
 				publicKeyRing.UsePreferredEncryptionKey(keyId);
+
+				if (publicKeyRing.PreferredEncryptionKey != null && publicKeyRing.PreferredEncryptionKey.KeyId == keyId)
+					keyFound = true;
 			}
+
+			if (!keyFound)
+				throw new MissingKeyException(
+					$"No encryption key with id [{keyId:X}] was found in the supplied public key material.");
 		}
 
 		#endregion Public Methods
@@ -688,7 +705,37 @@ namespace PgpCore
 				IEnumerable<PgpPublicKeyRing> publicKeyRings = null,
 				bool allowEmptyPublicKeys = false) // Should only be run as the last step during construction!
 		{
-			if (publicKeyRings == null)
+			Lazy<PgpPublicKeyRing[]> keyRings;
+
+			if (publicKeyRings != null)
+			{
+				// Materialize once so stream-backed enumerables are not re-read per lazy, and so
+				// unparseable key material fails here rather than on first use.
+				PgpPublicKeyRing[] suppliedKeyRings = publicKeyRings.ToArray();
+
+				if (suppliedKeyRings.Length == 0 && !allowEmptyPublicKeys)
+					throw new InvalidKeyMaterialException("No PGP public keys found in the supplied key material.");
+
+				keyRings = new Lazy<PgpPublicKeyRing[]>(() => suppliedKeyRings);
+			}
+			else if (_secretKeys != null)
+			{
+				// No public key material was supplied, but a secret key ring carries its own public keys,
+				// so derive them rather than leaving every public key property null. Previously a
+				// private-key-only EncryptionKeys could not encrypt or verify at all, and Encrypt failed
+				// with a bare NullReferenceException (GitHub issue #316). Kept lazy so the private key
+				// stream is still only read on first use.
+				keyRings = new Lazy<PgpPublicKeyRing[]>(() =>
+					SecretKeys.GetKeyRings().Cast<PgpSecretKeyRing>()
+						.Select(Utilities.ExtractPublicKeyRing)
+						.ToArray());
+			}
+			else
+			{
+				keyRings = null;
+			}
+
+			if (keyRings == null)
 			{
 				_masterKey = new Lazy<PgpPublicKey>(() => null);
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => null);
@@ -697,23 +744,16 @@ namespace PgpCore
 			}
 			else
 			{
-				// Materialize once so stream-backed enumerables are not re-read per lazy, and so
-				// unparseable key material fails here rather than on first use.
-				PgpPublicKeyRing[] keyRings = publicKeyRings.ToArray();
-
-				if (keyRings.Length == 0 && !allowEmptyPublicKeys)
-					throw new InvalidKeyMaterialException("No PGP public keys found in the supplied key material.");
-
-				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => keyRings.Select(keyRing => new PgpPublicKeyRingWithPreferredKey(keyRing)).ToArray());
+				_publicKeyRingsWithPreferredKey = new Lazy<IEnumerable<PgpPublicKeyRingWithPreferredKey>>(() => keyRings.Value.Select(keyRing => new PgpPublicKeyRingWithPreferredKey(keyRing)).ToArray());
 				_masterKey = new Lazy<PgpPublicKey>(() =>
-					Utilities.FindMasterKey(keyRings.First()));
+					Utilities.FindMasterKey(keyRings.Value.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					keyRings.Select(Utilities.FindBestEncryptionKey).ToArray());
+					keyRings.Value.Select(Utilities.FindBestEncryptionKey).ToArray());
 				// Include every key in each ring so signatures made by any subkey can be matched
 				// by key id, while keeping the best verification key first for consumers that
 				// only look at the primary key.
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					keyRings.SelectMany(keyRing =>
+					keyRings.Value.SelectMany(keyRing =>
 					{
 						PgpPublicKey bestKey = Utilities.FindBestVerificationKey(keyRing);
 						return new[] { bestKey }.Concat(

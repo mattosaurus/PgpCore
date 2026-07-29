@@ -194,7 +194,11 @@ namespace PgpCore
                 throw new PgpException("Message is not a encrypted and signed file or simple signed file.");
 
             await outputStream.FlushAsync().ConfigureAwait(false);
-            outputStream.Seek(0, SeekOrigin.Begin);
+
+            // Rewinding is a convenience for callers passing a MemoryStream; a caller-supplied
+            // non-seekable output (an HTTP response stream, for example) cannot be rewound.
+            if (outputStream.CanSeek)
+                outputStream.Seek(0, SeekOrigin.Begin);
 
             return (verified);
         }
@@ -325,7 +329,9 @@ namespace PgpCore
                 throw new ArgumentNullException(nameof(inputStream));
             if (EncryptionKeys == null)
                 throw new ArgumentNullException(nameof(EncryptionKeys), "Verification Key not found.");
-            if (inputStream.Position != 0)
+            // Only seekable streams have a meaningful position; reading Position on a non-seekable
+            // stream such as a NetworkStream throws NotSupportedException.
+            if (inputStream.CanSeek && inputStream.Position != 0)
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             bool verified;
