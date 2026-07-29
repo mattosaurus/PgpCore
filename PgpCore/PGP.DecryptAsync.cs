@@ -198,50 +198,29 @@ namespace PgpCore
                     PgpObjectFactory objectFactory = new PgpObjectFactory(compDataIn);
                     message = objectFactory.NextPgpObject();
 
+                    // Signatures are not verified here; Decrypt only extracts the payload. Use
+                    // DecryptAndVerify to verify them.
                     if (message is PgpOnePassSignatureList || message is PgpSignatureList)
-                    {
                         message = objectFactory.NextPgpObject();
-                        var literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        PgpLiteralData literalData = (PgpLiteralData)message;
-                        Stream unc = literalData.GetInputStream();
-                        await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
-                    }
+
+                    PgpLiteralData compressedLiteralData = (PgpLiteralData)message;
+                    Stream compressedUnc = compressedLiteralData.GetInputStream();
+                    await StreamHelper.PipeAllAsync(compressedUnc, outputStream).ConfigureAwait(false);
                 }
                 else if (message is PgpLiteralData literalData)
                 {
                     Stream unc = literalData.GetInputStream();
                     await StreamHelper.PipeAllAsync(unc, outputStream).ConfigureAwait(false);
-
-                    if (encryptedDataAsymmetric != null)
-                    {
-                        if (encryptedDataAsymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataAsymmetric.Verify() && !IgnoreIntegrityCheckFailure)
-                            {
-                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (encryptedDataSymmetric.IsIntegrityProtected())
-                        {
-                            if (!encryptedDataSymmetric.Verify() && !IgnoreIntegrityCheckFailure)
-                            {
-                                throw new MessageIntegrityException("Message failed integrity check. The encrypted data may have been tampered with.");
-                            }
-                        }
-                    }
                 }
                 else if (message is PgpOnePassSignatureList)
                     throw new PgpException("Encrypted message contains a signed message - not literal data.");
                 else
                     throw new PgpException("Message is not a simple encrypted file.");
+
+                // The modification detection code trails the payload, so this can only run once the data
+                // above has been fully read. The compressed branch previously skipped the check entirely,
+                // which left tampering undetected for the compressed output v8 produces by default.
+                VerifyMessageIntegrity(encryptedDataAsymmetric, encryptedDataSymmetric);
             }
         }
 
