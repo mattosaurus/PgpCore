@@ -5,6 +5,7 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 using System.IO;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Org.BouncyCastle.Bcpg;
 
 namespace PgpCore.Tests.UnitTests.Keys
@@ -65,16 +66,16 @@ namespace PgpCore.Tests.UnitTests.Keys
                     PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
                     foreach (PgpSecretKeyRing kRing in pgpSec.GetKeyRings())
                     {
-                        foreach (PgpSecretKey k in kRing.GetSecretKeys())
-                        {
-                            if (k.IsSigningKey)
-                            {
-                                k.Should().NotBeNull();
-                                k.IsSigningKey.Should().BeTrue();
-                                k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
-                            }
-                        }
+                        // A generated key is a certify/sign master key plus an encryption subkey (#285).
+                        PgpSecretKey[] secretKeys = kRing.GetSecretKeys().Cast<PgpSecretKey>().ToArray();
+                        secretKeys.Should().HaveCount(2);
+
+                        PgpSecretKey masterKey = secretKeys.Single(k => k.IsMasterKey);
+                        masterKey.IsSigningKey.Should().BeTrue();
+                        masterKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
+
+                        PgpSecretKey encryptionSubKey = secretKeys.Single(k => !k.IsMasterKey);
+                        encryptionSubKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                     }
                 }
             }
@@ -134,16 +135,16 @@ namespace PgpCore.Tests.UnitTests.Keys
                     PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
                     foreach (PgpSecretKeyRing kRing in pgpSec.GetKeyRings())
                     {
-                        foreach (PgpSecretKey k in kRing.GetSecretKeys())
-                        {
-                            if (k.IsSigningKey)
-                            {
-                                k.Should().NotBeNull();
-                                k.IsSigningKey.Should().BeTrue();
-                                k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
-                            }
-                        }
+                        // A generated key is a certify/sign master key plus an encryption subkey (#285).
+                        PgpSecretKey[] secretKeys = kRing.GetSecretKeys().Cast<PgpSecretKey>().ToArray();
+                        secretKeys.Should().HaveCount(2);
+
+                        PgpSecretKey masterKey = secretKeys.Single(k => k.IsMasterKey);
+                        masterKey.IsSigningKey.Should().BeTrue();
+                        masterKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
+
+                        PgpSecretKey encryptionSubKey = secretKeys.Single(k => !k.IsMasterKey);
+                        encryptionSubKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                     }
                 }
             }
@@ -204,16 +205,16 @@ namespace PgpCore.Tests.UnitTests.Keys
                     PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
                     foreach (PgpSecretKeyRing kRing in pgpSec.GetKeyRings())
                     {
-                        foreach (PgpSecretKey k in kRing.GetSecretKeys())
-                        {
-                            if (k.IsSigningKey)
-                            {
-                                k.Should().NotBeNull();
-                                k.IsSigningKey.Should().BeTrue();
-                                k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
-                            }
-                        }
+                        // A generated key is a certify/sign master key plus an encryption subkey (#285).
+                        PgpSecretKey[] secretKeys = kRing.GetSecretKeys().Cast<PgpSecretKey>().ToArray();
+                        secretKeys.Should().HaveCount(2);
+
+                        PgpSecretKey masterKey = secretKeys.Single(k => k.IsMasterKey);
+                        masterKey.IsSigningKey.Should().BeTrue();
+                        masterKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
+
+                        PgpSecretKey encryptionSubKey = secretKeys.Single(k => !k.IsMasterKey);
+                        encryptionSubKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                     }
                 }
             }
@@ -275,16 +276,16 @@ namespace PgpCore.Tests.UnitTests.Keys
                     PgpSecretKeyRingBundle pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(privateKeyStream));
                     foreach (PgpSecretKeyRing kRing in pgpSec.GetKeyRings())
                     {
-                        foreach (PgpSecretKey k in kRing.GetSecretKeys())
-                        {
-                            if (k.IsSigningKey)
-                            {
-                                k.Should().NotBeNull();
-                                k.IsSigningKey.Should().BeTrue();
-                                k.IsMasterKey.Should().BeTrue();
-                                k.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
-                            }
-                        }
+                        // A generated key is a certify/sign master key plus an encryption subkey (#285).
+                        PgpSecretKey[] secretKeys = kRing.GetSecretKeys().Cast<PgpSecretKey>().ToArray();
+                        secretKeys.Should().HaveCount(2);
+
+                        PgpSecretKey masterKey = secretKeys.Single(k => k.IsMasterKey);
+                        masterKey.IsSigningKey.Should().BeTrue();
+                        masterKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
+
+                        PgpSecretKey encryptionSubKey = secretKeys.Single(k => !k.IsMasterKey);
+                        encryptionSubKey.KeyEncryptionAlgorithm.Should().Be(SymmetricKeyAlgorithmTag.Aes256);
                     }
                 }
             }

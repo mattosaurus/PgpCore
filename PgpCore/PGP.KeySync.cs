@@ -96,19 +96,28 @@ namespace PgpCore
                 });
 
             PgpKeyPair masterKey = GenerateMasterKeyPair(strength, certainty);
+            PgpKeyPair encryptionSubKey = GenerateEncryptionSubKeyPair(strength, certainty);
 
-            // EdDSA/ECDSA self-certifications require SHA-256+, so promote a SHA-1 certification hash for those
-            // algorithms. RSA (and any explicitly stronger hash) is left unchanged.
-            HashAlgorithmTag certificationHashAlgorithm = GetCertificationHashAlgorithm(preferredHashAlgorithmTags[0]);
+            // EdDSA/ECDSA (and large DSA) self-certifications require SHA-256+, so promote a SHA-1
+            // certification hash for those algorithms. RSA (and any explicitly stronger hash) is left unchanged.
+            HashAlgorithmTag certificationHashAlgorithm = GetCertificationHashAlgorithm(preferredHashAlgorithmTags[0], strength);
 
+            // The master key certifies and signs; encryption is delegated to the subkey added below. Without
+            // that split, signature-only algorithms (EdDSA, ECDSA, DSA) produce a key that cannot encrypt at
+            // all, and RSA keys use a single key for everything unlike every mainstream implementation (#285).
             PgpSignatureSubpacketGenerator signHashGen = new PgpSignatureSubpacketGenerator();
-            signHashGen.SetKeyFlags(false, PgpKeyFlags.CanCertify | PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage | PgpKeyFlags.CanSign);
+            signHashGen.SetKeyFlags(false, PgpKeyFlags.CanCertify | PgpKeyFlags.CanSign);
             signHashGen.SetPreferredCompressionAlgorithms(false, Array.ConvertAll(preferredCompressionAlgorithms, item => (int)item));
             signHashGen.SetPreferredHashAlgorithms(false, Array.ConvertAll(preferredHashAlgorithmTags, item => (int)item));
             signHashGen.SetPreferredSymmetricAlgorithms(false, Array.ConvertAll(preferredSymmetricKeyAlgorithms, item => (int)item));
             signHashGen.SetFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
             signHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
             signHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);
+
+            PgpSignatureSubpacketGenerator encryptionSubKeyHashGen = new PgpSignatureSubpacketGenerator();
+            encryptionSubKeyHashGen.SetKeyFlags(false, PgpKeyFlags.CanEncryptCommunications | PgpKeyFlags.CanEncryptStorage);
+            encryptionSubKeyHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
+            encryptionSubKeyHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);
 
             PgpKeyRingGenerator keyRingGen = new PgpKeyRingGenerator(
                 PgpSignatureType,
@@ -122,9 +131,10 @@ namespace PgpCore
                 null,
                 new SecureRandom());
 
-            PgpSecretKeyRing secretKeyRing = keyRingGen.GenerateSecretKeyRing();
+            keyRingGen.AddSubKey(encryptionSubKey, encryptionSubKeyHashGen.Generate(), null, certificationHashAlgorithm);
 
-            ExportKeyPair(privateKeyStream, publicKeyStream, secretKeyRing.GetSecretKey(), armor, emitVersion);
+            ExportKeyRing(privateKeyStream, publicKeyStream, keyRingGen.GenerateSecretKeyRing(),
+                keyRingGen.GeneratePublicKeyRing(), armor, emitVersion);
         }
     }
 }
