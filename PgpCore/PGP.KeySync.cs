@@ -119,11 +119,18 @@ namespace PgpCore
             encryptionSubKeyHashGen.SetKeyExpirationTime(false, keyExpirationInSeconds);
             encryptionSubKeyHashGen.SetSignatureExpirationTime(false, signatureExpirationInSeconds);
 
+            // A key generated without a passphrase must be stored unencrypted, as gpg does. Encrypting
+            // the secret key material with the empty string looks the same to PgpCore but makes other
+            // implementations (gpg, Kleopatra) demand a non-empty passphrase to use the key (#308).
+            SymmetricKeyAlgorithmTag secretKeyEncryptionAlgorithm = password.Length == 0
+                ? SymmetricKeyAlgorithmTag.Null
+                : SymmetricKeyAlgorithm;
+
             PgpKeyRingGenerator keyRingGen = new PgpKeyRingGenerator(
                 PgpSignatureType,
                 masterKey,
                 username,
-                SymmetricKeyAlgorithm,
+                secretKeyEncryptionAlgorithm,
                 certificationHashAlgorithm,
                 password.ToCharArray(),
                 certificationHashAlgorithm == HashAlgorithmTag.Sha1,

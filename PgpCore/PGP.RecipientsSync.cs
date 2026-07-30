@@ -71,7 +71,7 @@ namespace PgpCore
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException($"{nameof(input)} cannot be null or empty.", nameof(input));
 
-            using (Stream inputStream = input.GetStream())
+            using (Stream inputStream = input.GetStream(TextEncoding))
                 return GetRecipients(inputStream);
         }
 

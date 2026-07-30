@@ -1,4 +1,4 @@
-using Org.BouncyCastle.Bcpg;
+﻿using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
@@ -96,12 +96,12 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await SignDetachedAsync(inputStream, outputStream, true, headers).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync().ConfigureAwait(false);
+                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
             }
         }
 
@@ -235,8 +235,8 @@ namespace PgpCore
         /// <param name="signature">Detached signature string</param>
         public async Task<bool> VerifyDetachedAsync(string input, string signature)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
-            using (Stream signatureStream = await signature.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream signatureStream = await signature.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             {
                 return await VerifyDetachedAsync(inputStream, signatureStream).ConfigureAwait(false);
             }

@@ -7,16 +7,16 @@ namespace PgpCore.Extensions
 {
     internal static class StreamExtensions
     {
-        internal static string GetString(this Stream inputStream)
+        internal static string GetString(this Stream inputStream, Encoding encoding = null)
         {
-            var reader = new StreamReader(inputStream);
+            var reader = encoding != null ? new StreamReader(inputStream, encoding) : new StreamReader(inputStream);
             var output = reader.ReadToEnd();
             return output;
         }
 
-        internal static async Task<string> GetStringAsync(this Stream inputStream)
+        internal static async Task<string> GetStringAsync(this Stream inputStream, Encoding encoding = null)
         {
-            var reader = new StreamReader(inputStream);
+            var reader = encoding != null ? new StreamReader(inputStream, encoding) : new StreamReader(inputStream);
             var output = await reader.ReadToEndAsync().ConfigureAwait(false);
             return output;
         }

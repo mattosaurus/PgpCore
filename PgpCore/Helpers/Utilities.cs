@@ -729,23 +729,40 @@ namespace PgpCore
 		public static PgpPublicKey FindBestEncryptionKey(PgpPublicKeyRing publicKeys)
 		{
 			PgpPublicKey[] keys = publicKeys.GetPublicKeys().Cast<PgpPublicKey>().ToArray();
-			// Is encryption key and has the two encryption key flags
-			PgpPublicKey[] encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 4).ToArray();
 
-			// If no suitable encryption keys are found, get master key with encryption capability
-			if (!encryptKeys
-				    .Any())
-				encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 3).ToArray();
-
-			// Otherwise get any keys with encryption capability
-			if (!encryptKeys
-					.Any())
-				encryptKeys = keys.Where(key => GetEncryptionScore(key) >= 2).ToArray();
-
-			PgpPublicKey encryptionKey = encryptKeys.OrderByDescending(GetEncryptionScore).FirstOrDefault();
-			if (encryptionKey == null)
+			// Any key with encryption capability (score >= 2); higher scores are preferred below.
+			PgpPublicKey[] usableKeys = keys.Where(key => GetEncryptionScore(key) >= 2).ToArray();
+			if (usableKeys.Length == 0)
 				throw new NoEncryptionKeyException("No encryption keys in keyring");
-			return encryptionKey;
+
+			// Expired and revoked keys must not be chosen automatically - gpg refuses them without an
+			// explicit override, while this previously encrypted with them silently (GitHub issue #71).
+			// They stay selectable via EncryptionKeys.UseEncryptionKey(keyId) as the explicit override.
+			PgpPublicKey[] currentKeys = usableKeys.Where(IsNeitherExpiredNorRevoked).ToArray();
+			if (currentKeys.Length == 0)
+				throw new NoEncryptionKeyException(
+					"The only encryption-capable keys in the keyring are expired or revoked. " +
+					"Supply a current key, or select one explicitly with UseEncryptionKey(keyId) to override.");
+
+			// Highest score first; the newest key wins among equals, so a newly issued subkey takes
+			// over from the older one it replaces (GitHub issue #210).
+			return currentKeys
+				.OrderByDescending(GetEncryptionScore)
+				.ThenByDescending(key => key.CreationTime)
+				.First();
+		}
+
+		/// <summary>
+		/// Returns true when the key is neither revoked nor past its expiry time and so may be chosen
+		/// automatically for encryption. A key with no expiry set never expires.
+		/// </summary>
+		private static bool IsNeitherExpiredNorRevoked(PgpPublicKey key)
+		{
+			if (key.IsRevoked())
+				return false;
+
+			long validSeconds = key.GetValidSeconds();
+			return validSeconds == 0 || key.CreationTime.AddSeconds(validSeconds) > DateTime.UtcNow;
 		}
 
 		/// <summary>
@@ -804,6 +821,7 @@ namespace PgpCore
 		/// presence check and does not cryptographically verify the signature. A message may carry more than
 		/// one signature (e.g. signed with multiple keys), so all entries are checked rather than just the first.
 		/// </summary>
+		[Obsolete("This is a key-id presence check, not a cryptographic signature verification, and is no longer used by PgpCore. Use PGP.Verify or PGP.DecryptAndVerify, which verify signatures cryptographically. This method will be removed in a future major version.")]
 		public static bool FindPublicKey(PgpOnePassSignatureList onePassSignatureList,
 			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
 		{
@@ -824,6 +842,7 @@ namespace PgpCore
 		/// presence check and does not cryptographically verify the signature. A message may carry more than
 		/// one signature, so all entries are checked rather than just the first.
 		/// </summary>
+		[Obsolete("This is a key-id presence check, not a cryptographic signature verification, and is no longer used by PgpCore. Use PGP.Verify or PGP.DecryptAndVerify, which verify signatures cryptographically. This method will be removed in a future major version.")]
 		public static bool FindPublicKey(PgpSignatureList signatureList,
 			IEnumerable<PgpPublicKey> verificationKeys, out PgpPublicKey verificationKey)
 		{
