@@ -20,6 +20,12 @@ namespace PgpCore
 		private const int BufferSize = 0x10000;
 		private const string DefaultFileName = "name";
 
+		/// <summary>
+		/// OpenPGP packet tag of the AEAD (OCB) encrypted data packet. BouncyCastle has no entry for it and
+		/// rejects it while reading the packet stream, so it is recognised by tag number in the error message.
+		/// </summary>
+		private const string AeadEncryptedDataPacketTag = "20";
+
 		public CompressionAlgorithmTag CompressionAlgorithm { get; set; } = CompressionAlgorithmTag.Zip;
 
 		public SymmetricKeyAlgorithmTag SymmetricKeyAlgorithm { get; set; } = SymmetricKeyAlgorithmTag.Aes256;
@@ -207,23 +213,72 @@ namespace PgpCore
 
 		#region ChainEncryptedOut
 
+		/// <summary>
+		/// Translates BouncyCastle's "unknown packet type encountered: 20" into
+		/// <see cref="UnsupportedAeadException"/>. Tag 20 is the AEAD (OCB) encrypted data packet, which the
+		/// referenced BouncyCastle version cannot read. Reporting it as unrecognised or unencrypted data is
+		/// misleading, because the input is valid OpenPGP and is encrypted.
+		/// </summary>
+		/// <param name="exception">The exception thrown while reading the packet stream.</param>
+		/// <exception cref="UnsupportedAeadException">When the exception denotes an AEAD data packet.</exception>
+		private static void ThrowIfAeadEncryptedData(Exception exception)
+		{
+			const string aeadPacketMarker = "unknown packet type encountered: " + AeadEncryptedDataPacketTag;
+
+			if (exception?.Message == null ||
+				exception.Message.IndexOf(aeadPacketMarker, StringComparison.OrdinalIgnoreCase) < 0)
+			{
+				return;
+			}
+
+			throw new UnsupportedAeadException(
+				"The message uses AEAD (OCB) encryption, which the referenced BouncyCastle version cannot read. " +
+				"Ask the sender to disable AEAD, or remove the AEAD feature flag from the key. " +
+				"See https://github.com/mattosaurus/PgpCore/issues/219.",
+				exception);
+		}
+
 		private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
 		{
 			var encryptedDataGenerator =
 				new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
 
-			foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
+			AddEncryptionMethods(encryptedDataGenerator);
+
+			return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
+		}
+
+		/// <summary>
+		/// Adds every configured recipient to <paramref name="encryptedDataGenerator"/>: the chosen
+		/// encryption key from each supplied public key ring, plus the symmetric key when one is set.
+		/// </summary>
+		/// <exception cref="NoEncryptionKeyException">
+		/// When no encryption method is available at all. This previously surfaced as a
+		/// <see cref="NullReferenceException"/> from iterating a null key ring collection.
+		/// </exception>
+		private void AddEncryptionMethods(PgpEncryptedDataGenerator encryptedDataGenerator)
+		{
+			int methodCount = 0;
+
+			if (EncryptionKeys.PublicKeyRings != null)
 			{
-				PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
-				encryptedDataGenerator.AddMethod(publicKey);
+				foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
+				{
+					PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
+					encryptedDataGenerator.AddMethod(publicKey);
+					methodCount++;
+				}
 			}
-			
+
 			if (EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
 			{
 				encryptedDataGenerator.AddMethodRaw(EncryptionKeys.SymmetricKey, HashAlgorithmTag);
+				methodCount++;
 			}
 
-			return encryptedDataGenerator.Open(outputStream, new byte[BufferSize]);
+			if (methodCount == 0)
+				throw new NoEncryptionKeyException(
+					"No encryption key is available. Supply a public key, a private key to derive one from, or a symmetric key.");
 		}
 
 		#endregion ChainEncryptedOut

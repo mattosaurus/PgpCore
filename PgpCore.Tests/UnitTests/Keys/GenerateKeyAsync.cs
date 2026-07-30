@@ -48,7 +48,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     // If we successfully read the public key without exceptions, it is considered valid
                     publicKey.Should().NotBeNull();
                     publicKey.Version.Should().Be(4);
-                    publicKey.CreationTime.Should().BeCloseTo(DateTime.UtcNow, new TimeSpan(0, 0, 10));
+                    ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
@@ -118,7 +118,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     // If we successfully read the public key without exceptions, it is considered valid
                     publicKey.Should().NotBeNull();
                     publicKey.Version.Should().Be(4);
-                    publicKey.CreationTime.Should().BeCloseTo(DateTime.UtcNow, new TimeSpan(0, 0, 10));
+                    ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
@@ -187,7 +187,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     // If we successfully read the public key without exceptions, it is considered valid
                     publicKey.Should().NotBeNull();
                     publicKey.Version.Should().Be(4);
-                    publicKey.CreationTime.Should().BeCloseTo(DateTime.UtcNow, new TimeSpan(0, 0, 10));
+                    ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();
@@ -257,7 +257,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     // If we successfully read the public key without exceptions, it is considered valid
                     publicKey.Should().NotBeNull();
                     publicKey.Version.Should().Be(4);
-                    publicKey.CreationTime.Should().BeCloseTo(DateTime.UtcNow, new TimeSpan(0, 0, 10));
+                    ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
                     publicKey.IsRevoked().Should().BeFalse();

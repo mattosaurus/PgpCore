@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Bcpg;
+﻿using FluentAssertions;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Security;
 using System;
@@ -48,6 +49,48 @@ namespace PgpCore.Tests.UnitTests
 
                 yield return new object[] { symmetricKeyAlgorithmTag };
             }
+        }
+
+        /// <summary>
+        /// Wraps a stream and reports CanSeek false, like a NetworkStream. Reading Position or Length, or
+        /// seeking, throws just as it would on a genuinely forward-only stream.
+        /// </summary>
+        public sealed class NonSeekableStream : Stream
+        {
+            private readonly Stream _inner;
+            public NonSeekableStream(Stream inner) => _inner = inner;
+
+            public override bool CanRead => _inner.CanRead;
+            public override bool CanSeek => false;
+            public override bool CanWrite => _inner.CanWrite;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+            public override void Flush() => _inner.Flush();
+            public override int Read(byte[] buffer, int offset, int count) => _inner.Read(buffer, offset, count);
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => _inner.Write(buffer, offset, count);
+        }
+
+        /// <summary>
+        /// Asserts that a generated key records a sensible creation time - not in the future, and recent
+        /// rather than an epoch or otherwise bogus value.
+        /// <para>
+        /// This deliberately avoids a tight "close to now" tolerance. The creation time is stamped when key
+        /// generation begins, so any such tolerance is really a bound on how long generating a master key
+        /// and its encryption subkey takes, which makes the assertion fail on a slow or loaded machine
+        /// rather than on anything to do with the key.
+        /// </para>
+        /// </summary>
+        public static void ShouldHavePlausibleCreationTime(PgpPublicKey publicKey)
+        {
+            // PGP creation times have one second resolution, hence the slack on the upper bound.
+            publicKey.CreationTime.Should().BeOnOrBefore(DateTime.UtcNow.AddSeconds(1));
+            publicKey.CreationTime.Should().BeAfter(DateTime.UtcNow.AddMinutes(-10));
         }
 
         /// <summary>

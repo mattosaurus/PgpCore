@@ -111,6 +111,10 @@ namespace PgpCore
                 }
                 catch (IOException ex)
                 {
+                    // An AEAD message is valid encrypted OpenPGP that BouncyCastle simply cannot read, so
+                    // it must not be reported as unrecognised or unencrypted data.
+                    ThrowIfAeadEncryptedData(ex);
+
                     if (anyMessageProcessed)
                         break; // tolerate trailing non-message data after valid messages
 

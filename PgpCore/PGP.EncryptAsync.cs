@@ -95,16 +95,7 @@ namespace PgpCore
 
             PgpEncryptedDataGenerator pk =
                 new PgpEncryptedDataGenerator(SymmetricKeyAlgorithm, withIntegrityCheck, new SecureRandom());
-            foreach (PgpPublicKeyRingWithPreferredKey publicKeyRing in EncryptionKeys.PublicKeyRings)
-            {
-                PgpPublicKey publicKey = publicKeyRing.PreferredEncryptionKey ?? publicKeyRing.DefaultEncryptionKey;
-                pk.AddMethod(publicKey);
-            }
-            
-            if (EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
-            {
-                pk.AddMethodRaw(EncryptionKeys.SymmetricKey, HashAlgorithmTag);
-            }
+            AddEncryptionMethods(pk);
 
             if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
             {

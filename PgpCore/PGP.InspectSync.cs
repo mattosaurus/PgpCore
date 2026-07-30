@@ -34,7 +34,19 @@ namespace PgpCore
 
             inputStream.Seek(0, SeekOrigin.Begin);
             PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
-            PgpObject pgpObject = pgpObjectFactory.NextPgpObject();
+
+            PgpObject pgpObject;
+            try
+            {
+                pgpObject = pgpObjectFactory.NextPgpObject();
+            }
+            catch (IOException ex)
+            {
+                // Report AEAD input as such rather than leaking BouncyCastle's raw
+                // "unknown packet type encountered: 20".
+                ThrowIfAeadEncryptedData(ex);
+                throw;
+            }
 
             // the first object might be a PGP marker packet.
             PgpEncryptedDataList enc = null;
