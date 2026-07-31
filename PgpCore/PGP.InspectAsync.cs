@@ -1,4 +1,4 @@
-using Org.BouncyCastle.Bcpg;
+﻿using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Utilities.Zlib;
 using PgpCore.Abstractions;
@@ -82,7 +82,7 @@ namespace PgpCore
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException($"{nameof(input)} cannot be null or empty.", nameof(input));
 
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             {
                 return await InspectAsync(inputStream).ConfigureAwait(false);
             }

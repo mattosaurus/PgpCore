@@ -1,4 +1,4 @@
-using PgpCore.Abstractions;
+﻿using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Models;
 using System;
@@ -15,7 +15,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFile">Plain data file to be verified</param>
         /// <param name="outputFile">File to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputFile contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public bool Verify(FileInfo inputFile, FileInfo outputFile = null, bool throwIfEncrypted = false) => VerifyAsync(inputFile, outputFile, throwIfEncrypted).GetAwaiter().GetResult();
 
         /// <summary>
@@ -23,14 +23,14 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream">Plain data stream to be verified</param>
         /// <param name="outputStream">Stream to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public bool Verify(Stream inputStream, Stream outputStream = null, bool throwIfEncrypted = false) => VerifyAsync(inputStream, outputStream, throwIfEncrypted).GetAwaiter().GetResult();
 
         /// <summary>
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public bool Verify(string input, bool throwIfEncrypted = false) => VerifyAsync(input, throwIfEncrypted).GetAwaiter().GetResult();
 
         public bool VerifyFile(FileInfo inputFile, bool throwIfEncrypted = false) => Verify(inputFile, null, throwIfEncrypted);

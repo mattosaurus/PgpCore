@@ -21,7 +21,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputFile">Plain data file to be verified</param>
         /// <param name="outputFile">File to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputFile contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public async Task<bool> VerifyAsync(FileInfo inputFile, FileInfo outputFile = null, bool throwIfEncrypted = false)
         {
             if (inputFile == null)
@@ -54,7 +54,7 @@ namespace PgpCore
         /// </summary>
         /// <param name="inputStream">Plain data stream to be verified</param>
         /// <param name="outputStream">Stream to write the decrypted data to</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public async Task<bool> VerifyAsync(Stream inputStream, Stream outputStream = null, bool throwIfEncrypted = false)
         {
             bool verified = false;
@@ -99,17 +99,17 @@ namespace PgpCore
                 pgpObject = factory.NextPgpObject();
             }
 
-            if (pgpObject is PgpEncryptedDataList dataList)
+            if (pgpObject is PgpEncryptedDataList)
             {
-                if (throwIfEncrypted)
-                {
-                    throw new ArgumentException("Input is encrypted. Decrypt the input first.", nameof(inputStream));
-                }
-                PgpPublicKeyEncryptedData publicKeyEncryptedData = Utilities.ExtractPublicKey(dataList);
-                var keyIdToVerify = publicKeyEncryptedData.KeyId;
-                // If we encounter an encrypted packet, verify with the encryption keys used instead
-                // TODO does this even make sense? maybe throw exception instead, or try to decrypt first
-                verified = Utilities.FindPublicKeyInKeyRings(keyIdToVerify, EncryptionKeys.PublicKeyRings.Select(keyRing => keyRing.PgpPublicKeyRing), out PgpPublicKey _);
+                // A signature inside an encrypted message cannot be verified without decrypting, so
+                // there is nothing meaningful Verify can report here. Previously, when
+                // throwIfEncrypted was false, this returned true if the message was merely encrypted
+                // *to* a known key id - a result trivially satisfied by any sender and unrelated to
+                // any signature, so it could be mistaken for successful verification. Encrypted input
+                // now always throws; use DecryptAndVerify (or Decrypt then Verify) instead. The
+                // throwIfEncrypted parameter is retained for signature compatibility.
+                throw new ArgumentException(
+                    "Input is encrypted. Use DecryptAndVerify, or decrypt the input first.", nameof(inputStream));
             }
             else if (pgpObject is PgpOnePassSignatureList onePassSignatureList)
             {
@@ -245,10 +245,10 @@ namespace PgpCore
         /// PGP verify a given string.
         /// </summary>
         /// <param name="input">Plain string to be verified</param>
-        /// <param name="throwIfEncrypted">Throw if inputStream contains encrypted data. Otherwise, verify encryption key.</param>
+        /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public async Task<bool> VerifyAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             {
                 return await VerifyAsync(inputStream, null, throwIfEncrypted).ConfigureAwait(false);
             }
@@ -272,13 +272,13 @@ namespace PgpCore
             {
                 bool verified = await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
 
-                return new VerificationResult(verified, await outputStream.GetStringAsync().ConfigureAwait(false));
+                return new VerificationResult(verified, await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             {
                 return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted).ConfigureAwait(false);
             }
@@ -418,7 +418,7 @@ namespace PgpCore
         /// <param name="input">Clear signed string to be verified</param>
         public async Task<bool> VerifyClearAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
                 return await VerifyClearAsync(inputStream, null).ConfigureAwait(false);
         }
 
@@ -441,13 +441,13 @@ namespace PgpCore
                 bool verified = await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Position = 0;
 
-                return new VerificationResult(verified, await outputStream.GetStringAsync().ConfigureAwait(false));
+                return new VerificationResult(verified, await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             {
                 return await VerifyAndReadClearStreamAsync(inputStream).ConfigureAwait(false);
             }

@@ -234,12 +234,12 @@ namespace PgpCore
         /// <param name="input">PGP encrypted string</param>
         public async Task<string> DecryptAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await DecryptAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync().ConfigureAwait(false);
+                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
             }
         }
 
@@ -535,12 +535,12 @@ namespace PgpCore
         /// <param name="input">PGP encrypted string to be decrypted and verified</param>
         public async Task<string> DecryptAndVerifyAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await DecryptAndVerifyAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync().ConfigureAwait(false);
+                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
             }
         }
 

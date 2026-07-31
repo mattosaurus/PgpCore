@@ -43,6 +43,15 @@ namespace PgpCore
 		public bool AddVersionHeader { get; set; } = true;
 
 		/// <summary>
+		/// Text encoding used by the string based overloads when converting between strings and the
+		/// underlying data. Defaults to UTF-8 without a byte order mark, which round trips any .NET
+		/// string. Set this when a counterparty produces or expects text in a specific legacy encoding
+		/// (e.g. Windows-1253); the stream and file overloads are unaffected as they never reinterpret
+		/// bytes as text.
+		/// </summary>
+		public Encoding TextEncoding { get; set; } = new UTF8Encoding(false);
+
+		/// <summary>
 		/// When true, decrypt operations tolerate a failed modification detection (MDC) integrity
 		/// check instead of throwing <see cref="MessageIntegrityException"/>. Equivalent to
 		/// gpg --ignore-mdc-error. Leave false unless you must read legacy data from senders that

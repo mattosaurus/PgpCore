@@ -1,4 +1,4 @@
-using Org.BouncyCastle.Bcpg;
+﻿using Org.BouncyCastle.Bcpg;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -119,12 +119,12 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await SignAsync(inputStream, outputStream, true, name, headers, oldFormat).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync().ConfigureAwait(false);
+                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
             }
         }
 
@@ -204,12 +204,12 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
-            using (Stream inputStream = await input.GetStreamAsync().ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await ClearSignAsync(inputStream, outputStream, headers).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync().ConfigureAwait(false);
+                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
             }
         }
 
