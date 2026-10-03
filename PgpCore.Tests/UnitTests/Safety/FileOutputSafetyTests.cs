@@ -174,12 +174,14 @@ namespace PgpCore.Tests.UnitTests.Safety
             Assert.Equal(fingerprint, PGP.InspectKeys(output)[0].Fingerprint);
         }
 
-        [Fact]
-        public void KeyGeneration_RejectsSameDestination()
+        [Theory]
+        [InlineData("public.asc")]
+        [InlineData("PUBLIC.asc")]
+        public void KeyGeneration_RejectsSameDestination(string privateName)
         {
             var key = File("public.asc");
             byte[] original = System.IO.File.ReadAllBytes(key.FullName);
-            Assert.Throws<ArgumentException>(() => new PGP().GenerateKey(key, key));
+            Assert.Throws<ArgumentException>(() => new PGP().GenerateKey(key, File(privateName)));
             Assert.Equal(original, System.IO.File.ReadAllBytes(key.FullName));
         }
 

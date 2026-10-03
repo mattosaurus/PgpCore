@@ -42,6 +42,90 @@ namespace PgpCore.Tests.UnitTests.Safety
         }
 
         [Fact]
+        public async Task CertificationIssuer_DoesNotRedirectSigningSubkeyLookup()
+        {
+            var primary = Pair();
+            var signer = Pair();
+            var generator = Ring(primary);
+            var flags = new PgpSignatureSubpacketGenerator();
+            flags.SetKeyFlags(false, KeyFlags.SignData);
+            generator.AddSubKey(signer, flags.Generate(), null, HashAlgorithmTag.Sha256, HashAlgorithmTag.Sha256);
+            var ring = generator.GeneratePublicKeyRing();
+            var certification = new PgpSignatureGenerator(signer.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            certification.InitSign(PgpSignature.DirectKey, signer.PrivateKey);
+            // An issuer on a primary certificate must never masquerade as that primary's key ID.
+            ring = PgpPublicKeyRing.InsertPublicKey(ring, PgpPublicKey.AddCertification(ring.GetPublicKey(),
+                certification.GenerateCertification(ring.GetPublicKey())));
+            var keys = Keys(ring);
+            Assert.True(Utilities.FindPublicKey(signer.KeyId, keys.VerificationKeys, out var found));
+            Assert.Equal(signer.KeyId, found.KeyId);
+            byte[] payload = Encoding.UTF8.GetBytes("authenticated subkey signature");
+            var signature = new PgpSignatureGenerator(signer.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            signature.InitSign(PgpSignature.BinaryDocument, signer.PrivateKey);
+            signature.Update(payload);
+            using var signed = new MemoryStream();
+            signature.Generate().Encode(signed);
+            signed.Position = 0;
+            using var input = new MemoryStream(payload);
+            Assert.True(await new PGP(keys).VerifyDetachedAsync(input, signed));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void DirectKeySelfSignature_IsAuthenticatedWithoutRequiringUserIds(bool authentic)
+        {
+            var primary = Pair();
+            var signer = authentic ? primary : Pair();
+            var signature = new PgpSignatureGenerator(signer.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            signature.InitSign(PgpSignature.DirectKey, signer.PrivateKey);
+            var packets = new PgpSignatureSubpacketGenerator();
+            packets.SetKeyFlags(false, KeyFlags.EncryptComms);
+            signature.SetHashedSubpackets(packets.Generate());
+            var key = PgpPublicKey.AddCertification(primary.PublicKey, signature.GenerateCertification(primary.PublicKey));
+            using var encoded = new MemoryStream();
+            key.Encode(encoded);
+            encoded.Position = 0;
+            if (!authentic) Assert.Throws<InvalidKeyMaterialException>(() => PGP.InspectKeys(encoded));
+            else
+            {
+                var info = Assert.Single(PGP.InspectKeys(encoded));
+                Assert.True(info.IsUsableForEncryption);
+                Assert.False(info.CanSign);
+                Assert.Empty(info.UserIds);
+            }
+        }
+
+        [Theory]
+        [InlineData(0, true)]
+        [InlineData(1, false)]
+        [InlineData(7, true)]
+        public void LegacyV3Keys_RespectNativeValidityDays(int days, bool usable)
+        {
+            DateTime created = DateTime.UtcNow.AddDays(-2);
+            var pair = Pair(created);
+            byte[] contents = new PublicKeyPacket(3, pair.PublicKey.Algorithm, created,
+                pair.PublicKey.PublicKeyPacket.Key).GetEncodedContents();
+            contents[5] = (byte)(days >> 8);
+            contents[6] = (byte)days;
+            using var encoded = new MemoryStream();
+            // Encode a native v3 primary packet: version, timestamp, validity days, RSA MPIs.
+            encoded.WriteByte(0xC0 | (byte)PacketTag.PublicKey);
+            encoded.WriteByte((byte)contents.Length);
+            encoded.Write(contents);
+            encoded.Position = 0;
+            var ring = new PgpPublicKeyRing(encoded);
+            encoded.Position = 0;
+            var info = PGP.InspectKeys(encoded)[0];
+            Assert.Equal(usable, info.IsUsableForEncryption);
+            Assert.Equal(usable, info.IsUsableForSigning);
+            Assert.Equal(days == 0 ? (DateTime?)null : ring.GetPublicKey().CreationTime.AddDays(days), info.Expiration);
+            if (usable) Assert.Equal(ring.GetPublicKey().KeyId, Utilities.FindBestEncryptionKey(ring).KeyId);
+            else Assert.Throws<NoEncryptionKeyException>(() => Utilities.FindBestEncryptionKey(ring));
+            Assert.Single(Keys(ring).VerificationKeys); // Historical verification remains available.
+        }
+
+        [Fact]
         public void AppendedForeignSubkey_IsRejectedForVerificationAndEncryptionSelection()
         {
             var trusted = Ring(Pair()).GeneratePublicKeyRing();

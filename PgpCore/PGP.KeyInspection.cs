@@ -30,7 +30,7 @@ namespace PgpCore
                 bool primaryCurrent = keys[0].IsCurrent(now);
                 foreach (var key in keys)
                 {
-                    long seconds = key.Authorization?.GetHashedSubPackets()?.GetKeyExpirationTime() ?? 0;
+                    long seconds = key.ExpirationSeconds;
                     DateTime? expiration = seconds <= 0 || seconds > (DateTime.MaxValue - key.PublicKey.CreationTime).TotalSeconds
                         ? (DateTime?)null : key.PublicKey.CreationTime.AddSeconds(seconds);
                     result.Add(new PgpKeyInfo

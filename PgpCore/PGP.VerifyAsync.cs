@@ -328,40 +328,13 @@ namespace PgpCore
                 throw new ArgumentException("inputStream should be at start of stream", nameof(inputStream));
 
             bool verified;
+            bool singleLine;
 
             using (Stream outStream = SeekableInput.Create())
             {
                 using (ArmoredInputStream armoredInputStream = new ArmoredInputStream(new NonClosingStream(inputStream)))
                 {
-                    using var lineOut = new MemoryStream();
-                    byte[] lineSep = LineSeparator;
-                    var lookAhead = ReadInputLine(lineOut, armoredInputStream);
-
-                    // Read past message to signature and store message in stream
-                    if (lookAhead != -1 && armoredInputStream.IsClearText())
-                    {
-                        var line = lineOut.ToArray();
-                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
-                        await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
-
-                        while (lookAhead != -1 && armoredInputStream.IsClearText())
-                        {
-                            lookAhead = ReadInputLine(lineOut, lookAhead, armoredInputStream);
-
-                            line = lineOut.ToArray();
-                            await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
-                            // Always write the separator back, even after the final line. A trailing
-                            // empty line (consecutive newlines at the end of the message) must keep its
-                            // separator so the hashing pass below sees it and updates the signature with
-                            // the CRLF the signer hashed (RFC 4880 Section 7.1).
-                            await outStream.WriteAsync(lineSep, 0, lineSep.Length).ConfigureAwait(false);
-                        }
-                    }
-                    else if (lookAhead != -1)
-                    {
-                        var line = lineOut.ToArray();
-                        await outStream.WriteAsync(line, 0, GetLengthWithoutSeparatorOrTrailingWhitespace(line)).ConfigureAwait(false);
-                    }
+                    singleLine = ClearTextCanonicalization.Copy(armoredInputStream, outStream);
 
                     // Get public key from correctly positioned stream and initialise for verification
                     PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(armoredInputStream);
@@ -375,21 +348,7 @@ namespace PgpCore
                         ?? EncryptionKeys.VerificationKeys.First();
                     pgpSignature.InitVerify(verificationKey);
 
-                    // Read through message again and calculate signature
-                    outStream.Position = 0;
-                    lookAhead = ReadInputLine(lineOut, outStream);
-
-                    ProcessLine(pgpSignature, lineOut.ToArray());
-
-                    while (lookAhead != -1)
-                    {
-                        lookAhead = ReadInputLine(lineOut, lookAhead, outStream);
-
-                        pgpSignature.Update((byte)'\r');
-                        pgpSignature.Update((byte)'\n');
-
-                        ProcessLine(pgpSignature, lineOut.ToArray());
-                    }
+                    ClearTextCanonicalization.UpdateSignature(pgpSignature, outStream);
 
                     verified = pgpSignature.Verify();
                 }
@@ -397,6 +356,8 @@ namespace PgpCore
                 // Copy the message to the outputStream, if supplied
                 if (outputStream != null)
                 {
+                    // Preserve the existing extraction contract for a single line.
+                    if (singleLine) outStream.SetLength(Math.Max(0, outStream.Length - Environment.NewLine.Length));
                     outStream.Position = 0;
                     await outStream.CopyToAsync(outputStream).ConfigureAwait(false);
                 }

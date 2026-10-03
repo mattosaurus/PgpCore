@@ -761,11 +761,9 @@ namespace PgpCore
 		public static bool FindPublicKey(long keyId, IEnumerable<PgpPublicKey> verificationKeys,
 			out PgpPublicKey verificationKey)
 		{
-			var foundKeys = verificationKeys.Where(key =>
-				key.KeyId == keyId ||
-				key.GetSignatures().Cast<PgpSignature>().Any(signature => signature.KeyId == keyId)).ToArray();
-			verificationKey = foundKeys.FirstOrDefault();
-			return foundKeys.Any();
+			// Certification issuers identify the certifier, not the certified key.
+			verificationKey = verificationKeys.FirstOrDefault(key => key.KeyId == keyId);
+			return verificationKey != null;
 		}
 
 		/// <summary>

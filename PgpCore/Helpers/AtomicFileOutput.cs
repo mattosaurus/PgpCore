@@ -79,10 +79,10 @@ namespace PgpCore.Helpers
         /// </summary>
         internal static void WriteKeyPair(FileInfo publicFile, FileInfo privateFile, Action<Stream, Stream> write)
         {
-            StringComparison comparison = Path.DirectorySeparatorChar == '\\'
-                ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            if (string.Equals(publicFile.FullName, privateFile.FullName, comparison))
-                throw new ArgumentException("Public and private key destinations must be different files.");
+            // A Unix destination can also be on a case-insensitive volume. Reject
+            // case-only aliases without creating a probe file or guessing its type.
+            if (string.Equals(publicFile.FullName, privateFile.FullName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Public and private key destinations must differ by more than letter case.");
 
             using (var publicOutput = new AtomicFileOutput(publicFile))
             using (var privateOutput = new AtomicFileOutput(privateFile))

@@ -18,16 +18,21 @@ namespace PgpCore.Helpers
             internal bool CanSign;
             internal bool CanEncrypt;
 
+            internal long ExpirationSeconds => PublicKey.Version <= 3
+                ? PublicKey.GetValidSeconds()
+                : Authorization?.GetHashedSubPackets()?.GetKeyExpirationTime() ?? 0;
+
             internal bool IsCurrent(DateTime now)
             {
                 if (Revoked || PublicKey.CreationTime > now)
                     return false;
+                long keySeconds = ExpirationSeconds;
+                if (keySeconds > 0 && (now - PublicKey.CreationTime).TotalSeconds >= keySeconds)
+                    return false;
                 if (Authorization != null)
                 {
-                    long keySeconds = Authorization.GetHashedSubPackets()?.GetKeyExpirationTime() ?? 0;
                     long signatureSeconds = Authorization.GetHashedSubPackets()?.GetSignatureExpirationTime() ?? 0;
                     if (Authorization.CreationTime > now ||
-                        keySeconds > 0 && (now - PublicKey.CreationTime).TotalSeconds >= keySeconds ||
                         signatureSeconds > 0 && (now - Authorization.CreationTime).TotalSeconds >= signatureSeconds)
                         return false;
                 }
@@ -103,7 +108,7 @@ namespace PgpCore.Helpers
         private static IEnumerable<PgpSignature> ReadSelfSignatures(PgpPublicKey primary)
         {
             foreach (PgpSignature signature in primary.GetSignaturesOfType(PgpSignature.DirectKey))
-                if (Verify(signature, primary, () => signature.VerifyCertification(primary)))
+                if (Verify(signature, primary, () => VerifyDirectKey(signature, primary)))
                     yield return signature;
             foreach (string userId in primary.GetUserIds())
                 foreach (PgpSignature signature in SelfCertifications(primary, userId))
@@ -114,6 +119,19 @@ namespace PgpCore.Helpers
                         signature.SignatureType <= PgpSignature.PositiveCertification &&
                         Verify(signature, primary, () => signature.VerifyCertification(attribute, primary)))
                         yield return signature;
+        }
+
+        private static bool VerifyDirectKey(PgpSignature signature, PgpPublicKey key)
+        {
+            // BouncyCastle's single-key VerifyCertification accepts revocations only.
+            // Hash the same public-key framing used by its certification generator.
+            byte[] contents = key.PublicKeyPacket.GetEncodedContents();
+            if (contents.Length > ushort.MaxValue) return false;
+            signature.Update((byte)0x99);
+            signature.Update((byte)(contents.Length >> 8));
+            signature.Update((byte)contents.Length);
+            signature.Update(contents);
+            return signature.Verify();
         }
 
         internal static string[] UserIds(PgpPublicKey primary) => primary.GetUserIds()
