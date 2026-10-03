@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg.Sig;
 using PgpCore.Extensions;
+using PgpCore.Helpers;
 
 namespace PgpCore
 {
@@ -652,7 +653,7 @@ namespace PgpCore
 		/// end-of-stream at each armor block boundary, so a new PgpObjectFactory is constructed
 		/// repeatedly until no further objects can be read.
 		/// </summary>
-		private static List<object> ReadAllPgpObjects(Stream inputStream)
+		internal static List<object> ReadAllPgpObjects(Stream inputStream)
 		{
 			List<object> pgpObjects = new List<object>();
 			Stream decoderStream = PgpUtilities.GetDecoderStream(inputStream);
@@ -705,83 +706,36 @@ namespace PgpCore
 		/// <exception cref="ArgumentException"></exception>
 		public static PgpPublicKey FindBestVerificationKey(PgpPublicKeyRing publicKeys)
 		{
-			PgpPublicKey[] keys = publicKeys.GetPublicKeys().Cast<PgpPublicKey>().ToArray();
-
-			// Has Key Flags for signing content
-			PgpPublicKey[] verificationKeys = keys.Where(key => GetSigningScore(key) >= 3).ToArray();
-			// Failsafe, get master key with signing capabilities.
-			if (!verificationKeys.Any())
-				verificationKeys = keys.Where(key => GetSigningScore(key) >= 1).ToArray();
-
-			PgpPublicKey signingKey = verificationKeys.OrderByDescending(GetSigningScore).FirstOrDefault();
-			if (signingKey == null)
-				throw new MissingKeyException("No verification keys in keyring");
-
-			return signingKey;
+			return KeyRingValidation.SigningKeys(publicKeys, false)
+				.OrderByDescending(k => k.PublicKey.IsMasterKey).Select(k => k.PublicKey).FirstOrDefault()
+				?? throw new MissingKeyException("No authenticated verification keys in keyring.");
 		}
 
-		/// <summary>
-		/// Finds and returns the public key most suitable for encryption in a key ring. Master keys are prioritized
-		/// </summary>
-		/// <param name="publicKeys"></param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentException"></exception>
+		/// <summary>Chooses a current, authenticated encryption key from a certificate.</summary>
 		public static PgpPublicKey FindBestEncryptionKey(PgpPublicKeyRing publicKeys)
 		{
-			PgpPublicKey[] keys = publicKeys.GetPublicKeys().Cast<PgpPublicKey>().ToArray();
-
-			// Any key with encryption capability (score >= 2); higher scores are preferred below.
-			PgpPublicKey[] usableKeys = keys.Where(key => GetEncryptionScore(key) >= 2).ToArray();
-			if (usableKeys.Length == 0)
-				throw new NoEncryptionKeyException("No encryption keys in keyring");
-
-			// Expired and revoked keys must not be chosen automatically - gpg refuses them without an
-			// explicit override, while this previously encrypted with them silently (GitHub issue #71).
-			// They stay selectable via EncryptionKeys.UseEncryptionKey(keyId) as the explicit override.
-			PgpPublicKey[] currentKeys = usableKeys.Where(IsNeitherExpiredNorRevoked).ToArray();
-			if (currentKeys.Length == 0)
-				throw new NoEncryptionKeyException(
-					"The only encryption-capable keys in the keyring are expired or revoked. " +
-					"Supply a current key, or select one explicitly with UseEncryptionKey(keyId) to override.");
-
-			// Highest score first; the newest key wins among equals, so a newly issued subkey takes
-			// over from the older one it replaces (GitHub issue #210).
-			return currentKeys
-				.OrderByDescending(GetEncryptionScore)
-				.ThenByDescending(key => key.CreationTime)
-				.First();
+			return KeyRingValidation.EncryptionKeys(publicKeys, true)
+				.OrderByDescending(k => !k.PublicKey.IsMasterKey)
+				.ThenByDescending(k => k.PublicKey.CreationTime).Select(k => k.PublicKey).FirstOrDefault()
+				?? throw new NoEncryptionKeyException("No current, authenticated encryption key in keyring. Keys may be missing, expired or revoked. " +
+					"UseEncryptionKey(keyId) can explicitly select an authenticated encryption-capable key regardless of current expiry or revocation.");
 		}
 
-		/// <summary>
-		/// Returns true when the key is neither revoked nor past its expiry time and so may be chosen
-		/// automatically for encryption. A key with no expiry set never expires.
-		/// </summary>
-		private static bool IsNeitherExpiredNorRevoked(PgpPublicKey key)
-		{
-			if (key.IsRevoked())
-				return false;
-
-			long validSeconds = key.GetValidSeconds();
-			return validSeconds == 0 || key.CreationTime.AddSeconds(validSeconds) > DateTime.UtcNow;
-		}
-
-		/// <summary>
-		/// Finds the first secret key in the key ring suitable for signing. 
-		/// </summary>
-		/// <param name="secretKeyRingBundle">The key ring bundle to search</param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentException">When no rings are suitable for signing</exception>
+		/// <summary>Chooses a current signing key with authenticated signing authorization.</summary>
 		public static PgpSecretKey FindBestSigningKey(PgpSecretKeyRingBundle secretKeyRingBundle)
 		{
-			PgpSecretKeyRing[] keyRings = secretKeyRingBundle.GetKeyRings().Cast<PgpSecretKeyRing>().ToArray();
-
-			var secretKeys = keyRings.SelectMany(ring => ring.GetSecretKeys().Cast<PgpSecretKey>())
-				.OrderByDescending(GetSigningScore).ToArray();
-
-			if(!secretKeys.Any())
-				throw new NoSigningKeyException("Could not find any signing keys in keyring");
-
-			return secretKeys.First();
+			foreach (PgpSecretKeyRing ring in secretKeyRingBundle.GetKeyRings())
+			{
+				var signingKeys = KeyRingValidation.SigningKeys(ExtractPublicKeyRing(ring), true)
+					.OrderByDescending(k => k.PublicKey.IsMasterKey).ThenByDescending(k => k.PublicKey.CreationTime);
+				foreach (var candidate in signingKeys)
+				{
+					PgpSecretKey key = ring.GetSecretKey(candidate.PublicKey.KeyId);
+					if (key != null && key.IsSigningKey && !key.IsPrivateKeyEmpty)
+						return key;
+				}
+			}
+			throw new NoSigningKeyException("No current, authenticated signing key in keyring.");
 		}
 
 		/// <summary>
@@ -1088,85 +1042,5 @@ namespace PgpCore
 			return pgpOnePassSignatureList;
 		}
 
-		/// <summary>
-		/// Scores the public key for how suitable it is as an encryption key
-		/// Master key += 1
-		/// IsEncryptionKey += 2
-		/// Either of the encryption flags += 1 (for each)
-		/// Highest score is 5
-		/// A key that declares key flags that do not permit encryption is disqualified (score 0).
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
-		private static int GetEncryptionScore(PgpPublicKey key)
-		{
-			PgpSignature[] signatures = key.GetSignatures().Cast<PgpSignature>()
-				.Where(signature => signature.HasSubpackets &&
-				                   (signature.KeyId == key.KeyId || signature.SignatureType == 0x18 /* Subkey Binding */))
-				.ToArray();
-
-			// Combine the key flags declared across the relevant self/binding signatures.
-			int keyFlags = signatures
-				.Select(signature => signature.GetHashedSubPackets().GetKeyFlags())
-				.Aggregate(0, (current, flags) => current | flags);
-
-			const int encryptionFlags = KeyFlags.EncryptComms | KeyFlags.EncryptStorage;
-
-			// If the key explicitly declares key flags but none of them permit encryption then it
-			// must not be used for encryption (RFC 4880 §5.2.3.21), even when its algorithm is
-			// encryption-capable (e.g. an RSA sign-only key, where IsEncryptionKey is true based on
-			// the algorithm alone). Disqualify it so it can never be selected.
-			if (keyFlags != 0 && (keyFlags & encryptionFlags) == 0)
-				return 0;
-
-			int score = 0;
-			if (key.IsMasterKey)
-				score += 1;
-			if (key.IsEncryptionKey)
-				score += 2;
-			if ((keyFlags & KeyFlags.EncryptComms) > 0)
-				score += 1;
-			if ((keyFlags & KeyFlags.EncryptStorage) > 0)
-				score += 1;
-			return score;
-		}
-
-		/// <summary>
-		/// Scores the public key for how suitable it is as a verification key
-		/// Master key += 1
-		/// Signing key flag += 2
-		/// Highest score is 3
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
-		private static int GetSigningScore(PgpPublicKey key)
-		{
-			int score = 0;
-			if (key.IsMasterKey)
-				score += 1;
-			var signatures = key.GetSignatures().Cast<PgpSignature>();
-			if (signatures.Any(signature => signature.HasSubpackets &&
-			                                (signature.GetHashedSubPackets().GetKeyFlags() & KeyFlags.SignData) > 0))
-				score += 2;
-			return score;
-		}
-
-		/// <summary>
-		/// Scores the secret key for how suitable it is as a signing key
-		/// Master key += 1
-		/// IsSigningKey += 2
-		/// Signing key flag += 2
-		/// Highest score is 5
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
-		private static int GetSigningScore(PgpSecretKey key)
-		{
-			int score = 0;
-			if (key.IsSigningKey)
-				score += 2;
-			score += GetSigningScore(key.PublicKey);
-			return score;
-		}
 	}
 }

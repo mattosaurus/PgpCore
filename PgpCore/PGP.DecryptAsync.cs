@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -37,9 +37,11 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAsync(inputStream, outStream).ConfigureAwait(false);
+            await AtomicFileOutput.WriteAsync(outputFile, async outStream =>
+            {
+                using (Stream inputStream = inputFile.OpenRead())
+                    await DecryptAsync(inputStream, outStream).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -104,8 +106,8 @@ namespace PgpCore
 
                     if (obj is PgpEncryptedDataList dataList)
                         enc = dataList;
-                    else if (obj is PgpCompressedData compressedData)
-                        message = compressedData;
+                    else if (obj is PgpCompressedData)
+                        throw new NotEncryptedDataException(NotEncryptedDataMessage);
                     else
                         enc = objFactory.NextPgpObject() as PgpEncryptedDataList;
                 }
@@ -130,6 +132,7 @@ namespace PgpCore
                     throw new NotEncryptedDataException(NotEncryptedDataMessage);
                 }
 
+                if (enc != null) RejectUnsupportedSessionKeys(enc);
                 await processMessageAsync(enc, message, outputStream).ConfigureAwait(false);
                 anyMessageProcessed = true;
             }
@@ -272,9 +275,11 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAndVerifyAsync(inputStream, outStream).ConfigureAwait(false);
+            await AtomicFileOutput.WriteAsync(outputFile, async outStream =>
+            {
+                using (Stream inputStream = inputFile.OpenRead())
+                    await DecryptAndVerifyAsync(inputStream, outStream).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>

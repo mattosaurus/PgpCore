@@ -809,7 +809,7 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 | Exception | Thrown when |
 | --- | --- |
 | `NotEncryptedDataException` | `Decrypt` input is not PGP encrypted data — plain text, signed-only, or clear-signed content. |
-| `UnsupportedAeadException` | The message uses AEAD (OCB) encryption, which the referenced BouncyCastle version cannot read ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
+| `UnsupportedAeadException` | The message uses an AEAD session-key format that PgpCore cannot decrypt ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
 | `IncorrectPassphraseException` | The supplied passphrase does not unlock the private key. |
 | `InvalidKeyMaterialException` | Key material could not be parsed, or contained no usable keys. |
 | `MessageIntegrityException` | The message failed its modification detection (MDC) check — see [IgnoreIntegrityCheckFailure](#ignoreintegritycheckfailure). |
@@ -820,3 +820,17 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 
 `PgpException` (BouncyCastle's type) is still thrown for signature verification failures, e.g.
 "Failed to verify file." from `DecryptAndVerify`.
+
+## Certificate validation and safe output
+
+Key selection authenticates primary self-signatures, subkey bindings, key flags, expiration metadata, and primary-issued revocations. Signing subkeys require an embedded primary-key binding signature. Appending a foreign or unbound subkey makes the certificate invalid. New encryption and signing reject expired or revoked primary keys and subkeys. Explicit encryption-key selection still permits historical keys, but requires an authentic binding and encryption capability.
+
+Verification uses authenticated signing keys, including expired or revoked keys for cryptographic verification of older data. It does not establish a trusted identity or prove that a message predates revocation. Compare the complete primary fingerprint against an independently trusted value.
+
+`PGP.InspectKeys(Stream)` returns every primary and subkey, authenticated user IDs, fingerprints, capabilities, and current usability. `PGP.ExportPublicKeys` validates public certificates before exporting them; it rejects secret-key packets and can require an expected complete primary fingerprint. Its file overload stages the validated export before replacing the destination.
+
+File-writing overloads stage output beside the destination and commit only after successful completion. Failed integrity or signature validation preserves an existing destination and does not publish a new plaintext file. Key generation produces both key files before committing either; failure to commit the second restores the first when possible. Two files are not a crash-atomic transaction. If restoration itself fails, the exception identifies the retained recovery backup.
+
+Staging files on Unix have owner-only permissions. Committed new files retain those permissions. Directory access and existing destination security remain the application's responsibility. Stream overloads can emit data before final validation, so callers must discard stream output when verification returns false or decryption throws. Borrowed streams remain open.
+
+Verification without extraction hashes and discards the payload. Non-seekable verification and inspection spool input to an owned temporary file instead of allocating memory proportional to message size. Clear-sign verification also uses a temporary stream for its second hashing pass; these operations require writable temporary storage.

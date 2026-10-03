@@ -8,15 +8,8 @@ using Xunit;
 namespace PgpCore.Tests.UnitTests.Decrypt
 {
     /// <summary>
-    /// AEAD (OCB) encrypted messages use the AEAD encrypted data packet, tag 20, which BouncyCastle has no
-    /// entry for and rejects while reading the packet stream (GitHub issue #219). PgpCore translates that
-    /// into <see cref="UnsupportedAeadException"/> so the error says what is actually wrong, rather than
-    /// claiming the input is not encrypted.
-    /// <para>
-    /// The translation works by matching BouncyCastle's exception message, so these tests pin both halves of
-    /// that behaviour: an AEAD packet must be recognised, and an unknown packet that is *not* AEAD must not
-    /// be. The latter guards against the match being loosened to any "unknown packet type" error.
-    /// </para>
+    /// AEAD session-key packets can be parsed by BouncyCastle without being decryptable.
+    /// PgpCore reports their unsupported format before choosing a decryption key.
     /// </summary>
     public class AeadMessages : TestBase
     {
@@ -68,10 +61,9 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         }
 
         [Fact]
-        public async Task DecryptAsync_AeadEncryptedMessage_ShouldPreserveTheUnderlyingBouncyCastleError()
+        public async Task DecryptAsync_AeadEncryptedMessage_ShouldReportTheUnsupportedSessionKeyVersion()
         {
-            // Arrange - the original error is the only record of which packet tag was rejected, so it must
-            // remain available for diagnosis.
+            // The error identifies the structurally recognized but unsupported packet version.
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
             PGP pgp = ArrangePgp(testFactory);
@@ -86,8 +78,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
 
             // Assert
             UnsupportedAeadException exception = (await act.Should().ThrowAsync<UnsupportedAeadException>()).Which;
-            exception.InnerException.Should().BeOfType<IOException>();
-            exception.InnerException.Message.Should().Contain("20");
+            exception.Message.Should().Contain("session-key packet version 5");
 
             // Teardown
             testFactory.Teardown();

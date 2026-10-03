@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
@@ -41,11 +41,13 @@ namespace PgpCore
             }
             else
             {
-                using (Stream inputStream = inputFile.OpenRead())
-                using (Stream outputStream = outputFile.OpenWrite())
+                return await AtomicFileOutput.VerifyAsync(outputFile, async outputStream =>
                 {
-                    return await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
-                }
+                    using (Stream inputStream = inputFile.OpenRead())
+                    {
+                        return await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
+                    }
+                }).ConfigureAwait(false);
             }
         }
 
@@ -57,21 +59,20 @@ namespace PgpCore
         /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public async Task<bool> VerifyAsync(Stream inputStream, Stream outputStream = null, bool throwIfEncrypted = false)
         {
+            if (inputStream == null) throw new ArgumentNullException(nameof(inputStream));
             bool verified = false;
 
-            // If no output stream provided just write to memory stream and discard
+            // Verification without extraction discards the payload as it is hashed.
             if (outputStream == null)
-                outputStream = new MemoryStream();
+                outputStream = Stream.Null;
 
             // Verification rewinds the input (clear-sign sniff, then packet parsing) and the
             // BouncyCastle decoder requires a seekable stream, so buffer non-seekable input
             // (e.g. a network stream) up front.
             if (!inputStream.CanSeek)
             {
-                MemoryStream seekableStream = new MemoryStream();
-                await inputStream.CopyToAsync(seekableStream).ConfigureAwait(false);
-                seekableStream.Position = 0;
-                inputStream = seekableStream;
+                using (var seekable = await SeekableInput.CopyAsync(inputStream).ConfigureAwait(false))
+                    return await VerifyAsync(seekable, outputStream, throwIfEncrypted).ConfigureAwait(false);
             }
 
             inputStream.Seek(0, SeekOrigin.Begin);
@@ -134,11 +135,12 @@ namespace PgpCore
                 {
                     pgpOnePassSignature.InitVerify(validationKey);
 
-                    int ch;
-                    while ((ch = pgpLiteralStream.ReadByte()) >= 0)
+                    byte[] buffer = new byte[VerificationBufferSize];
+                    int count;
+                    while ((count = await pgpLiteralStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
                     {
-                        pgpOnePassSignature.Update((byte)ch);
-                        outputStream.WriteByte((byte)ch);
+                        pgpOnePassSignature.Update(buffer, 0, count);
+                        await outputStream.WriteAsync(buffer, 0, count).ConfigureAwait(false);
                     }
 
                     PgpSignatureList pgpSignatureList = (PgpSignatureList)factory.NextPgpObject();
@@ -168,26 +170,15 @@ namespace PgpCore
                 if (Utilities.FindPublicKey(pgpSignature.KeyId, EncryptionKeys.VerificationKeys,
                         out PgpPublicKey publicKey))
                 {
-                    foreach (PgpSignature _ in publicKey.GetSignatures())
+                    pgpSignature.InitVerify(publicKey);
+                    byte[] buffer = new byte[VerificationBufferSize];
+                    int count;
+                    while ((count = await pgpLiteralStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
                     {
-                        if (!verified)
-                        {
-                            pgpSignature.InitVerify(publicKey);
-
-                            int ch;
-                            while ((ch = pgpLiteralStream.ReadByte()) >= 0)
-                            {
-                                pgpSignature.Update((byte)ch);
-                                outputStream.WriteByte((byte)ch);
-                            }
-
-                            verified = pgpSignature.Verify();
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        pgpSignature.Update(buffer, 0, count);
+                        await outputStream.WriteAsync(buffer, 0, count).ConfigureAwait(false);
                     }
+                    verified = pgpSignature.Verify();
                 }
             }
             else
@@ -309,11 +300,13 @@ namespace PgpCore
             }
             else
             {
-                using (Stream inputStream = inputFile.OpenRead())
-                using (Stream outputStream = outputFile.OpenWrite())
+                return await AtomicFileOutput.VerifyAsync(outputFile, async outputStream =>
                 {
-                    return await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
-                }
+                    using (Stream inputStream = inputFile.OpenRead())
+                    {
+                        return await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
+                    }
+                }).ConfigureAwait(false);
             }   
         }
 
@@ -336,11 +329,11 @@ namespace PgpCore
 
             bool verified;
 
-            using (MemoryStream outStream = new MemoryStream())
+            using (Stream outStream = SeekableInput.Create())
             {
-                using (ArmoredInputStream armoredInputStream = new ArmoredInputStream(inputStream))
+                using (ArmoredInputStream armoredInputStream = new ArmoredInputStream(new NonClosingStream(inputStream)))
                 {
-                    MemoryStream lineOut = new MemoryStream();
+                    using var lineOut = new MemoryStream();
                     byte[] lineSep = LineSeparator;
                     var lookAhead = ReadInputLine(lineOut, armoredInputStream);
 

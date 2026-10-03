@@ -1,8 +1,9 @@
-﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Utilities.Zlib;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
+using PgpCore.Helpers;
 using PgpCore.Models;
 using System;
 using System.Collections.Generic;
@@ -31,10 +32,8 @@ namespace PgpCore
             // non-seekable stream (e.g. a network stream) must be buffered up front.
             if (!inputStream.CanSeek)
             {
-                MemoryStream seekableStream = new MemoryStream();
-                await inputStream.CopyToAsync(seekableStream).ConfigureAwait(false);
-                seekableStream.Position = 0;
-                inputStream = seekableStream;
+                using (var seekable = await SeekableInput.CopyAsync(inputStream).ConfigureAwait(false))
+                    return await InspectAsync(seekable).ConfigureAwait(false);
             }
 
             bool isArmored = await IsArmoredAsync(inputStream).ConfigureAwait(false);
@@ -92,7 +91,9 @@ namespace PgpCore
         {
             stream.Seek(0, SeekOrigin.Begin);
             byte[] headerBytes = new byte[26];
-            await stream.ReadAsync(headerBytes, 0, 26).ConfigureAwait(false);
+            int offset = 0, read;
+            while (offset < headerBytes.Length && (read = await stream.ReadAsync(headerBytes, offset, headerBytes.Length - offset).ConfigureAwait(false)) > 0)
+                offset += read;
             return IsArmored(headerBytes);
         }
 

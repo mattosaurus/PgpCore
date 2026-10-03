@@ -149,7 +149,7 @@ namespace PgpCore
 
 		private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers)
 		{
-			using (StreamReader streamReader = new StreamReader(inputStream))
+			using (StreamReader streamReader = new StreamReader(inputStream, Encoding.UTF8, true, 1024, leaveOpen: true))
 			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
@@ -247,6 +247,17 @@ namespace PgpCore
 				exception);
 		}
 
+        private static void RejectUnsupportedSessionKeys(PgpEncryptedDataList encrypted)
+        {
+            foreach (PgpEncryptedData recipient in encrypted.GetEncryptedDataObjects())
+            {
+                if (recipient is PgpPbeEncryptedData password && password.Version >= 5)
+                    throw new UnsupportedAeadException("AEAD encrypted messages with session-key packet version " + password.Version +
+                        " are not supported. Ask the sender for non-AEAD output. See https://github.com/mattosaurus/PgpCore/issues/219.");
+
+            }
+        }
+
 		private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
 		{
 			var encryptedDataGenerator =
@@ -299,11 +310,11 @@ namespace PgpCore
 			if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
 			{
 				PgpCompressedDataGenerator compressedDataGenerator =
-					new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
+					new PgpCompressedDataGenerator(CompressionAlgorithm);
 				return compressedDataGenerator.Open(encryptedOut);
 			}
 
-			return encryptedOut;
+			return new NonClosingStream(encryptedOut);
 		}
 
 		#endregion ChainCompressedOut
