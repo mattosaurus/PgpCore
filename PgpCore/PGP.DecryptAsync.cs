@@ -82,7 +82,7 @@ namespace PgpCore
                 // A fresh factory is required to cross armor block boundaries: ArmoredInputStream
                 // reports end-of-stream at each boundary but continues into the next block on
                 // subsequent reads.
-                PgpObjectFactory objFactory = new PgpObjectFactory(decoderStream);
+                PgpObjectFactory objFactory;
 
                 // the first object might be a PGP marker packet.
                 PgpEncryptedDataList enc = null;
@@ -90,6 +90,7 @@ namespace PgpCore
 
                 try
                 {
+                    objFactory = PgpPacketReader.CreateFactory(decoderStream);
                     PgpObject obj = objFactory.NextPgpObject();
 
                     if (obj == null)
@@ -117,9 +118,6 @@ namespace PgpCore
                     // it must not be reported as unrecognised or unencrypted data.
                     ThrowIfAeadEncryptedData(ex);
 
-                    if (anyMessageProcessed)
-                        break; // tolerate trailing non-message data after valid messages
-
                     // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
                     throw new NotEncryptedDataException(NotEncryptedDataMessage, ex);
                 }
@@ -127,8 +125,6 @@ namespace PgpCore
                 // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
                 if (enc == null && message == null)
                 {
-                    if (anyMessageProcessed)
-                        break;
                     throw new NotEncryptedDataException(NotEncryptedDataMessage);
                 }
 

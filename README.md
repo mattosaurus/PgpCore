@@ -831,6 +831,10 @@ Verification uses authenticated signing keys, including expired or revoked keys 
 
 File-writing overloads stage output beside the destination and commit only after successful completion. Failed integrity or signature validation preserves an existing destination and does not publish a new plaintext file. Key generation produces both key files before committing either; failure to commit the second restores the first when possible. Public and private key destinations must differ by more than letter case, including on case-sensitive volumes. Two files are not a crash-atomic transaction. If restoration itself fails, the exception identifies the retained recovery backup.
 
+Concatenated encrypted messages must all parse and decrypt successfully before file output is committed. A damaged later message fails the operation instead of replacing the destination with only the earlier plaintext chunks.
+
+AEAD/OCB data packets (tag 20) are unsupported by the current BouncyCastle OpenPGP decryption engine. Decryption and inspection reject them with `UnsupportedAeadException` before attempting to process their payload, whether recipients use public keys or passphrases. Ask the sender for non-AEAD, MDC-protected output; changing key preferences cannot repair existing ciphertext. See [issue #219](https://github.com/mattosaurus/PgpCore/issues/219).
+
 Staging files on Unix have owner-only permissions. Committed new files retain those permissions. Directory access and existing destination security remain the application's responsibility. Stream overloads can emit data before final validation, so callers must discard stream output when verification returns false or decryption throws. Borrowed streams remain open.
 
 Verification without extraction hashes and discards the payload. Non-seekable verification and inspection spool input to an owned temporary file instead of allocating memory proportional to message size. Clear-sign verification canonicalizes and hashes even long lines with fixed-size buffers and private temporary storage; these operations require writable temporary storage.

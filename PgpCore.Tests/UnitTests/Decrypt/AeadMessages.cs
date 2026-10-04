@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Org.BouncyCastle.Bcpg;
 using System;
 using System.IO;
 using System.Text;
@@ -25,6 +26,43 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             "/aMyj8BGMAxddcrsuUnkw2rtq5K14=";
 
         private static byte[] OcbEncryptedMessage => Convert.FromBase64String(OcbEncryptedMessageBase64);
+
+        // GnuPG 2.4.4 --force-ocb --encrypt using Constants.PUBLICKEY1: a version 3
+        // public-key session packet followed by tag 20, as produced by Kleopatra.
+        private const string PublicKeyOcbMessage =
+            "hIwDHCBL6iCIoI8BA/9Kc/oyjM3SWmRB9TzGwc0K4pW4VSU5mIT1C6sdIP75+B2n1kZNC1VWEp4f1L34sjKZnIQv3vvA++ie2QUwnKM5wMXB9G3WazeW4WmevpqV1FF2KG4xKHvWZTLhASDudyePBWevKI7FslOxhRidlVUli/r6DB+UKSCdEXt9n2pR1dRjAQkCEKjWmVrf5NwLP1sVMTmyoD8/dB5YgaZfe0AnPPRkqWvYxt2smfuNgwlgD+EYUX0dsyYyGj+byibIsjJHKIO0HwXDiqMlWRfevEuT8LAPaptvyZK8lsKg5LGbApgeCbpv";
+
+        [Theory]
+        [InlineData("decrypt", false, false)]
+        [InlineData("decrypt", true, false)]
+        [InlineData("decrypt", false, true)]
+        [InlineData("decrypt", true, true)]
+        [InlineData("decryptVerify", false, false)]
+        [InlineData("decryptVerify", true, true)]
+        [InlineData("inspect", false, false)]
+        [InlineData("inspect", true, true)]
+        public async Task PublicKeyOcb_ReportsUnsupportedEncryptionBeforeReadingPayload(string operation, bool armored, bool nonSeekable)
+        {
+            byte[] message = Convert.FromBase64String(PublicKeyOcbMessage);
+            if (armored)
+            {
+                using var encoded = new MemoryStream();
+                using (var armor = new ArmoredOutputStream(encoded)) armor.Write(message);
+                message = encoded.ToArray();
+            }
+            using var bytes = new MemoryStream(message);
+            using Stream input = nonSeekable ? new NonSeekableStream(bytes) : bytes;
+            using var output = new MemoryStream();
+            var pgp = new PGP(new EncryptionKeys(Constants.PRIVATEKEY1, Constants.PASSWORD1));
+            UnsupportedAeadException error = await Assert.ThrowsAsync<UnsupportedAeadException>(async () =>
+            {
+                if (operation == "inspect") await pgp.InspectAsync(input);
+                else if (operation == "decryptVerify") await pgp.DecryptAndVerifyAsync(input, output);
+                else await pgp.DecryptAsync(input, output);
+            });
+            Assert.Contains("AEAD", error.Message);
+            Assert.Equal(0, output.Length);
+        }
 
         /// <summary>
         /// A packet whose tag is unknown to BouncyCastle but is not the AEAD tag. 0xD5 is a new-format
