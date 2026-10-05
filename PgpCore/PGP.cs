@@ -19,6 +19,7 @@ namespace PgpCore
 	{
 		private const int BufferSize = 0x10000;
 		private const string DefaultFileName = "name";
+		private static readonly Encoding ArmorEncoding = new UTF8Encoding(false);
 
 		/// <summary>
 		/// OpenPGP packet tag of the AEAD (OCB) encrypted data packet. BouncyCastle has no entry for it and
@@ -43,11 +44,11 @@ namespace PgpCore
 		public bool AddVersionHeader { get; set; } = true;
 
 		/// <summary>
-		/// Text encoding used by the string based overloads when converting between strings and the
-		/// underlying data. Defaults to UTF-8 without a byte order mark, which round trips any .NET
-		/// string. Set this when a counterparty produces or expects text in a specific legacy encoding
-		/// (e.g. Windows-1253); the stream and file overloads are unaffected as they never reinterpret
-		/// bytes as text.
+		/// Text encoding used for literal payloads in string encryption and signing, and for decoded
+		/// plaintext returned by read helpers. Defaults to UTF-8 without a byte order mark. Set this
+		/// when a counterparty uses a different payload encoding, such as Windows-1253 or UTF-16.
+		/// Armored and clear-signed string representations use UTF-8 independently of this setting.
+		/// Stream and file operations retain their byte-oriented input and output.
 		/// </summary>
 		public Encoding TextEncoding { get; set; } = new UTF8Encoding(false);
 

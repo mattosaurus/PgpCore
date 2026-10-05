@@ -101,7 +101,7 @@ namespace PgpCore
             {
                 await SignDetachedAsync(inputStream, outputStream, true, headers).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
+                return await outputStream.GetStringAsync(ArmorEncoding).ConfigureAwait(false);
             }
         }
 
@@ -236,7 +236,7 @@ namespace PgpCore
         public async Task<bool> VerifyDetachedAsync(string input, string signature)
         {
             using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
-            using (Stream signatureStream = await signature.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream signatureStream = await signature.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             {
                 return await VerifyDetachedAsync(inputStream, signatureStream).ConfigureAwait(false);
             }

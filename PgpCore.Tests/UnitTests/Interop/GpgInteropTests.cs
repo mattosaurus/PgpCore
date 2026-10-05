@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -215,6 +216,45 @@ namespace PgpCore.Tests.UnitTests.Interop
     /// </summary>
     public class GpgInteropTests : TestBase
     {
+        [GpgFact]
+        [Trait("Category", "Interop")]
+        public async Task GpgClearSignedLatin1_FileAndStreamReaders_PreservePayloadEncoding()
+        {
+            var testFactory = new TestFactory();
+            string homeDir = GpgRunner.CreateHomeDir();
+            try
+            {
+                testFactory.Arrange(KeyType.Generated, FileType.Known);
+                const string content = "caf\u00E9 na\u00EFve r\u00E9sum\u00E9";
+                string inputPath = Path.Combine(homeDir, "latin1.txt");
+                string signedPath = Path.Combine(homeDir, "latin1.asc");
+                File.WriteAllBytes(inputPath, Encoding.Latin1.GetBytes(content));
+                var import = GpgRunner.Run(homeDir, testFactory.Password,
+                    "--import", testFactory.PrivateKeyFileInfo.FullName);
+                import.ExitCode.Should().Be(0, "{0}", import.Details);
+                var sign = GpgRunner.Run(homeDir, testFactory.Password,
+                    "--armor", "--output", signedPath, "--clearsign", inputPath);
+                sign.ExitCode.Should().Be(0, "{0}", sign.Details);
+
+                var pgp = new PGP(new EncryptionKeys(testFactory.PublicKeyFileInfo))
+                {
+                    TextEncoding = Encoding.Latin1
+                };
+                var general = await pgp.VerifyAndReadSignedFileAsync(new FileInfo(signedPath));
+                general.IsVerified.Should().BeTrue();
+                general.ClearText.TrimEnd('\r', '\n').Should().Be(content);
+                using var input = File.OpenRead(signedPath);
+                var clear = await pgp.VerifyAndReadClearStreamAsync(input);
+                clear.IsVerified.Should().BeTrue();
+                clear.ClearText.TrimEnd('\r', '\n').Should().Be(content);
+            }
+            finally
+            {
+                GpgRunner.DeleteHomeDir(homeDir);
+                testFactory.Teardown();
+            }
+        }
+
         [GpgFact]
         [Trait("Category", "Interop")]
         public void PgpCoreEncrypt_GpgDecrypt_ShouldProduceOriginalContent()
