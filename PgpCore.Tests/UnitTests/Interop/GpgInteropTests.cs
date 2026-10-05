@@ -355,7 +355,7 @@ namespace PgpCore.Tests.UnitTests.Interop
                 PGP pgp = new PGP(signingKeys);
 
                 string contentFilePath = Path.Combine(homeDir, "content.txt");
-                File.WriteAllText(contentFilePath, "foo\n\nbar\n\n");
+                File.WriteAllText(contentFilePath, "foo\u00A0\u2003\n\nbar\n\n");
                 string clearSignedFilePath = Path.Combine(homeDir, "clearsigned.asc");
 
                 // Act

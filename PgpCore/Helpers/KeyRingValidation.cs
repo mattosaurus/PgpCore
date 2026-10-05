@@ -3,6 +3,7 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Bcpg.Sig;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace PgpCore.Helpers
@@ -24,7 +25,8 @@ namespace PgpCore.Helpers
 
             internal bool IsCurrent(DateTime now)
             {
-                if (Revoked || PublicKey.CreationTime > now)
+                DateTime latestCreation = now.AddMinutes(5);
+                if (Revoked || PublicKey.CreationTime > latestCreation)
                     return false;
                 long keySeconds = ExpirationSeconds;
                 if (keySeconds > 0 && (now - PublicKey.CreationTime).TotalSeconds >= keySeconds)
@@ -32,7 +34,7 @@ namespace PgpCore.Helpers
                 if (Authorization != null)
                 {
                     long signatureSeconds = Authorization.GetHashedSubPackets()?.GetSignatureExpirationTime() ?? 0;
-                    if (Authorization.CreationTime > now ||
+                    if (Authorization.CreationTime > latestCreation ||
                         signatureSeconds > 0 && (now - Authorization.CreationTime).TotalSeconds >= signatureSeconds)
                         return false;
                 }
@@ -55,10 +57,10 @@ namespace PgpCore.Helpers
             foreach (PgpPublicKey subkey in ring.GetPublicKeys().Where(k => !k.IsMasterKey))
             {
                 PgpSignature binding = subkey.GetSignaturesOfType(PgpSignature.SubkeyBinding)
-                    .Where(s => Verify(s, primary, () => s.VerifyCertification(primary, subkey)))
+                    .Where(s => Verify(s, primary, copy => copy.VerifyCertification(primary, subkey)))
                     .OrderByDescending(s => s.CreationTime).FirstOrDefault();
                 if (binding == null)
-                    throw new InvalidKeyMaterialException($"Subkey [{subkey.KeyId:X}] has no valid binding to the primary key.");
+                    continue;
 
                 var info = Create(subkey, binding,
                     primaryInfo.Revoked || HasRevocation(primary, subkey, PgpSignature.SubkeyRevocation));
@@ -108,7 +110,7 @@ namespace PgpCore.Helpers
         private static IEnumerable<PgpSignature> ReadSelfSignatures(PgpPublicKey primary)
         {
             foreach (PgpSignature signature in primary.GetSignaturesOfType(PgpSignature.DirectKey))
-                if (Verify(signature, primary, () => VerifyDirectKey(signature, primary)))
+                if (Verify(signature, primary, copy => VerifyDirectKey(copy, primary)))
                     yield return signature;
             foreach (string userId in primary.GetUserIds())
                 foreach (PgpSignature signature in SelfCertifications(primary, userId))
@@ -117,17 +119,23 @@ namespace PgpCore.Helpers
                 foreach (PgpSignature signature in primary.GetSignaturesForUserAttribute(attribute))
                     if (signature.SignatureType >= PgpSignature.DefaultCertification &&
                         signature.SignatureType <= PgpSignature.PositiveCertification &&
-                        Verify(signature, primary, () => signature.VerifyCertification(attribute, primary)))
+                        Verify(signature, primary, copy => copy.VerifyCertification(attribute, primary)))
                         yield return signature;
         }
 
         private static bool VerifyDirectKey(PgpSignature signature, PgpPublicKey key)
         {
             // BouncyCastle's single-key VerifyCertification accepts revocations only.
-            // Hash the same public-key framing used by its certification generator.
+            // Use the framing belonging to the key version. Modern key packets have
+            // a four-octet length even though the current signature reader is still limited.
             byte[] contents = key.PublicKeyPacket.GetEncodedContents();
-            if (contents.Length > ushort.MaxValue) return false;
-            signature.Update((byte)0x99);
+            if (key.Version <= 4 && contents.Length > ushort.MaxValue) return false;
+            signature.Update((byte)(key.Version <= 4 ? 0x99 : key.Version == 5 ? 0x9A : 0x9B));
+            if (key.Version >= 5)
+            {
+                signature.Update((byte)(contents.Length >> 24));
+                signature.Update((byte)(contents.Length >> 16));
+            }
             signature.Update((byte)(contents.Length >> 8));
             signature.Update((byte)contents.Length);
             signature.Update(contents);
@@ -141,17 +149,17 @@ namespace PgpCore.Helpers
         {
             PgpSignature[] signatures = primary.GetSignaturesForId(userId).ToArray();
             DateTime revokedAt = signatures.Where(s => s.SignatureType == PgpSignature.CertificationRevocation &&
-                Verify(s, primary, () => s.VerifyCertification(userId, primary)))
+                Verify(s, primary, copy => copy.VerifyCertification(userId, primary)))
                 .Select(s => s.CreationTime).DefaultIfEmpty(DateTime.MinValue).Max();
             return signatures.Where(s => s.SignatureType >= PgpSignature.DefaultCertification &&
                 s.SignatureType <= PgpSignature.PositiveCertification && s.CreationTime > revokedAt &&
-                Verify(s, primary, () => s.VerifyCertification(userId, primary)));
+                Verify(s, primary, copy => copy.VerifyCertification(userId, primary)));
         }
 
         private static bool HasRevocation(PgpPublicKey primary, PgpPublicKey key, int type)
         {
             return key.GetSignaturesOfType(type).Any(s => Verify(s, primary,
-                () => key.IsMasterKey ? s.VerifyCertification(key) : s.VerifyCertification(primary, key)));
+                copy => key.IsMasterKey ? copy.VerifyCertification(key) : copy.VerifyCertification(primary, key)));
         }
 
         private static bool HasBackSignature(PgpPublicKey primary, PgpPublicKey subkey, PgpSignature binding)
@@ -164,28 +172,38 @@ namespace PgpCore.Helpers
 
         private static bool HasBackSignature(PgpPublicKey primary, PgpPublicKey subkey, PgpSignatureSubpacketVector packets)
         {
-            PgpSignatureList signatures = packets?.GetEmbeddedSignatures();
+            PgpSignatureList signatures;
+            try { signatures = packets?.GetEmbeddedSignatures(); }
+            catch (Exception error) when (IsUnverifiableSignature(error)) { return false; }
             if (signatures == null)
                 return false;
             for (int i = 0; i < signatures.Count; i++)
             {
                 PgpSignature signature = signatures[i];
                 if (signature.SignatureType == PgpSignature.PrimaryKeyBinding &&
-                    Verify(signature, subkey, () => signature.VerifyCertification(primary, subkey)))
+                    Verify(signature, subkey, copy => copy.VerifyCertification(primary, subkey)))
                     return true;
             }
             return false;
         }
 
-        private static bool Verify(PgpSignature signature, PgpPublicKey signer, Func<bool> verify)
+        private static bool Verify(PgpSignature signature, PgpPublicKey signer, Func<PgpSignature, bool> verify)
         {
             try
             {
-                signature.InitVerify(signer);
-                return verify();
+                // Rings and their signature objects are shared by independent lazies and callers.
+                // Keep mutable verifier state private to this operation, including revocations.
+                using var encoded = new MemoryStream(signature.GetEncoded(), false);
+                var copy = ((PgpSignatureList)new PgpObjectFactory(encoded).NextPgpObject())[0];
+                copy.InitVerify(signer);
+                return verify(copy);
             }
-            catch (PgpException) { return false; }
-            catch (ArgumentException) { return false; }
+            catch (Exception error) when (IsUnverifiableSignature(error)) { return false; }
         }
+
+        private static bool IsUnverifiableSignature(Exception error) => error is PgpException ||
+            error is ArgumentException || error is IOException || error is NotSupportedException ||
+            error is UnsupportedPacketVersionException ||
+            error is Org.BouncyCastle.Security.SecurityUtilityException;
     }
 }

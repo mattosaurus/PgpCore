@@ -16,6 +16,47 @@ namespace PgpCore.Tests.UnitTests.Safety
     public class ClearTextMemoryTests
     {
         [Fact]
+        public async Task ManyShortCleartextLines_PreserveLineBoundariesAndVerify()
+        {
+            var pgp = new PGP(new EncryptionKeys(Constants.PUBLICKEY1, Constants.PRIVATEKEY1, Constants.PASSWORD1));
+            string text = string.Concat(Enumerable.Repeat("short line\n", 10000));
+            string signed = await pgp.ClearSignAsync(text);
+            Assert.True(await pgp.VerifyClearAsync(signed));
+        }
+
+        [Fact]
+        public async Task ClearSigning_PreservesTrailingUnicodeWhitespaceInTheSignature()
+        {
+            var pgp = new PGP(new EncryptionKeys(Constants.PUBLICKEY1, Constants.PRIVATEKEY1, Constants.PASSWORD1));
+            string signed = await pgp.ClearSignAsync("Unicode whitespace\u00A0\u2003\nsecond line");
+            Assert.True(await pgp.VerifyClearAsync(signed));
+        }
+
+        [Fact]
+        public async Task ClearVerification_RejectsAnUnmatchedUnhashedIssuerId()
+        {
+            var keys = new EncryptionKeys(Constants.PUBLICKEY1, Constants.PRIVATEKEY1, Constants.PASSWORD1);
+            var generator = new PgpSignatureGenerator(keys.SigningSecretKey.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            generator.InitSign(PgpSignature.CanonicalTextDocument, keys.SigningPrivateKey);
+            var unhashed = new PgpSignatureSubpacketGenerator();
+            unhashed.SetIssuerKeyID(false, keys.SigningSecretKey.KeyId ^ 1);
+            generator.SetUnhashedSubpackets(unhashed.Generate());
+            byte[] payload = Encoding.UTF8.GetBytes("issuer mismatch");
+            generator.Update(payload);
+            using var input = new MemoryStream();
+            using (var armor = new ArmoredOutputStream(input))
+            {
+                armor.BeginClearText(HashAlgorithmTag.Sha256);
+                armor.Write(payload);
+                armor.Write(Encoding.ASCII.GetBytes("\r\n"));
+                armor.EndClearText();
+                generator.Generate().Encode(armor);
+            }
+            input.Position = 0;
+            Assert.False(await new PGP(keys).VerifyClearAsync(input));
+        }
+
+        [Fact]
         public async Task LongCleartextLine_VerifiesWithoutAllocatingMemoryProportionalToItsLength()
         {
             using var publicKey = new MemoryStream();

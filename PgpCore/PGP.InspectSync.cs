@@ -77,8 +77,6 @@ namespace PgpCore
             if (enc == null && message == null)
                 throw new ArgumentException("Failed to detect encrypted content format.", nameof(inputStream));
 
-            if (enc != null) RejectUnsupportedSessionKeys(enc);
-
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
                 // decrypt

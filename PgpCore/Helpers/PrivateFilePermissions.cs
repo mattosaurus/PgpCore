@@ -16,10 +16,37 @@ namespace PgpCore.Helpers
         }
 
         internal static void Restrict(FileStream stream)
+            => SetMode(stream, 0x180);
+
+        internal static void SetMode(FileStream stream, int mode)
         {
-            if (FChmod(stream.SafeFileHandle.DangerousGetHandle().ToInt32(), 0x180) != 0)
-                throw new IOException("Unable to restrict staging file permissions (errno " + Marshal.GetLastWin32Error() + ").");
+            if (FChmod(stream.SafeFileHandle.DangerousGetHandle().ToInt32(), (uint)mode) != 0)
+                throw new IOException("Unable to set staging file permissions (errno " + Marshal.GetLastWin32Error() + ").");
         }
+
+        internal static int? ReadMode(string path)
+        {
+            if (Stat(path, out FileStatus status) == 0)
+                return status.Mode & 0x1FF;
+            int error = Marshal.GetLastWin32Error();
+            if (error == 2) return null; // ENOENT: a new output keeps its creation/umask defaults.
+            throw new IOException("Unable to read destination permissions (errno " + error + ").");
+        }
+
+        // The .NET runtime's portable stat layout avoids platform-specific libc struct stat layouts.
+        // It is part of the runtime already used for Unix FileStream operations.
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FileStatus
+        {
+            internal int Flags, Mode;
+            internal uint Uid, Gid;
+            internal long Size, ATime, ATimeNsec, MTime, MTimeNsec, CTime, CTimeNsec;
+            internal long BirthTime, BirthTimeNsec, Dev, RDev, Ino;
+            internal uint UserFlags;
+        }
+
+        [DllImport("System.Native", EntryPoint = "SystemNative_Stat", CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern int Stat(string path, out FileStatus status);
 
         [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
         private static extern int Mkdir(string path, uint mode);

@@ -33,12 +33,38 @@ namespace PgpCore.Tests.UnitTests.Safety
 
         [UnixFact]
         [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
-        public void GeneratedKeyFiles_AreReadableAndWritableOnlyByTheirOwner()
+        public void GeneratedPrivateKey_IsOwnerOnlyWhilePublicOutputUsesCreationDefaults()
         {
             var expected = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-            Assert.Equal(expected, System.IO.File.GetUnixFileMode(File("public.asc").FullName));
+            var defaultFile = File("creation-default.txt");
+            System.IO.File.WriteAllText(defaultFile.FullName, "default mode");
+            Assert.Equal(System.IO.File.GetUnixFileMode(defaultFile.FullName), System.IO.File.GetUnixFileMode(File("public.asc").FullName));
             Assert.Equal(expected, System.IO.File.GetUnixFileMode(File("private.asc").FullName));
             Assert.Empty(Directory.GetFileSystemEntries(_root, ".pgpcore-*"));
+        }
+
+        [UnixFact]
+        [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+        public async Task ReplacingOutput_PreservesDestinationPermissions()
+        {
+            var input = File("input.txt");
+            var output = File("shared.pgp");
+            System.IO.File.WriteAllText(input.FullName, "shared drop-folder payload");
+            System.IO.File.WriteAllText(output.FullName, "existing");
+            var mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead;
+            System.IO.File.SetUnixFileMode(output.FullName, mode);
+            await _pgp.EncryptAsync(input, output);
+            Assert.Equal(mode, System.IO.File.GetUnixFileMode(output.FullName));
+            Assert.Equal("shared drop-folder payload", await _pgp.DecryptAsync(System.IO.File.ReadAllText(output.FullName)));
+        }
+
+        [UnixFact]
+        [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+        public void ReplacingSecretKey_RestrictsPreviouslySharedPermissions()
+        {
+            System.IO.File.SetUnixFileMode(File("private.asc").FullName, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead);
+            new PGP().GenerateKey(File("public.asc"), File("private.asc"), strength: 1024, certainty: 8);
+            Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, System.IO.File.GetUnixFileMode(File("private.asc").FullName));
         }
 
         [Theory]

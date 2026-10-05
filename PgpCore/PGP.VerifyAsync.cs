@@ -341,11 +341,10 @@ namespace PgpCore
                     PgpSignatureList pgpSignatureList = (PgpSignatureList)pgpObjectFactory.NextPgpObject();
                     PgpSignature pgpSignature = pgpSignatureList[0];
 
-                    // Match the signature's key id against the supplied keys (including subkeys);
-                    // fall back to the primary verification key for legacy behaviour.
+                    // Match the signature's key id against authenticated keys, including subkeys.
                     PgpPublicKey verificationKey =
-                        EncryptionKeys.VerificationKeys.FirstOrDefault(key => key.KeyId == pgpSignature.KeyId)
-                        ?? EncryptionKeys.VerificationKeys.First();
+                        EncryptionKeys.VerificationKeys.FirstOrDefault(key => key.KeyId == pgpSignature.KeyId);
+                    if (verificationKey == null) return false;
                     pgpSignature.InitVerify(verificationKey);
 
                     ClearTextCanonicalization.UpdateSignature(pgpSignature, outStream);

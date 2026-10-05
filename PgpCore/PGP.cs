@@ -162,7 +162,7 @@ namespace PgpCore
 					byte[] lineByteArray = Encoding.UTF8.GetBytes(line);
 					// Does the line end with whitespace?
 					// Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-					string cleanLine = line.TrimEnd();
+					string cleanLine = line.TrimEnd(' ', '\t');
 					byte[] cleanLineByteArray = Encoding.UTF8.GetBytes(cleanLine);
 
 					pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
@@ -224,7 +224,7 @@ namespace PgpCore
 
 		/// <summary>
 		/// Translates BouncyCastle's "unknown packet type encountered: 20" into
-		/// <see cref="UnsupportedAeadException"/>. Tag 20 is the AEAD (OCB) encrypted data packet, which the
+		/// <see cref="UnsupportedAeadException"/>. Tag 20 is an AEAD encrypted data packet, which the
 		/// referenced BouncyCastle version cannot read. Reporting it as unrecognised or unencrypted data is
 		/// misleading, because the input is valid OpenPGP and is encrypted.
 		/// </summary>
@@ -241,22 +241,11 @@ namespace PgpCore
 			}
 
 			throw new UnsupportedAeadException(
-				"The message uses AEAD (OCB) encryption, which the referenced BouncyCastle version cannot read. " +
-				"Ask the sender to disable AEAD, or remove the AEAD feature flag from the key. " +
+				"The message uses AEAD encryption, which the referenced BouncyCastle version cannot read. " +
+				"Ask the sender for non-AEAD, MDC-protected output. " +
 				"See https://github.com/mattosaurus/PgpCore/issues/219.",
 				exception);
 		}
-
-        private static void RejectUnsupportedSessionKeys(PgpEncryptedDataList encrypted)
-        {
-            foreach (PgpEncryptedData recipient in encrypted.GetEncryptedDataObjects())
-            {
-                if (recipient is PgpPbeEncryptedData password && password.Version >= 5)
-                    throw new UnsupportedAeadException("AEAD encrypted messages with session-key packet version " + password.Version +
-                        " are not supported. Ask the sender for non-AEAD output. See https://github.com/mattosaurus/PgpCore/issues/219.");
-
-            }
-        }
 
 		private Stream ChainEncryptedOut(Stream outputStream, bool withIntegrityCheck)
 		{

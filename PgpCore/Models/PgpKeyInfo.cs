@@ -6,7 +6,7 @@ namespace PgpCore.Models
     /// <summary>Public certificate metadata derived from authenticated self-signatures and bindings.</summary>
     public sealed class PgpKeyInfo
     {
-        /// <summary>The key ID as sixteen hexadecimal digits.</summary>
+        /// <summary>The key ID as sixteen uppercase hexadecimal digits without a prefix.</summary>
         public string KeyId { get; internal set; }
         /// <summary>The full hexadecimal fingerprint of this key.</summary>
         public string Fingerprint { get; internal set; }

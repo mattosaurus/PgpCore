@@ -37,8 +37,11 @@ namespace PgpCore.Helpers
                 }
                 if (count > 0) output.Write(buffer, 0, count);
                 // Discard trailing spaces/tabs on disk, including runs spanning buffers.
-                output.SetLength(start + trimmedLength);
-                output.Position = start + trimmedLength;
+                if (trimmedLength != length)
+                {
+                    output.SetLength(start + trimmedLength);
+                    output.Position = start + trimmedLength;
+                }
                 output.Write(separator, 0, separator.Length);
 
                 int ending = character;

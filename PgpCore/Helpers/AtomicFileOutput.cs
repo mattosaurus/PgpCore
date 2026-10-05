@@ -10,18 +10,20 @@ namespace PgpCore.Helpers
         private readonly string _destination;
         private readonly string _staging;
         private readonly string _privateDirectory;
+        private readonly bool _secret;
         private FileStream _stream;
 
-        internal AtomicFileOutput(FileInfo destination)
+        internal AtomicFileOutput(FileInfo destination, bool secret = false)
         {
             _destination = destination.FullName;
+            _secret = secret;
             if (Path.DirectorySeparatorChar == '/')
                 _privateDirectory = PrivateFilePermissions.CreateDirectory(destination.DirectoryName);
             _staging = Path.Combine(_privateDirectory ?? destination.DirectoryName, ".pgpcore-" + Guid.NewGuid().ToString("N") + ".tmp");
             try
             {
                 _stream = new FileStream(_staging, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                if (_privateDirectory != null) PrivateFilePermissions.Restrict(_stream);
+                if (_privateDirectory != null && _secret) PrivateFilePermissions.Restrict(_stream);
             }
             catch
             {
@@ -35,6 +37,11 @@ namespace PgpCore.Helpers
         internal void Commit(string backup = null)
         {
             _stream.Flush(true);
+            if (_privateDirectory != null)
+            {
+                int? mode = _secret ? 0x180 : PrivateFilePermissions.ReadMode(_destination);
+                if (mode.HasValue) PrivateFilePermissions.SetMode(_stream, mode.Value);
+            }
             _stream.Dispose();
             _stream = null;
             if (File.Exists(_destination))
@@ -85,7 +92,7 @@ namespace PgpCore.Helpers
                 throw new ArgumentException("Public and private key destinations must differ by more than letter case.");
 
             using (var publicOutput = new AtomicFileOutput(publicFile))
-            using (var privateOutput = new AtomicFileOutput(privateFile))
+            using (var privateOutput = new AtomicFileOutput(privateFile, secret: true))
             {
                 write(publicOutput.Stream, privateOutput.Stream);
                 string backup = Path.Combine(publicFile.DirectoryName, ".pgpcore-" + Guid.NewGuid().ToString("N") + ".bak");

@@ -33,7 +33,7 @@ namespace PgpCore.Helpers
                 tag = packets.NextPacketTag();
             }
             if (tag == PacketTag.AeadEncData)
-                throw new UnsupportedAeadException("The message uses AEAD (OCB) encryption (packet tag 20), which the referenced BouncyCastle version cannot decrypt. " +
+                throw new UnsupportedAeadException("The message uses AEAD encryption (packet tag 20), which the referenced BouncyCastle version cannot decrypt. " +
                     "Ask the sender for non-AEAD, MDC-protected output. See https://github.com/mattosaurus/PgpCore/issues/219.");
             encoded.Flush();
             return new PgpObjectFactory(prefix.Length == 0 ? packets : new PrefixStream(prefix.ToArray(), packets));

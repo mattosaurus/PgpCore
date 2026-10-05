@@ -3,7 +3,7 @@ using System;
 namespace PgpCore
 {
     /// <summary>
-    /// Thrown when the message uses an AEAD session-key format that PgpCore cannot decrypt.
+    /// Thrown when the message uses an AEAD encryption format that PgpCore cannot decrypt.
     /// BouncyCastle may recognize the packets without implementing their decryption.
     /// See https://github.com/mattosaurus/PgpCore/issues/219.
     /// </summary>

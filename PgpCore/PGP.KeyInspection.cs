@@ -35,7 +35,7 @@ namespace PgpCore
                         ? (DateTime?)null : key.PublicKey.CreationTime.AddSeconds(seconds);
                     result.Add(new PgpKeyInfo
                     {
-                        KeyId = $"0x{unchecked((ulong)key.PublicKey.KeyId):X16}",
+                        KeyId = $"{unchecked((ulong)key.PublicKey.KeyId):X16}",
                         Fingerprint = Hex(key.PublicKey.GetFingerprint()),
                         PrimaryFingerprint = primaryFingerprint,
                         UserIds = userIds.ToArray(),

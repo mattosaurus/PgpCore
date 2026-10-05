@@ -809,7 +809,7 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 | Exception | Thrown when |
 | --- | --- |
 | `NotEncryptedDataException` | `Decrypt` input is not PGP encrypted data — plain text, signed-only, or clear-signed content. |
-| `UnsupportedAeadException` | The message uses an AEAD session-key format that PgpCore cannot decrypt ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
+| `UnsupportedAeadException` | The message uses an AEAD encryption format that PgpCore cannot decrypt ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
 | `IncorrectPassphraseException` | The supplied passphrase does not unlock the private key. |
 | `InvalidKeyMaterialException` | Key material could not be parsed, or contained no usable keys. |
 | `MessageIntegrityException` | The message failed its modification detection (MDC) check — see [IgnoreIntegrityCheckFailure](#ignoreintegritycheckfailure). |
@@ -823,7 +823,7 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 
 ## Certificate validation and safe output
 
-Key selection authenticates primary self-signatures, subkey bindings, key flags, expiration metadata, and primary-issued revocations. Signing subkeys require an embedded primary-key binding signature. Appending a foreign or unbound subkey makes the certificate invalid. New encryption and signing reject expired or revoked primary keys and subkeys. Explicit encryption-key selection still permits historical keys, but requires an authentic binding and encryption capability.
+Key selection authenticates primary self-signatures, subkey bindings, key flags, expiration metadata, and primary-issued revocations. Signing subkeys require an embedded primary-key binding signature. Subkeys without a verifiable binding are excluded from key selection and inspection; they do not disable the authentic keys in the same certificate. A primary key without a valid self-signature remains invalid. New encryption and signing reject expired or revoked primary keys and subkeys. Creation times allow up to five minutes of clock skew; expiration and revocation checks still apply. Explicit encryption-key selection still permits historical keys, but requires an authentic binding and encryption capability.
 
 Verification uses authenticated signing keys, including expired or revoked keys for cryptographic verification of older data. It does not establish a trusted identity or prove that a message predates revocation. Compare the complete primary fingerprint against an independently trusted value.
 
@@ -833,8 +833,8 @@ File-writing overloads stage output beside the destination and commit only after
 
 Concatenated encrypted messages must all parse and decrypt successfully before file output is committed. A damaged later message fails the operation instead of replacing the destination with only the earlier plaintext chunks.
 
-AEAD/OCB data packets (tag 20) are unsupported by the current BouncyCastle OpenPGP decryption engine. Decryption and inspection reject them with `UnsupportedAeadException` before attempting to process their payload, whether recipients use public keys or passphrases. Ask the sender for non-AEAD, MDC-protected output; changing key preferences cannot repair existing ciphertext. See [issue #219](https://github.com/mattosaurus/PgpCore/issues/219).
+AEAD data packets (tag 20), including OCB and EAX, are unsupported by the current BouncyCastle OpenPGP decryption engine. Decryption and inspection reject them with `UnsupportedAeadException` before attempting to process their payload, whether recipients use public keys or passphrases. Ask the sender for non-AEAD, MDC-protected output; changing key preferences cannot repair existing ciphertext. See [issue #219](https://github.com/mattosaurus/PgpCore/issues/219).
 
-Staging files on Unix have owner-only permissions. Committed new files retain those permissions. Directory access and existing destination security remain the application's responsibility. Stream overloads can emit data before final validation, so callers must discard stream output when verification returns false or decryption throws. Borrowed streams remain open.
+Unix staging directories are owner-only while an operation is in progress. New non-secret outputs use normal creation permissions under the process umask; replacements preserve the existing destination's read, write, and execute permission bits. Generated secret-key files are owner-only, including replacements. Atomic file output requires create, rename, and delete access in the destination directory, even when the existing destination file is writable. There is no in-place fallback: callers needing their own output or permission policy can use a stream overload. Stream overloads can emit data before final validation, so callers must discard stream output when verification returns false or decryption throws. Borrowed streams remain open.
 
 Verification without extraction hashes and discards the payload. Non-seekable verification and inspection spool input to an owned temporary file instead of allocating memory proportional to message size. Clear-sign verification canonicalizes and hashes even long lines with fixed-size buffers and private temporary storage; these operations require writable temporary storage.

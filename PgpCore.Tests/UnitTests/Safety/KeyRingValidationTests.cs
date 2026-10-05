@@ -71,18 +71,38 @@ namespace PgpCore.Tests.UnitTests.Safety
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public void DirectKeySelfSignature_IsAuthenticatedWithoutRequiringUserIds(bool authentic)
+        [InlineData(4, false)]
+        [InlineData(4, true)]
+        [InlineData(5, false)]
+        [InlineData(5, true)]
+        [InlineData(6, false)]
+        [InlineData(6, true)]
+        public void DirectKeySelfSignature_IsAuthenticatedWithoutRequiringUserIds(int keyVersion, bool authentic)
         {
             var primary = Pair();
+            var publicKey = keyVersion == 4 ? primary.PublicKey : new PgpPublicKey(new PublicKeyPacket(
+                (byte)keyVersion, primary.PublicKey.Algorithm, primary.PublicKey.CreationTime, primary.PublicKey.PublicKeyPacket.Key));
             var signer = authentic ? primary : Pair();
             var signature = new PgpSignatureGenerator(signer.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
             signature.InitSign(PgpSignature.DirectKey, signer.PrivateKey);
             var packets = new PgpSignatureSubpacketGenerator();
             packets.SetKeyFlags(false, KeyFlags.EncryptComms);
             signature.SetHashedSubpackets(packets.Generate());
-            var key = PgpPublicKey.AddCertification(primary.PublicKey, signature.GenerateCertification(primary.PublicKey));
+            PgpSignature certification;
+            if (keyVersion == 4)
+                certification = signature.GenerateCertification(publicKey);
+            else
+            {
+                // Isolate key framing with a v4 signature, supported by this BouncyCastle reader.
+                // This does not claim support for v5/v6 signature packets.
+                byte[] contents = publicKey.PublicKeyPacket.GetEncodedContents();
+                signature.Update(new[] { (byte)(keyVersion == 5 ? 0x9A : 0x9B),
+                    (byte)(contents.Length >> 24), (byte)(contents.Length >> 16),
+                    (byte)(contents.Length >> 8), (byte)contents.Length });
+                signature.Update(contents);
+                certification = signature.Generate();
+            }
+            var key = PgpPublicKey.AddCertification(publicKey, certification);
             using var encoded = new MemoryStream();
             key.Encode(encoded);
             encoded.Position = 0;
@@ -126,17 +146,86 @@ namespace PgpCore.Tests.UnitTests.Safety
         }
 
         [Fact]
-        public void AppendedForeignSubkey_IsRejectedForVerificationAndEncryptionSelection()
+        public void AppendedForeignSubkey_IsExcludedWhileAuthenticKeysRemainUsable()
         {
-            var trusted = Ring(Pair()).GeneratePublicKeyRing();
+            var trustedGenerator = Ring(Pair());
+            var encryptionKey = Pair();
+            var flags = new PgpSignatureSubpacketGenerator();
+            flags.SetKeyFlags(false, KeyFlags.EncryptComms);
+            trustedGenerator.AddSubKey(encryptionKey, flags.Generate(), null, HashAlgorithmTag.Sha256);
+            var trusted = trustedGenerator.GeneratePublicKeyRing();
             var foreign = Ring(Pair());
             foreign.AddSubKey(Pair(), HashAlgorithmTag.Sha256, HashAlgorithmTag.Sha256);
             var subkey = foreign.GeneratePublicKeyRing().GetPublicKeys().Last();
             var modified = PgpPublicKeyRing.InsertPublicKey(trusted, subkey);
             Assert.Equal(trusted.GetPublicKey().GetFingerprint(), modified.GetPublicKey().GetFingerprint());
-            Assert.Throws<InvalidKeyMaterialException>(() => Keys(modified).VerificationKeys.ToArray());
-            Assert.Throws<InvalidKeyMaterialException>(() => Keys(modified).UseEncryptionKey(subkey.KeyId));
-            Assert.Throws<InvalidKeyMaterialException>(() => Utilities.FindBestEncryptionKey(modified));
+            Assert.Single(Keys(modified).VerificationKeys);
+            Assert.Throws<MissingKeyException>(() => Keys(modified).UseEncryptionKey(subkey.KeyId));
+            Assert.Equal(encryptionKey.KeyId, Utilities.FindBestEncryptionKey(modified).KeyId);
+            using var encoded = new MemoryStream();
+            modified.Encode(encoded);
+            encoded.Position = 0;
+            var inspected = PGP.InspectKeys(encoded);
+            Assert.Equal(2, inspected.Count);
+            Assert.DoesNotContain(inspected, key => key.Fingerprint == BitConverter.ToString(subkey.GetFingerprint()).Replace("-", ""));
+        }
+
+        [Fact]
+        public void CertificateValidation_DoesNotMutateCallerOwnedSignatureState()
+        {
+            var ring = Ring(Pair(), KeyFlags.SignData | KeyFlags.EncryptComms).GeneratePublicKeyRing();
+            var primary = ring.GetPublicKey();
+            const string userId = "certificate@example.test";
+            var signature = primary.GetSignaturesForId(userId).Single();
+            byte[] key = primary.PublicKeyPacket.GetEncodedContents();
+            byte[] id = Encoding.UTF8.GetBytes(userId);
+            signature.InitVerify(primary);
+            signature.Update((byte)0x99);
+            // Another operation can validate this same ring while its caller is verifying a certification.
+            Assert.Equal(primary.KeyId, Utilities.FindBestEncryptionKey(ring).KeyId);
+            signature.Update((byte)(key.Length >> 8));
+            signature.Update((byte)key.Length);
+            signature.Update(key);
+            signature.Update(new byte[] { 0xB4, 0, 0, 0, (byte)id.Length });
+            signature.Update(id);
+            Assert.True(signature.Verify());
+        }
+
+        [Fact]
+        public void SharedCertificate_ValidatesConcurrently()
+        {
+            var ring = Ring(Pair(), KeyFlags.SignData | KeyFlags.EncryptComms).GeneratePublicKeyRing();
+            var wrapper = new PgpCore.Models.PgpPublicKeyRingWithPreferredKey(ring);
+            Parallel.For(0, 64, new ParallelOptions { MaxDegreeOfParallelism = 8 }, i =>
+            {
+                Assert.Equal(ring.GetPublicKey().KeyId, Utilities.FindBestEncryptionKey(ring).KeyId);
+                Assert.Equal(ring.GetPublicKey().KeyId, wrapper.DefaultEncryptionKey.KeyId);
+                wrapper.UsePreferredEncryptionKey(ring.GetPublicKey().KeyId);
+            });
+        }
+
+        [Theory]
+        [InlineData(2, 0, true)]
+        [InlineData(0, 2, true)]
+        [InlineData(20, 0, false)]
+        [InlineData(0, 20, false)]
+        public void CreationTimes_AllowSmallClockSkewButRejectFarFutureKeys(int keyMinutes, int signatureMinutes, bool usable)
+        {
+            var primary = Pair(DateTime.UtcNow.AddMinutes(keyMinutes));
+            var signature = new PgpSignatureGenerator(primary.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            signature.InitSign(PgpSignature.DirectKey, primary.PrivateKey);
+            var packets = new PgpSignatureSubpacketGenerator();
+            packets.SetSignatureCreationTime(false, DateTime.UtcNow.AddMinutes(signatureMinutes));
+            packets.SetKeyFlags(false, KeyFlags.SignData | KeyFlags.EncryptComms);
+            signature.SetHashedSubpackets(packets.Generate());
+            var key = PgpPublicKey.AddCertification(primary.PublicKey, signature.GenerateCertification(primary.PublicKey));
+            using var encoded = new MemoryStream();
+            key.Encode(encoded);
+            encoded.Position = 0;
+            var info = Assert.Single(PGP.InspectKeys(encoded));
+            Assert.Equal(usable, info.IsUsableForEncryption);
+            Assert.Equal(usable, info.IsUsableForSigning);
+            Assert.Matches("^[0-9A-F]{16}$", info.KeyId);
         }
 
         [Theory]
@@ -176,6 +265,22 @@ namespace PgpCore.Tests.UnitTests.Safety
             var publicRing = ring.GeneratePublicKeyRing();
             Assert.Equal(publicRing.GetPublicKeys().Last().KeyId, Utilities.FindBestEncryptionKey(publicRing).KeyId);
             Assert.Single(Keys(publicRing).VerificationKeys);
+        }
+
+        [Fact]
+        public void UnsupportedEmbeddedBackSignature_DoesNotDisableEncryptionOrThePrimaryKey()
+        {
+            var generator = Ring(Pair());
+            var subkey = Pair();
+            var flags = new PgpSignatureSubpacketGenerator();
+            flags.SetKeyFlags(false, KeyFlags.SignData | KeyFlags.EncryptComms);
+            var unhashed = new PgpSignatureSubpacketGenerator();
+            // An unsupported embedded signature can occur in a binding's unauthenticated area.
+            unhashed.AddCustomSubpacket(new EmbeddedSignature(false, false, new byte[] { 5, 0, 0, 0 }));
+            generator.AddSubKey(subkey, flags.Generate(), unhashed.Generate(), HashAlgorithmTag.Sha256);
+            var ring = generator.GeneratePublicKeyRing();
+            Assert.Single(Keys(ring).VerificationKeys);
+            Assert.Equal(subkey.KeyId, Utilities.FindBestEncryptionKey(ring).KeyId);
         }
 
         [Fact]
