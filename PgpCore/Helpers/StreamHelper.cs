@@ -7,7 +7,7 @@ namespace PgpCore.Helpers
 {
     public static class StreamHelper
     {
-        private const int BufferSize = 512;
+        private const int BufferSize = 16 * 1024;
 
         public static void Drain(Stream inStr)
         {
