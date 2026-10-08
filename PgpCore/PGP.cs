@@ -299,7 +299,7 @@ namespace PgpCore
 			if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
 			{
 				PgpCompressedDataGenerator compressedDataGenerator =
-					new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
+					new PgpCompressedDataGenerator(CompressionAlgorithm);
 				return compressedDataGenerator.Open(encryptedOut);
 			}
 
