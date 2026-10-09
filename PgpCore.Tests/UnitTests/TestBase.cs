@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Security;
@@ -14,9 +14,9 @@ namespace PgpCore.Tests.UnitTests
     public abstract class TestBase
     {
 #if NETFRAMEWORK
-        public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.4.0+83ebf4a805";
+        public const string VERSION = "BouncyCastle.NET Cryptography (net461) v2.7.0+4007498b13";
 #else
-        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.4.0+83ebf4a805";
+        public const string VERSION = "BouncyCastle.NET Cryptography (net6.0) v2.7.0+4007498b13";
 #endif
         public const string DEFAULTNAME = "name";
         public const string TESTNAME = "Test Name";

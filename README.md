@@ -254,7 +254,7 @@ PGP pgp = new PGP(encryptionKeys);
 string signedContent = await pgp.SignAsync("String to sign");
 ```
 ### Clear Sign
-Clear sign the provided file, stream, or string using a private key so that it is still human readable. A common use of digital signatures is to sign usenet postings or email messages. In such situations it is undesirable to compress the document while signing it. This is because the signature would then depend on the compression algorithm used. This is problematic when different people use different compression algorithms. To overcome this problem, the OpenPGP digital signature format has a special type of signature that is not computed on the message itself. Instead, the signature is computed on a "cleartext" version of the message - a version that is exactly the same as the original message except that it is not compressed and certain types of information (such as the end of line markers) are not included. This cleartext version is then compressed and the signature is appended to the compressed cleartext to produce the final message.
+Clear signing keeps the message readable and appends an armored signature. The signature hashes canonical CRLF line endings and ignores trailing spaces and tabs on each line. The separator immediately before the signature armor is excluded from the hash. Clear-signed messages are not compressed or encrypted.
 
 [`gpg --output "C:\TEMP\Content\content.txt" --clearsign  "C:\TEMP\Content\clearSigned.pgp"`](https://www.gnupg.org/gph/en/manual/x135.html)
 #### Clear Sign File
@@ -809,7 +809,7 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 | Exception | Thrown when |
 | --- | --- |
 | `NotEncryptedDataException` | `Decrypt` input is not PGP encrypted data — plain text, signed-only, or clear-signed content. |
-| `UnsupportedAeadException` | The message uses AEAD (OCB) encryption, which the referenced BouncyCastle version cannot read ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
+| `UnsupportedAeadException` | The message uses an AEAD encryption format that PgpCore cannot decrypt ([#219](https://github.com/mattosaurus/PgpCore/issues/219)). |
 | `IncorrectPassphraseException` | The supplied passphrase does not unlock the private key. |
 | `InvalidKeyMaterialException` | Key material could not be parsed, or contained no usable keys. |
 | `MessageIntegrityException` | The message failed its modification detection (MDC) check — see [IgnoreIntegrityCheckFailure](#ignoreintegritycheckfailure). |
@@ -820,3 +820,21 @@ Operations throw specific exception types, all deriving from `PgpCoreException` 
 
 `PgpException` (BouncyCastle's type) is still thrown for signature verification failures, e.g.
 "Failed to verify file." from `DecryptAndVerify`.
+
+## Certificate validation and safe output
+
+Key selection authenticates primary self-signatures, subkey bindings, key flags, expiration metadata, and primary-issued revocations. Signing subkeys require an embedded primary-key binding signature. Subkeys without a verifiable binding are excluded from key selection and inspection; they do not disable the authentic keys in the same certificate. A primary key without a valid self-signature remains invalid. New encryption and signing reject expired or revoked primary keys and subkeys. Creation times allow up to five minutes of clock skew; expiration and revocation checks still apply. Explicit encryption-key selection still permits historical keys, but requires an authentic binding and encryption capability.
+
+Verification uses authenticated signing keys, including expired or revoked keys for cryptographic verification of older data. It does not establish a trusted identity or prove that a message predates revocation. Compare the complete primary fingerprint against an independently trusted value.
+
+`PGP.InspectKeys(Stream)` returns every primary and subkey, authenticated user IDs, fingerprints, capabilities, and current usability. `PGP.ExportPublicKeys` validates public certificates before exporting them; it rejects secret-key packets and can require an expected complete primary fingerprint. Its file overload stages the validated export before replacing the destination.
+
+File-writing overloads stage output beside the destination and commit only after successful completion. Failed integrity or signature validation preserves an existing destination and does not publish a new plaintext file. Key generation produces both key files before committing either; failure to commit the second restores the first when possible. Public and private key destinations must differ by more than letter case, including on case-sensitive volumes. Two files are not a crash-atomic transaction. If restoration itself fails, the exception identifies the retained recovery backup.
+
+Concatenated encrypted messages must all parse and decrypt successfully before file output is committed. A damaged later message fails the operation instead of replacing the destination with only the earlier plaintext chunks.
+
+AEAD data packets (tag 20), including OCB and EAX, are unsupported by the current BouncyCastle OpenPGP decryption engine. Decryption and inspection reject them with `UnsupportedAeadException` before attempting to process their payload, whether recipients use public keys or passphrases. Ask the sender for non-AEAD, MDC-protected output; changing key preferences cannot repair existing ciphertext. See [issue #219](https://github.com/mattosaurus/PgpCore/issues/219).
+
+Unix staging directories are owner-only while an operation is in progress. New non-secret outputs use normal creation permissions under the process umask; replacements preserve the existing destination's read, write, and execute permission bits. Generated secret-key files are owner-only, including replacements. Atomic file output requires create, rename, and delete access in the destination directory, even when the existing destination file is writable. There is no in-place fallback: callers needing their own output or permission policy can use a stream overload. Stream overloads can emit data before final validation, so callers must discard stream output when verification returns false or decryption throws. Borrowed streams remain open.
+
+Verification without extraction hashes and discards the payload. Non-seekable verification and inspection spool input to an owned temporary file instead of allocating memory proportional to message size. Clear-sign verification canonicalizes and hashes even long lines with fixed-size buffers and private temporary storage; these operations require writable temporary storage.

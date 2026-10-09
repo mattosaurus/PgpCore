@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Org.BouncyCastle.Bcpg;
 using System;
 using System.IO;
 using System.Text;
@@ -8,15 +9,8 @@ using Xunit;
 namespace PgpCore.Tests.UnitTests.Decrypt
 {
     /// <summary>
-    /// AEAD (OCB) encrypted messages use the AEAD encrypted data packet, tag 20, which BouncyCastle has no
-    /// entry for and rejects while reading the packet stream (GitHub issue #219). PgpCore translates that
-    /// into <see cref="UnsupportedAeadException"/> so the error says what is actually wrong, rather than
-    /// claiming the input is not encrypted.
-    /// <para>
-    /// The translation works by matching BouncyCastle's exception message, so these tests pin both halves of
-    /// that behaviour: an AEAD packet must be recognised, and an unknown packet that is *not* AEAD must not
-    /// be. The latter guards against the match being loosened to any "unknown packet type" error.
-    /// </para>
+    /// AEAD session-key packets can be parsed by BouncyCastle without being decryptable.
+    /// PgpCore reports their unsupported format before choosing a decryption key.
     /// </summary>
     public class AeadMessages : TestBase
     {
@@ -32,6 +26,43 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             "/aMyj8BGMAxddcrsuUnkw2rtq5K14=";
 
         private static byte[] OcbEncryptedMessage => Convert.FromBase64String(OcbEncryptedMessageBase64);
+
+        // GnuPG 2.4.4 --force-ocb --encrypt using Constants.PUBLICKEY1: a version 3
+        // public-key session packet followed by tag 20, as produced by Kleopatra.
+        private const string PublicKeyOcbMessage =
+            "hIwDHCBL6iCIoI8BA/9Kc/oyjM3SWmRB9TzGwc0K4pW4VSU5mIT1C6sdIP75+B2n1kZNC1VWEp4f1L34sjKZnIQv3vvA++ie2QUwnKM5wMXB9G3WazeW4WmevpqV1FF2KG4xKHvWZTLhASDudyePBWevKI7FslOxhRidlVUli/r6DB+UKSCdEXt9n2pR1dRjAQkCEKjWmVrf5NwLP1sVMTmyoD8/dB5YgaZfe0AnPPRkqWvYxt2smfuNgwlgD+EYUX0dsyYyGj+byibIsjJHKIO0HwXDiqMlWRfevEuT8LAPaptvyZK8lsKg5LGbApgeCbpv";
+
+        [Theory]
+        [InlineData("decrypt", false, false)]
+        [InlineData("decrypt", true, false)]
+        [InlineData("decrypt", false, true)]
+        [InlineData("decrypt", true, true)]
+        [InlineData("decryptVerify", false, false)]
+        [InlineData("decryptVerify", true, true)]
+        [InlineData("inspect", false, false)]
+        [InlineData("inspect", true, true)]
+        public async Task PublicKeyOcb_ReportsUnsupportedEncryptionBeforeReadingPayload(string operation, bool armored, bool nonSeekable)
+        {
+            byte[] message = Convert.FromBase64String(PublicKeyOcbMessage);
+            if (armored)
+            {
+                using var encoded = new MemoryStream();
+                using (var armor = new ArmoredOutputStream(encoded)) armor.Write(message);
+                message = encoded.ToArray();
+            }
+            using var bytes = new MemoryStream(message);
+            using Stream input = nonSeekable ? new NonSeekableStream(bytes) : bytes;
+            using var output = new MemoryStream();
+            var pgp = new PGP(new EncryptionKeys(Constants.PRIVATEKEY1, Constants.PASSWORD1));
+            UnsupportedAeadException error = await Assert.ThrowsAsync<UnsupportedAeadException>(async () =>
+            {
+                if (operation == "inspect") await pgp.InspectAsync(input);
+                else if (operation == "decryptVerify") await pgp.DecryptAndVerifyAsync(input, output);
+                else await pgp.DecryptAsync(input, output);
+            });
+            Assert.Contains("AEAD", error.Message);
+            Assert.Equal(0, output.Length);
+        }
 
         /// <summary>
         /// A packet whose tag is unknown to BouncyCastle but is not the AEAD tag. 0xD5 is a new-format
@@ -68,10 +99,9 @@ namespace PgpCore.Tests.UnitTests.Decrypt
         }
 
         [Fact]
-        public async Task DecryptAsync_AeadEncryptedMessage_ShouldPreserveTheUnderlyingBouncyCastleError()
+        public async Task DecryptAsync_AeadEncryptedMessage_ShouldReportTheUnsupportedSessionKeyVersion()
         {
-            // Arrange - the original error is the only record of which packet tag was rejected, so it must
-            // remain available for diagnosis.
+            // The error identifies the structurally recognized but unsupported packet version.
             TestFactory testFactory = new TestFactory();
             await testFactory.ArrangeAsync(KeyType.Known, FileType.Known);
             PGP pgp = ArrangePgp(testFactory);
@@ -86,8 +116,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
 
             // Assert
             UnsupportedAeadException exception = (await act.Should().ThrowAsync<UnsupportedAeadException>()).Which;
-            exception.InnerException.Should().BeOfType<IOException>();
-            exception.InnerException.Message.Should().Contain("20");
+            exception.Message.Should().Contain("session-key packet version 5");
 
             // Teardown
             testFactory.Teardown();

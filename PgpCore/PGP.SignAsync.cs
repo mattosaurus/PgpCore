@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -44,7 +44,7 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            using (Stream outputStream = outputFile.OpenWrite())
+            await AtomicFileOutput.WriteAsync(outputFile, async outputStream =>
             {
                 if (armor)
                 {
@@ -55,7 +55,7 @@ namespace PgpCore
                 }
                 else
                     await OutputSignedAsync(inputFile, outputStream, name, oldFormat).ConfigureAwait(false);
-            }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -161,10 +161,10 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.Name}] does not exist.");
 
-            using (Stream outputStream = outputFile.OpenWrite())
+            await AtomicFileOutput.WriteAsync(outputFile, async outputStream =>
             {
                 await OutputClearSignedAsync(inputFile, outputStream, headers).ConfigureAwait(false);
-            }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>

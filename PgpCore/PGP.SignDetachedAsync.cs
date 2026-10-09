@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
@@ -40,11 +40,13 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outputStream = outputFile.OpenWrite())
+            await AtomicFileOutput.WriteAsync(outputFile, async outputStream =>
             {
-                await SignDetachedAsync(inputStream, outputStream, armor, headers).ConfigureAwait(false);
-            }
+                using (Stream inputStream = inputFile.OpenRead())
+                {
+                    await SignDetachedAsync(inputStream, outputStream, armor, headers).ConfigureAwait(false);
+                }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -116,7 +118,7 @@ namespace PgpCore
                 signatureGenerator.Update(buf, 0, length);
             }
 
-            using (BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(outputStream))
+            using (BcpgOutputStream bcpgOutputStream = new BcpgOutputStream(new NonClosingStream(outputStream)))
             {
                 signatureGenerator.Generate().Encode(bcpgOutputStream);
             }

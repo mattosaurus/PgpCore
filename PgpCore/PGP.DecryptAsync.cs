@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -37,9 +37,11 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAsync(inputStream, outStream).ConfigureAwait(false);
+            await AtomicFileOutput.WriteAsync(outputFile, async outStream =>
+            {
+                using (Stream inputStream = inputFile.OpenRead())
+                    await DecryptAsync(inputStream, outStream).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -69,7 +71,7 @@ namespace PgpCore
         /// after the first message would silently discard the remainder of the data.
         /// </summary>
         private async Task ProcessMessagesAsync(Stream inputStream, Stream outputStream,
-            Func<PgpEncryptedDataList, PgpObject, Stream, Task> processMessageAsync)
+            Func<PgpEncryptedDataList, Stream, Task> processMessageAsync)
         {
             Stream decoderStream = Utilities.GetDecoderStream(inputStream);
             bool anyMessageProcessed = false;
@@ -80,14 +82,14 @@ namespace PgpCore
                 // A fresh factory is required to cross armor block boundaries: ArmoredInputStream
                 // reports end-of-stream at each boundary but continues into the next block on
                 // subsequent reads.
-                PgpObjectFactory objFactory = new PgpObjectFactory(decoderStream);
+                PgpObjectFactory objFactory;
 
                 // the first object might be a PGP marker packet.
                 PgpEncryptedDataList enc = null;
-                PgpObject message = null;
 
                 try
                 {
+                    objFactory = PgpPacketReader.CreateFactory(decoderStream);
                     PgpObject obj = objFactory.NextPgpObject();
 
                     if (obj == null)
@@ -104,8 +106,8 @@ namespace PgpCore
 
                     if (obj is PgpEncryptedDataList dataList)
                         enc = dataList;
-                    else if (obj is PgpCompressedData compressedData)
-                        message = compressedData;
+                    else if (obj is PgpCompressedData)
+                        throw new NotEncryptedDataException(NotEncryptedDataMessage);
                     else
                         enc = objFactory.NextPgpObject() as PgpEncryptedDataList;
                 }
@@ -115,22 +117,16 @@ namespace PgpCore
                     // it must not be reported as unrecognised or unencrypted data.
                     ThrowIfAeadEncryptedData(ex);
 
-                    if (anyMessageProcessed)
-                        break; // tolerate trailing non-message data after valid messages
-
                     // BouncyCastle throws e.g. "unknown object in stream 20" for clear-signed input.
                     throw new NotEncryptedDataException(NotEncryptedDataMessage, ex);
                 }
 
-                // If enc and message are null at this point, we failed to detect the contents of the encrypted stream.
-                if (enc == null && message == null)
+                if (enc == null)
                 {
-                    if (anyMessageProcessed)
-                        break;
                     throw new NotEncryptedDataException(NotEncryptedDataMessage);
                 }
 
-                await processMessageAsync(enc, message, outputStream).ConfigureAwait(false);
+                await processMessageAsync(enc, outputStream).ConfigureAwait(false);
                 anyMessageProcessed = true;
             }
 
@@ -138,7 +134,7 @@ namespace PgpCore
                 throw new NotEncryptedDataException(NotEncryptedDataMessage);
         }
 
-        private async Task DecryptMessageAsync(PgpEncryptedDataList enc, PgpObject message, Stream outputStream)
+        private async Task DecryptMessageAsync(PgpEncryptedDataList enc, Stream outputStream)
         {
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
@@ -147,53 +143,50 @@ namespace PgpCore
                 PgpPublicKeyEncryptedData encryptedDataAsymmetric = null;
                 PgpPbeEncryptedData encryptedDataSymmetric = null;
 
-                if (enc != null)
+                List<long> messageKeyIds = new List<long>();
+
+                foreach (PgpEncryptedData encryptedData in enc.GetEncryptedDataObjects())
                 {
-                    List<long> messageKeyIds = new List<long>();
-
-                    foreach (PgpEncryptedData encryptedData in enc.GetEncryptedDataObjects())
+                    if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                     {
-                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
-                        {
-                            messageKeyIds.Add(publicKeyEncryptedData.KeyId);
-                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
+                        messageKeyIds.Add(publicKeyEncryptedData.KeyId);
+                        privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
 
-                            if (privateKey != null)
-                            {
-                                encryptedDataAsymmetric = publicKeyEncryptedData;
-                                break;
-                            }
-                        }
-
-                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
+                        if (privateKey != null)
                         {
-                            encryptedDataSymmetric = passwordEncryptedData;
+                            encryptedDataAsymmetric = publicKeyEncryptedData;
+                            break;
                         }
                     }
 
-                    Stream clear = null;
-
-                    if (encryptedDataAsymmetric != null)
+                    if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
                     {
-                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                        encryptedDataSymmetric = passwordEncryptedData;
                     }
-                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
-                    {
-                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
-                    }
+                }
 
-                    if (clear == null)
-                        throw new NoDecryptionKeyException(
-                            $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
+                Stream clear = null;
 
-                    PgpObjectFactory plainFact = new PgpObjectFactory(clear);
+                if (encryptedDataAsymmetric != null)
+                {
+                    clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                }
+                else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
+                {
+                    clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
+                }
 
+                if (clear == null)
+                    throw new NoDecryptionKeyException(
+                        $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
+
+                PgpObjectFactory plainFact = new PgpObjectFactory(clear);
+
+                PgpObject message = plainFact.NextPgpObject();
+
+                if (message is PgpOnePassSignatureList || message is PgpSignatureList)
+                {
                     message = plainFact.NextPgpObject();
-
-                    if (message is PgpOnePassSignatureList || message is PgpSignatureList)
-                    {
-                        message = plainFact.NextPgpObject();
-                    }
                 }
 
                 if (message is PgpCompressedData pgpCompressedData)
@@ -272,9 +265,11 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Encrypted File [{inputFile.FullName}] not found.");
 
-            using (Stream inputStream = inputFile.OpenRead())
-            using (Stream outStream = outputFile.OpenWrite())
-                await DecryptAndVerifyAsync(inputStream, outStream).ConfigureAwait(false);
+            await AtomicFileOutput.WriteAsync(outputFile, async outStream =>
+            {
+                using (Stream inputStream = inputFile.OpenRead())
+                    await DecryptAndVerifyAsync(inputStream, outStream).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -294,7 +289,7 @@ namespace PgpCore
             await ProcessMessagesAsync(inputStream, outputStream, DecryptAndVerifyMessageAsync).ConfigureAwait(false);
         }
 
-        private async Task DecryptAndVerifyMessageAsync(PgpEncryptedDataList encryptedDataList, PgpObject message, Stream outputStream)
+        private async Task DecryptAndVerifyMessageAsync(PgpEncryptedDataList encryptedDataList, Stream outputStream)
         {
             using (CompositeDisposable disposables = new CompositeDisposable())
             {
@@ -305,50 +300,47 @@ namespace PgpCore
 
                 // Factory that produced the current message; the signature and literal data packets that
                 // follow have to be read from the same factory.
-                PgpObjectFactory factory = null;
+                PgpObjectFactory factory;
 
-                if (encryptedDataList != null)
+                List<long> messageKeyIds = new List<long>();
+
+                foreach (PgpEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
                 {
-                    List<long> messageKeyIds = new List<long>();
-
-                    foreach (PgpEncryptedData encryptedData in encryptedDataList.GetEncryptedDataObjects())
+                    if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
                     {
-                        if (encryptedData is PgpPublicKeyEncryptedData publicKeyEncryptedData)
-                        {
-                            messageKeyIds.Add(publicKeyEncryptedData.KeyId);
-                            privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
+                        messageKeyIds.Add(publicKeyEncryptedData.KeyId);
+                        privateKey = EncryptionKeys.FindSecretKey(publicKeyEncryptedData.KeyId);
 
-                            if (privateKey != null)
-                            {
-                                encryptedDataAsymmetric = publicKeyEncryptedData;
-                                break;
-                            }
-                        }
-
-                        if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
+                        if (privateKey != null)
                         {
-                            encryptedDataSymmetric = passwordEncryptedData;
+                            encryptedDataAsymmetric = publicKeyEncryptedData;
+                            break;
                         }
                     }
 
-                    Stream clear = null;
-
-                    if (encryptedDataAsymmetric != null)
+                    if (encryptedData is PgpPbeEncryptedData passwordEncryptedData)
                     {
-                        clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                        encryptedDataSymmetric = passwordEncryptedData;
                     }
-                    else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
-                    {
-                        clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
-                    }
-
-                    if (clear == null)
-                        throw new NoDecryptionKeyException(
-                            $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
-
-                    factory = new PgpObjectFactory(clear);
-                    message = factory.NextPgpObject();
                 }
+
+                Stream clear = null;
+
+                if (encryptedDataAsymmetric != null)
+                {
+                    clear = encryptedDataAsymmetric.GetDataStream(privateKey).DisposeWith(disposables);
+                }
+                else if (encryptedDataSymmetric != null && EncryptionKeys.SymmetricKey != null && EncryptionKeys.SymmetricKey.Length > 0)
+                {
+                    clear = encryptedDataSymmetric.GetDataStreamRaw(EncryptionKeys.SymmetricKey).DisposeWith(disposables);
+                }
+
+                if (clear == null)
+                    throw new NoDecryptionKeyException(
+                        $"Decryption key for message not found. The message is encrypted to key id(s) [{string.Join(", ", messageKeyIds.Select(id => id.ToString("X")))}] but none of the supplied private keys match.");
+
+                factory = new PgpObjectFactory(clear);
+                PgpObject message = factory.NextPgpObject();
 
                 if (message is PgpCompressedData compressedData)
                 {
@@ -356,9 +348,6 @@ namespace PgpCore
                     factory = new PgpObjectFactory(compDataIn);
                     message = factory.NextPgpObject();
                 }
-
-                if (factory == null)
-                    throw new PgpException("File was not signed.");
 
                 // The signature is verified cryptographically against the literal data as it is written
                 // out, so a signature made by an unrelated key - or over different content - fails here.

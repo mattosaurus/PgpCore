@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Bcpg.Sig;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Crypto.Generators;
@@ -6,6 +6,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using PgpCore.Abstractions;
+using PgpCore.Helpers;
 using System.IO;
 using System;
 using Org.BouncyCastle.Math;
@@ -34,11 +35,10 @@ namespace PgpCore
             if (privateKeyFileInfo == null)
                 throw new ArgumentNullException(nameof(privateKeyFileInfo));
 
-            using (Stream pubs = publicKeyFileInfo.Create())
-            using (Stream pris = privateKeyFileInfo.Create())
+            AtomicFileOutput.WriteKeyPair(publicKeyFileInfo, privateKeyFileInfo, (pubs, pris) =>
                 GenerateKey(pubs, pris, username, password, strength, certainty, armor, emitVersion,
                     keyExpirationInSeconds, signatureExpirationInSeconds,
-                    preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms);
+                    preferredCompressionAlgorithms, preferredHashAlgorithmTags, preferredSymmetricKeyAlgorithms));
         }
 
         public void GenerateKey(

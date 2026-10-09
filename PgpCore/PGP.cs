@@ -149,7 +149,7 @@ namespace PgpCore
 
 		private async Task OutputClearSignedAsync(Stream inputStream, Stream outputStream, IDictionary<string, string> headers)
 		{
-			using (StreamReader streamReader = new StreamReader(inputStream))
+			using (StreamReader streamReader = new StreamReader(inputStream, Encoding.UTF8, true, 1024, leaveOpen: true))
 			using (ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream, headers, AddVersionHeader))
 			{
 				PgpSignatureGenerator pgpSignatureGenerator = InitClearSignatureGenerator(armoredOutputStream);
@@ -162,7 +162,7 @@ namespace PgpCore
 					byte[] lineByteArray = Encoding.UTF8.GetBytes(line);
 					// Does the line end with whitespace?
 					// Trailing white space needs to be removed from the end of the document for a valid signature RFC 4880 Section 7.1
-					string cleanLine = line.TrimEnd();
+					string cleanLine = line.TrimEnd(' ', '\t');
 					byte[] cleanLineByteArray = Encoding.UTF8.GetBytes(cleanLine);
 
 					pgpSignatureGenerator.Update(cleanLineByteArray, 0, cleanLineByteArray.Length);
@@ -224,7 +224,7 @@ namespace PgpCore
 
 		/// <summary>
 		/// Translates BouncyCastle's "unknown packet type encountered: 20" into
-		/// <see cref="UnsupportedAeadException"/>. Tag 20 is the AEAD (OCB) encrypted data packet, which the
+		/// <see cref="UnsupportedAeadException"/>. Tag 20 is an AEAD encrypted data packet, which the
 		/// referenced BouncyCastle version cannot read. Reporting it as unrecognised or unencrypted data is
 		/// misleading, because the input is valid OpenPGP and is encrypted.
 		/// </summary>
@@ -241,8 +241,8 @@ namespace PgpCore
 			}
 
 			throw new UnsupportedAeadException(
-				"The message uses AEAD (OCB) encryption, which the referenced BouncyCastle version cannot read. " +
-				"Ask the sender to disable AEAD, or remove the AEAD feature flag from the key. " +
+				"The message uses AEAD encryption, which the referenced BouncyCastle version cannot read. " +
+				"Ask the sender for non-AEAD, MDC-protected output. " +
 				"See https://github.com/mattosaurus/PgpCore/issues/219.",
 				exception);
 		}
@@ -299,11 +299,11 @@ namespace PgpCore
 			if (CompressionAlgorithm != CompressionAlgorithmTag.Uncompressed)
 			{
 				PgpCompressedDataGenerator compressedDataGenerator =
-					new PgpCompressedDataGenerator(CompressionAlgorithmTag.Zip);
+					new PgpCompressedDataGenerator(CompressionAlgorithm);
 				return compressedDataGenerator.Open(encryptedOut);
 			}
 
-			return encryptedOut;
+			return new NonClosingStream(encryptedOut);
 		}
 
 		#endregion ChainCompressedOut
@@ -442,110 +442,6 @@ namespace PgpCore
 
 			publicOutArmored?.Dispose();
 		}
-
-		private static int ReadInputLine(MemoryStream streamOut, Stream encodedFile)
-		{
-			streamOut.SetLength(0);
-
-			int lookAhead = -1;
-			int character;
-
-			while ((character = encodedFile.ReadByte()) >= 0)
-			{
-				streamOut.WriteByte((byte)character);
-				if (character == '\r' || character == '\n')
-				{
-					lookAhead = ReadPassedEol(streamOut, character, encodedFile);
-					break;
-				}
-			}
-
-			return lookAhead;
-		}
-
-		private static int ReadInputLine(MemoryStream streamOut, int lookAhead, Stream encodedFile)
-		{
-			streamOut.SetLength(0);
-
-			int character = lookAhead;
-
-			do
-			{
-				streamOut.WriteByte((byte)character);
-				if (character == '\r' || character == '\n')
-				{
-					lookAhead = ReadPassedEol(streamOut, character, encodedFile);
-					break;
-				}
-			} while ((character = encodedFile.ReadByte()) >= 0);
-
-			if (character < 0)
-			{
-				lookAhead = -1;
-			}
-
-			return lookAhead;
-		}
-
-		private static int ReadPassedEol(MemoryStream streamOut, int lastCharacter, Stream encodedFile)
-		{
-			int lookAhead = encodedFile.ReadByte();
-
-			if (lastCharacter == '\r' && lookAhead == '\n')
-			{
-				streamOut.WriteByte((byte)lookAhead);
-				lookAhead = encodedFile.ReadByte();
-			}
-
-			return lookAhead;
-		}
-
-		private static int GetLengthWithoutSeparatorOrTrailingWhitespace(byte[] line)
-		{
-			int end = line.Length - 1;
-
-			while (end >= 0 && IsWhiteSpace(line[end]))
-			{
-				end--;
-			}
-
-			return end + 1;
-		}
-
-		private static int GetLengthWithoutWhiteSpace(byte[] line)
-		{
-			int end = line.Length - 1;
-
-			while (end >= 0 && IsWhiteSpace(line[end]))
-			{
-				end--;
-			}
-
-			return end + 1;
-		}
-
-		private static bool IsWhiteSpace(byte b)
-		{
-			return IsLineEnding(b) || b == '\t' || b == ' ';
-		}
-
-		private static bool IsLineEnding(byte b)
-		{
-			return b == '\r' || b == '\n';
-		}
-
-		private static void ProcessLine(PgpSignature sig, byte[] line)
-		{
-			// note: trailing white space needs to be removed from the end of
-			// each line for signature calculation RFC 4880 Section 7.1
-			int length = GetLengthWithoutWhiteSpace(line);
-			if (length > 0)
-			{
-				sig.Update(line, 0, length);
-			}
-		}
-
-		private static byte[] LineSeparator => Encoding.ASCII.GetBytes(Environment.NewLine);
 
 		public void Dispose()
 		{ }

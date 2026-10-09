@@ -33,11 +33,12 @@ namespace PgpCore
             PgpLiteralData pgpLiteralData = null;
 
             inputStream.Seek(0, SeekOrigin.Begin);
-            PgpObjectFactory pgpObjectFactory = new PgpObjectFactory(PgpUtilities.GetDecoderStream(inputStream));
+            PgpObjectFactory pgpObjectFactory;
 
             PgpObject pgpObject;
             try
             {
+                pgpObjectFactory = PgpPacketReader.CreateFactory(PgpUtilities.GetDecoderStream(inputStream));
                 pgpObject = pgpObjectFactory.NextPgpObject();
             }
             catch (IOException ex)

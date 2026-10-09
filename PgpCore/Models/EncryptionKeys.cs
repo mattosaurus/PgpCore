@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using PgpCore.Abstractions;
 using PgpCore.Extensions;
 using PgpCore.Helpers;
@@ -744,23 +744,17 @@ namespace PgpCore
 					Utilities.FindMasterKey(keyRings.Value.First()));
 				_encryptKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
 					keyRings.Value.Select(Utilities.FindBestEncryptionKey).ToArray());
-				// Include every key in each ring so signatures made by any subkey can be matched
-				// by key id, while keeping the best verification key first for consumers that
-				// only look at the primary key.
+				// Only cryptographically bound keys authorized to sign enter the verification pool.
+				// Current expiry is deliberately not a historical signature validity policy.
 				_verificationKeys = new Lazy<IEnumerable<PgpPublicKey>>(() =>
-					keyRings.Value.SelectMany(keyRing =>
-					{
-						PgpPublicKey bestKey = Utilities.FindBestVerificationKey(keyRing);
-						return new[] { bestKey }.Concat(
-							keyRing.GetPublicKeys().Cast<PgpPublicKey>().Where(key => key.KeyId != bestKey.KeyId));
-					}).ToArray());
+					keyRings.Value.SelectMany(ring => KeyRingValidation.SigningKeys(ring, false))
+						.OrderByDescending(key => key.PublicKey.IsMasterKey).Select(key => key.PublicKey).ToArray());
 			}
 
 			if (_secretKeys != null)
 			{
 				_signingSecretKey = new Lazy<PgpSecretKey>(() => Utilities.FindBestSigningKey(SecretKeys));
-				if (SigningSecretKey != null)
-					_signingPrivateKey = new Lazy<PgpPrivateKey>(() => ReadPrivateKey(SigningSecretKey));
+				_signingPrivateKey = new Lazy<PgpPrivateKey>(() => ReadPrivateKey(SigningSecretKey));
 			}
 			else
 			{

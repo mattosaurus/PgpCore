@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using PgpCore.Helpers;
 using System.Collections.Generic;
 using System.Linq;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -21,7 +22,7 @@ namespace PgpCore.Models
         {
             PgpPublicKeyRing = publicKeyRing;
             _defaultEncryptionKey = new Lazy<PgpPublicKey>(() => Utilities.FindBestEncryptionKey(PgpPublicKeyRing));
-            _encryptionKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => PgpPublicKeyRing.GetPublicKeys().Where(key => key.IsEncryptionKey));
+            _encryptionKeys = new Lazy<IEnumerable<PgpPublicKey>>(() => KeyRingValidation.EncryptionKeys(PgpPublicKeyRing, false).Select(key => key.PublicKey));
         }
 
         /// <summary>

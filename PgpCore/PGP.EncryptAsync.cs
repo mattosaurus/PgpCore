@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Security;
 using System;
@@ -49,9 +49,11 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            using (FileStream inputStream = inputFile.OpenRead())
-            using (Stream outputStream = outputFile.OpenWrite())
-                await EncryptAsync(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat).ConfigureAwait(false);
+            await AtomicFileOutput.WriteAsync(outputFile, async outputStream =>
+            {
+                using (FileStream inputStream = inputFile.OpenRead())
+                    await EncryptAsync(inputStream, outputStream, armor, withIntegrityCheck, name, headers, oldFormat).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -196,7 +198,7 @@ namespace PgpCore
             if (!inputFile.Exists)
                 throw new FileNotFoundException($"Input file [{inputFile.FullName}] does not exist.");
 
-            using (Stream outputStream = outputFile.OpenWrite())
+            await AtomicFileOutput.WriteAsync(outputFile, async outputStream =>
             {
                 if (armor)
                 {
@@ -207,7 +209,7 @@ namespace PgpCore
                 }
                 else
                     await OutputEncryptedAsync(inputFile, outputStream, withIntegrityCheck, name, oldFormat).ConfigureAwait(false);
-            }
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
