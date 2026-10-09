@@ -124,7 +124,7 @@ namespace PgpCore
             {
                 await SignAsync(inputStream, outputStream, true, name, headers, oldFormat).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
+                return await outputStream.GetStringAsync(ArmorEncoding).ConfigureAwait(false);
             }
         }
 
@@ -204,12 +204,12 @@ namespace PgpCore
             if (headers == null)
                 headers = new Dictionary<string, string>();
 
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             using (Stream outputStream = new MemoryStream())
             {
                 await ClearSignAsync(inputStream, outputStream, headers).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
+                return await outputStream.GetStringAsync(ArmorEncoding).ConfigureAwait(false);
             }
         }
 

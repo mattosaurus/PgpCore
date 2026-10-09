@@ -150,7 +150,7 @@ namespace PgpCore
             {
                 await EncryptAsync(inputStream, outputStream, true, withIntegrityCheck, name, headers, oldFormat).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
+                return await outputStream.GetStringAsync(ArmorEncoding).ConfigureAwait(false);
             }
         }
 
@@ -284,7 +284,7 @@ namespace PgpCore
             {
                 await EncryptAndSignAsync(inputStream, outputStream, true, withIntegrityCheck, name, headers, oldFormat).ConfigureAwait(false);
                 outputStream.Seek(0, SeekOrigin.Begin);
-                return await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false);
+                return await outputStream.GetStringAsync(ArmorEncoding).ConfigureAwait(false);
             }
         }
 

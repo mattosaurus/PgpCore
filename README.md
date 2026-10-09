@@ -792,11 +792,14 @@ other reasons to trust, since a failed check means the ciphertext was modified.
 PGP pgp = new PGP(encryptionKeys) { IgnoreIntegrityCheckFailure = true };
 ```
 ### TextEncoding
-The text encoding used by the string based overloads when converting between strings and bytes.
-Defaults to UTF-8 without a byte order mark, which round trips any .NET string. Set it when a
-counterparty produces or expects text in a specific legacy encoding — the encoding must match on both
-the encrypting and decrypting side. The stream and file overloads are unaffected, as they never
-reinterpret bytes as text.
+`TextEncoding` controls plaintext stored in literal packets by string encryption and signing, and
+plaintext decoded by the read helpers. It defaults to UTF-8 without a byte order mark. Set it when a
+counterparty uses another payload encoding, such as Windows-1253 or UTF-16.
+
+Armored string inputs and outputs use UTF-8 independently of the payload encoding. Clear-signing and
+verifying clear-signed strings also use UTF-8 for their cleartext. For a clear-signed document in another
+encoding, use the stream or file APIs and set `TextEncoding` when reading the verified plaintext.
+Stream and file operations retain their byte-oriented input and output.
 
 ```C#
 PGP pgp = new PGP(encryptionKeys) { TextEncoding = Encoding.GetEncoding(1253) };

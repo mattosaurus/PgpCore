@@ -81,7 +81,7 @@ namespace PgpCore
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException($"{nameof(input)} cannot be null or empty.", nameof(input));
 
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             {
                 return await InspectAsync(inputStream).ConfigureAwait(false);
             }

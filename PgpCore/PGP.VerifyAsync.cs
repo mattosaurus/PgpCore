@@ -239,7 +239,7 @@ namespace PgpCore
         /// <param name="throwIfEncrypted">Retained for signature compatibility; encrypted input now always throws. Use DecryptAndVerify for encrypted-and-signed messages.</param>
         public async Task<bool> VerifyAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             {
                 return await VerifyAsync(inputStream, null, throwIfEncrypted).ConfigureAwait(false);
             }
@@ -262,15 +262,18 @@ namespace PgpCore
             using (Stream outputStream = new MemoryStream())
             {
                 bool verified = await VerifyAsync(inputStream, outputStream, throwIfEncrypted).ConfigureAwait(false);
-
+                outputStream.Position = 0;
                 return new VerificationResult(verified, await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadSignedArmoredStringAsync(string input, bool throwIfEncrypted = false)
         {
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             {
+                if (IsClearSignedInput(inputStream))
+                    return await ReadVerifiedClearAsync(inputStream, ArmorEncoding).ConfigureAwait(false);
+
                 return await VerifyAndReadSignedStreamAsync(inputStream, throwIfEncrypted).ConfigureAwait(false);
             }
         }
@@ -371,7 +374,7 @@ namespace PgpCore
         /// <param name="input">Clear signed string to be verified</param>
         public async Task<bool> VerifyClearAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
                 return await VerifyClearAsync(inputStream, null).ConfigureAwait(false);
         }
 
@@ -388,21 +391,24 @@ namespace PgpCore
         }
 
         public async Task<VerificationResult> VerifyAndReadClearStreamAsync(Stream inputStream)
+            => await ReadVerifiedClearAsync(inputStream, TextEncoding).ConfigureAwait(false);
+
+        private async Task<VerificationResult> ReadVerifiedClearAsync(Stream inputStream, System.Text.Encoding encoding)
         {
             using (Stream outputStream = new MemoryStream())
             {
                 bool verified = await VerifyClearAsync(inputStream, outputStream).ConfigureAwait(false);
                 outputStream.Position = 0;
 
-                return new VerificationResult(verified, await outputStream.GetStringAsync(TextEncoding).ConfigureAwait(false));
+                return new VerificationResult(verified, await outputStream.GetStringAsync(encoding).ConfigureAwait(false));
             }
         }
 
         public async Task<VerificationResult> VerifyAndReadClearArmoredStringAsync(string input)
         {
-            using (Stream inputStream = await input.GetStreamAsync(TextEncoding).ConfigureAwait(false))
+            using (Stream inputStream = await input.GetStreamAsync(ArmorEncoding).ConfigureAwait(false))
             {
-                return await VerifyAndReadClearStreamAsync(inputStream).ConfigureAwait(false);
+                return await ReadVerifiedClearAsync(inputStream, ArmorEncoding).ConfigureAwait(false);
             }
         }
 
