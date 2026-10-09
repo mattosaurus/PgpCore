@@ -13,16 +13,18 @@ PgpCore is a .NET class library (NuGet package) wrapping BouncyCastle.Cryptograp
 dotnet build
 
 # Run all tests except gpg interop (what Windows CI runs)
-dotnet test PgpCore.Tests/PgpCore.Tests.csproj --filter "Category!=Interop"
+dotnet test --project PgpCore.Tests/PgpCore.Tests.csproj --filter "Category!=Interop"
 
 # Run a single test / test class
-dotnet test PgpCore.Tests/PgpCore.Tests.csproj --filter "FullyQualifiedName~ClearSignAsync_SignEmptyMessage"
+dotnet test --project PgpCore.Tests/PgpCore.Tests.csproj --filter "FullyQualifiedName~ClearSignAsync_SignEmptyMessage"
 
 # Run gpg interop tests (require gpg on PATH; auto-skip via GpgFactAttribute when absent)
-dotnet test PgpCore.Tests/PgpCore.Tests.csproj --filter "Category=Interop"
+dotnet test --project PgpCore.Tests/PgpCore.Tests.csproj --filter "Category=Interop"
 ```
 
-The full suite takes ~2 minutes. Test collections run sequentially (`parallelizeTestCollections: false` in xunit.runner.json) because tests share temp key/content files on disk.
+The test project uses xunit.v3, which runs on Microsoft.Testing.Platform; `global.json` opts `dotnet test` into that runner (the .NET 10 SDK refuses the VSTest path for it), so a single project is passed with `--project`. `--filter` still accepts the VSTest filter syntax.
+
+The full suite takes ~3 minutes. Test collections run sequentially (`parallelizeTestCollections: false` in xunit.runner.json) because tests share temp key/content files on disk.
 
 CI (`.github/workflows/`): Windows job builds and runs non-interop tests with coverage; a separate Ubuntu job runs the interop tests (MSYS gpg on the Windows runner mishandles `--homedir` paths); SonarCloud analysis consumes the coverage artifact.
 
@@ -54,7 +56,7 @@ Clear-sign/verify-clear implement RFC 4880 §7.1 canonical text rules by hand: t
 
 ### Test conventions
 
-Tests use xunit + FluentAssertions. `TestFactory` arranges per-test temp directories with keys and content: `testFactory.ArrangeAsync(KeyType.Known, FileType.Known)` then expose `PrivateKey`/`PublicKey`/`Password`/`Content` and `*FileInfo` properties; call `testFactory.Teardown()` at the end. `KeyType` values: `Generated` (fresh key, slow), `Known`, `KnownGpg` (checked-in fixtures), `Symmetric`. Round-trip tests conventionally run as `[Theory]` across all four key types. Tests are organized under `UnitTests/<Operation>/<Operation><Sync|Async>.<File|Stream|String>.cs`.
+Tests use xunit.v3 + FluentAssertions. Custom `FactAttribute` subclasses must forward `[CallerFilePath]`/`[CallerLineNumber]` to the base constructor (analyzer xUnit3003), and async calls that take a `CancellationToken` should pass `TestContext.Current.CancellationToken` (xUnit1051). `TestFactory` arranges per-test temp directories with keys and content: `testFactory.ArrangeAsync(KeyType.Known, FileType.Known)` then expose `PrivateKey`/`PublicKey`/`Password`/`Content` and `*FileInfo` properties; call `testFactory.Teardown()` at the end. `KeyType` values: `Generated` (fresh key, slow), `Known`, `KnownGpg` (checked-in fixtures), `Symmetric`. Round-trip tests conventionally run as `[Theory]` across all four key types. Tests are organized under `UnitTests/<Operation>/<Operation><Sync|Async>.<File|Stream|String>.cs`.
 
 ## Conventions
 

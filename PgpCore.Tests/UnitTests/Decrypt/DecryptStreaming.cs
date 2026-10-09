@@ -38,7 +38,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using MemoryStream chunkOut = new MemoryStream();
                 await pgpEncrypt.EncryptAsync(chunkIn, chunkOut, armor: armor);
                 chunkOut.Seek(0, SeekOrigin.Begin);
-                await chunkOut.CopyToAsync(concatenated);
+                await chunkOut.CopyToAsync(concatenated, TestContext.Current.CancellationToken);
             }
 
             concatenated.Seek(0, SeekOrigin.Begin);

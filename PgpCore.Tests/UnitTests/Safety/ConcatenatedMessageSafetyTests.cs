@@ -28,14 +28,14 @@ namespace PgpCore.Tests.UnitTests.Safety
             {
                 var source = new FileInfo(Path.Combine(root, "chunks.pgp"));
                 var destination = new FileInfo(Path.Combine(root, "output.txt"));
-                await File.WriteAllBytesAsync(source.FullName, encrypted.ToArray());
-                await File.WriteAllTextAsync(destination.FullName, "preserve existing destination");
+                await File.WriteAllBytesAsync(source.FullName, encrypted.ToArray(), TestContext.Current.CancellationToken);
+                await File.WriteAllTextAsync(destination.FullName, "preserve existing destination", TestContext.Current.CancellationToken);
                 await Assert.ThrowsAsync<NotEncryptedDataException>(async () =>
                 {
                     if (verify) await pgp.DecryptAndVerifyAsync(source, destination);
                     else await pgp.DecryptAsync(source, destination);
                 });
-                Assert.Equal("preserve existing destination", await File.ReadAllTextAsync(destination.FullName));
+                Assert.Equal("preserve existing destination", await File.ReadAllTextAsync(destination.FullName, TestContext.Current.CancellationToken));
                 Assert.Equal(2, Directory.GetFiles(root).Length);
             }
             finally { Directory.Delete(root, true); }

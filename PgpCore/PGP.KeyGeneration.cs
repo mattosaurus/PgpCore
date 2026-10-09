@@ -48,12 +48,12 @@ namespace PgpCore
                     return new PgpKeyPair(PublicKeyAlgorithm, kpg.GenerateKeyPair(), creationTime);
                 }
 
-                case PublicKeyAlgorithmTag.EdDsa:
+                case PublicKeyAlgorithmTag.EdDsa_Legacy:
                 {
                     // Ed25519 signing key. The generator ignores strength/certainty; the curve is fixed.
                     Ed25519KeyPairGenerator kpg = new Ed25519KeyPairGenerator();
                     kpg.Init(new Ed25519KeyGenerationParameters(secureRandom));
-                    return new PgpKeyPair(PublicKeyAlgorithmTag.EdDsa, kpg.GenerateKeyPair(), creationTime);
+                    return new PgpKeyPair(PublicKeyAlgorithmTag.EdDsa_Legacy, kpg.GenerateKeyPair(), creationTime);
                 }
 
                 case PublicKeyAlgorithmTag.ECDsa:
@@ -72,7 +72,7 @@ namespace PgpCore
                 default:
                     throw new NotSupportedException(
                         $"Key generation for {PublicKeyAlgorithm} is not supported. " +
-                        "Supported algorithms are RsaGeneral/RsaSign/RsaEncrypt, EdDsa (Ed25519), ECDsa (NIST P-256) and Dsa. " +
+                        "Supported algorithms are RsaGeneral/RsaSign/RsaEncrypt, EdDsa_Legacy (Ed25519), ECDsa (NIST P-256) and Dsa. " +
                         "Encryption-only algorithms cannot be used for the master key; an encryption subkey is generated automatically.");
             }
         }
@@ -116,7 +116,7 @@ namespace PgpCore
                     return new PgpKeyPair(PublicKeyAlgorithmTag.RsaGeneral, kpg.GenerateKeyPair(), creationTime);
                 }
 
-                case PublicKeyAlgorithmTag.EdDsa:
+                case PublicKeyAlgorithmTag.EdDsa_Legacy:
                 {
                     // X25519 ECDH, the encryption subkey gpg pairs with an Ed25519 master.
                     X25519KeyPairGenerator kpg = new X25519KeyPairGenerator();
@@ -210,7 +210,7 @@ namespace PgpCore
             switch (PublicKeyAlgorithm)
             {
                 // Ed25519 and the fixed NIST P-256 curve used for ECDSA both require 256 bits.
-                case PublicKeyAlgorithmTag.EdDsa:
+                case PublicKeyAlgorithmTag.EdDsa_Legacy:
                 case PublicKeyAlgorithmTag.ECDsa:
                     return 256;
 
@@ -226,7 +226,9 @@ namespace PgpCore
         /// <summary>
         /// Returns the output size, in bits, of an OpenPGP hash algorithm, or 0 for algorithms that are
         /// reserved, unknown, or unsupported - which are treated as too short so that a usable digest is
-        /// substituted rather than failing during signing.
+        /// substituted rather than failing during signing. BouncyCastle's non-standard tags (MD4, SM3 and
+        /// the pre-RFC 9580 SHA-3 values) fall into the latter group: their identifiers do not fit the
+        /// one-octet hash algorithm field of a signature packet, so they cannot be used on the wire.
         /// </summary>
         private static int GetHashAlgorithmBitLength(HashAlgorithmTag hashAlgorithm)
         {
@@ -234,7 +236,6 @@ namespace PgpCore
             {
                 case HashAlgorithmTag.MD5:
                 case HashAlgorithmTag.MD2:
-                case HashAlgorithmTag.MD4:
                     return 128;
 
                 case HashAlgorithmTag.Sha1:
@@ -246,22 +247,17 @@ namespace PgpCore
                     return 192;
 
                 case HashAlgorithmTag.Sha224:
-                case HashAlgorithmTag.Sha3_224:
                     return 224;
 
                 case HashAlgorithmTag.Sha256:
                 case HashAlgorithmTag.Sha3_256:
-                case HashAlgorithmTag.Sha3_256_Old:
-                case HashAlgorithmTag.SM3:
                     return 256;
 
                 case HashAlgorithmTag.Sha384:
-                case HashAlgorithmTag.Sha3_384:
                     return 384;
 
                 case HashAlgorithmTag.Sha512:
                 case HashAlgorithmTag.Sha3_512:
-                case HashAlgorithmTag.Sha3_512_Old:
                     return 512;
 
                 default:

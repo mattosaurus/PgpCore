@@ -738,7 +738,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 await pgpDecryptAndVerify.DecryptAndVerifyAsync(inputStream, outputStream);
                 outputStream.Seek(0, SeekOrigin.Begin);
                 using (StreamReader reader = new StreamReader(outputStream))
-                    decrypted = await reader.ReadToEndAsync();
+                    decrypted = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
             }
 
             // Assert

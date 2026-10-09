@@ -47,7 +47,7 @@ To reproduce the old behaviour, set the properties explicitly, e.g. `new PGP(key
 
 **Generated key structure:** `GenerateKey` now produces a certify/sign master key plus a separate
 encryption subkey, matching what GnuPG and other mainstream implementations emit. Previously a single
-master key carried every capability, which meant the signature-only algorithms (`EdDsa`, `ECDsa`, `Dsa`)
+master key carried every capability, which meant the signature-only algorithms (`EdDsa_Legacy`, `ECDsa`, `Dsa`)
 produced a key that could not encrypt at all ([#285](https://github.com/mattosaurus/PgpCore/issues/285)).
 See [PublicKeyAlgorithm](#publickeyalgorithm) for the algorithm pairings. Two consequences worth noting:
 
@@ -738,7 +738,7 @@ algorithm only needs to be capable of signing. The encryption subkey algorithm i
 | RsaGeneral - **Default** | RSA | RSA |
 | RsaEncrypt | RSA | RSA |
 | RsaSign | RSA | RSA |
-| EdDsa | Ed25519 | X25519 ECDH |
+| EdDsa_Legacy | Ed25519 | X25519 ECDH |
 | ECDsa | NIST P-256 | NIST P-256 ECDH |
 | Dsa | DSA | RSA |
 
@@ -776,7 +776,7 @@ The hash algorithm to be used by the signature.
 - Sha224
 
 During `GenerateKey` this value is also used for the key's self-certification, where some algorithms
-require a minimum digest size: 256 bits for `EdDsa` and `ECDsa`, and at least the subgroup size for `Dsa`
+require a minimum digest size: 256 bits for `EdDsa_Legacy` and `ECDsa`, and at least the subgroup size for `Dsa`
 (256 bits above 1024-bit keys, otherwise 160). If the requested hash is shorter than the key algorithm
 requires, SHA-256 is used for the certification instead — a shorter digest would produce a
 self-certification that other implementations may reject, and some combinations (`MD5` with `ECDsa` or

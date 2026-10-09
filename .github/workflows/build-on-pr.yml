@@ -27,4 +27,4 @@ jobs:
     - name: Show gpg version
       run: gpg --version
     - name: Run gpg interop tests
-      run: dotnet test PgpCore.Tests/PgpCore.Tests.csproj --filter "Category=Interop" --logger "console;verbosity=normal"
+      run: dotnet test --project PgpCore.Tests/PgpCore.Tests.csproj --filter "Category=Interop" --output Detailed

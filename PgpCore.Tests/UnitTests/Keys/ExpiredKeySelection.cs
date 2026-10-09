@@ -153,7 +153,7 @@ namespace PgpCore.Tests.UnitTests.Keys
             revocationGenerator.InitSign(PgpSignature.KeyRevocation, masterKey.PrivateKey);
             PgpSignature revocation = revocationGenerator.GenerateCertification(publicKey);
             PgpPublicKey revokedKey = PgpPublicKey.AddCertification(publicKey, revocation);
-            revokedKey.IsRevoked().Should().BeTrue("the arranged key must actually be revoked");
+            revokedKey.HasRevocation().Should().BeTrue("the arranged key must actually be revoked");
 
             PgpPublicKeyRing revokedRing = PgpPublicKeyRing.InsertPublicKey(ring, revokedKey);
 
