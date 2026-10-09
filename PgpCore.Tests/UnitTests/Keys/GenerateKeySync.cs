@@ -50,7 +50,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
-                    publicKey.IsRevoked().Should().BeFalse();
+                    publicKey.HasRevocation().Should().BeFalse();
                     publicKey.BitStrength.Should().Be(3072);
                 }
 
@@ -120,7 +120,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
-                    publicKey.IsRevoked().Should().BeFalse();
+                    publicKey.HasRevocation().Should().BeFalse();
                     publicKey.BitStrength.Should().Be(2048);
                 }
             }
@@ -189,7 +189,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
-                    publicKey.IsRevoked().Should().BeFalse();
+                    publicKey.HasRevocation().Should().BeFalse();
                     publicKey.BitStrength.Should().Be(3072);
                 }
 
@@ -259,7 +259,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     ShouldHavePlausibleCreationTime(publicKey);
                     publicKey.IsEncryptionKey.Should().BeTrue();
                     publicKey.IsMasterKey.Should().BeTrue();
-                    publicKey.IsRevoked().Should().BeFalse();
+                    publicKey.HasRevocation().Should().BeFalse();
                     publicKey.BitStrength.Should().Be(3072);
                     publicKey.GetValidSeconds().Should().Be(60);
                 }
@@ -297,7 +297,7 @@ namespace PgpCore.Tests.UnitTests.Keys
             // Arrange
             TestFactory testFactory = new TestFactory();
             testFactory.Arrange();
-            PGP pgp = new PGP { PublicKeyAlgorithm = PublicKeyAlgorithmTag.EdDsa };
+            PGP pgp = new PGP { PublicKeyAlgorithm = PublicKeyAlgorithmTag.EdDsa_Legacy };
 
             // Act
             pgp.GenerateKey(
@@ -326,7 +326,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                     PgpPublicKeyRingBundle bundle = new PgpPublicKeyRingBundle(PgpUtilities.GetDecoderStream(publicKeyStream));
                     PgpPublicKey masterKey = GetMasterKey(bundle);
                     masterKey.Should().NotBeNull();
-                    masterKey.Algorithm.Should().Be(PublicKeyAlgorithmTag.EdDsa);
+                    masterKey.Algorithm.Should().Be(PublicKeyAlgorithmTag.EdDsa_Legacy);
                 }
 
                 verified.Should().BeTrue();

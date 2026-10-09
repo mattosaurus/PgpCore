@@ -3,6 +3,7 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -11,7 +12,11 @@ namespace PgpCore.Tests.UnitTests.Safety
 {
     public sealed class UnixFactAttribute : FactAttribute
     {
-        public UnixFactAttribute() { if (OperatingSystem.IsWindows()) Skip = "Unix permission contract"; }
+        public UnixFactAttribute([CallerFilePath] string sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = -1)
+            : base(sourceFilePath, sourceLineNumber)
+        {
+            if (OperatingSystem.IsWindows()) Skip = "Unix permission contract";
+        }
     }
 
     public sealed class FileOutputSafetyTests : IDisposable

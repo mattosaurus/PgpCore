@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -19,7 +20,11 @@ namespace PgpCore.Tests.UnitTests.Interop
     /// </summary>
     public sealed class GpgFactAttribute : FactAttribute
     {
-        public GpgFactAttribute(string minimumGpgVersion = null)
+        public GpgFactAttribute(
+            string minimumGpgVersion = null,
+            [CallerFilePath] string sourceFilePath = null,
+            [CallerLineNumber] int sourceLineNumber = -1)
+            : base(sourceFilePath, sourceLineNumber)
         {
             if (GpgRunner.GpgVersion == null)
                 Skip = "gpg is not available on this machine";
@@ -500,7 +505,7 @@ namespace PgpCore.Tests.UnitTests.Interop
             foreach (PublicKeyAlgorithmTag algorithm in new[]
                      {
                          PublicKeyAlgorithmTag.RsaGeneral,
-                         PublicKeyAlgorithmTag.EdDsa,
+                         PublicKeyAlgorithmTag.EdDsa_Legacy,
                          PublicKeyAlgorithmTag.ECDsa,
                      })
             {

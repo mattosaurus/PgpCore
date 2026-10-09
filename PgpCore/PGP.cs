@@ -406,11 +406,7 @@ namespace PgpCore
 			ArmoredOutputStream secretOutArmored;
 			if (armor)
 			{
-				secretOutArmored = new ArmoredOutputStream(secretOut, AddVersionHeader);
-				if (!emitVersion)
-				{
-					secretOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
-				}
+				secretOutArmored = new ArmoredOutputStream(secretOut, AddVersionHeader && emitVersion);
 
 				secretOut = secretOutArmored;
 			}
@@ -426,11 +422,7 @@ namespace PgpCore
 			ArmoredOutputStream publicOutArmored;
 			if (armor)
 			{
-				publicOutArmored = new ArmoredOutputStream(publicOut, AddVersionHeader);
-				if (!emitVersion)
-				{
-					publicOutArmored.SetHeader(ArmoredOutputStream.HeaderVersion, null);
-				}
+				publicOutArmored = new ArmoredOutputStream(publicOut, AddVersionHeader && emitVersion);
 
 				publicOut = publicOutArmored;
 			}

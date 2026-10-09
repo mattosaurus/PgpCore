@@ -26,7 +26,7 @@ namespace PgpCore.Tests.UnitTests.Keys
             new TheoryData<PublicKeyAlgorithmTag, int, PublicKeyAlgorithmTag>
             {
                 { PublicKeyAlgorithmTag.RsaGeneral, 1024, PublicKeyAlgorithmTag.RsaGeneral },
-                { PublicKeyAlgorithmTag.EdDsa, 1024, PublicKeyAlgorithmTag.ECDH },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, PublicKeyAlgorithmTag.ECDH },
                 { PublicKeyAlgorithmTag.ECDsa, 1024, PublicKeyAlgorithmTag.ECDH },
                 { PublicKeyAlgorithmTag.Dsa, 1024, PublicKeyAlgorithmTag.RsaGeneral },
                 { PublicKeyAlgorithmTag.Dsa, 2048, PublicKeyAlgorithmTag.RsaGeneral },
@@ -188,10 +188,10 @@ namespace PgpCore.Tests.UnitTests.Keys
         public static TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag> ShortCertificationHashes =>
             new TheoryData<PublicKeyAlgorithmTag, int, HashAlgorithmTag>
             {
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha224 },
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha1 },
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.MD5 },
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.RipeMD160 },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.Sha224 },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.Sha1 },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.MD5 },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.RipeMD160 },
                 { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha224 },
                 { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha1 },
                 { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.MD5 },
@@ -202,7 +202,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                 { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.MD5 },
                 // Reserved and unsupported digests have no usable size and are replaced rather than
                 // being allowed to fail during signing.
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.DoubleSha },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.DoubleSha },
             };
 
         [Theory]
@@ -250,7 +250,7 @@ namespace PgpCore.Tests.UnitTests.Keys
                 { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.Sha1 },
                 { PublicKeyAlgorithmTag.Dsa, 1024, HashAlgorithmTag.Sha224 },
                 // Stronger than required is always kept.
-                { PublicKeyAlgorithmTag.EdDsa, 1024, HashAlgorithmTag.Sha512 },
+                { PublicKeyAlgorithmTag.EdDsa_Legacy, 1024, HashAlgorithmTag.Sha512 },
                 { PublicKeyAlgorithmTag.ECDsa, 1024, HashAlgorithmTag.Sha384 },
             };
 

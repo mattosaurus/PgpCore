@@ -429,7 +429,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
                 using MemoryStream chunkOutput = new MemoryStream();
                 await pgp.EncryptAndSignAsync(chunkInput, chunkOutput, armor: false);
                 chunkOutput.Position = 0;
-                await chunkOutput.CopyToAsync(concatenated);
+                await chunkOutput.CopyToAsync(concatenated, TestContext.Current.CancellationToken);
             }
             concatenated.Position = 0;
 
@@ -467,7 +467,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             {
                 await trustedPgp.EncryptAndSignAsync(first, firstEncrypted, armor: false);
                 firstEncrypted.Position = 0;
-                await firstEncrypted.CopyToAsync(concatenated);
+                await firstEncrypted.CopyToAsync(concatenated, TestContext.Current.CancellationToken);
             }
 
             using (MemoryStream second = new MemoryStream(Encoding.UTF8.GetBytes("second message")))
@@ -475,7 +475,7 @@ namespace PgpCore.Tests.UnitTests.Decrypt
             {
                 await untrustedPgp.EncryptAndSignAsync(second, secondEncrypted, armor: false);
                 secondEncrypted.Position = 0;
-                await secondEncrypted.CopyToAsync(concatenated);
+                await secondEncrypted.CopyToAsync(concatenated, TestContext.Current.CancellationToken);
             }
 
             concatenated.Position = 0;
