@@ -11,6 +11,9 @@ jobs:
     uses: ./.github/workflows/build.yml
   analyze:
     needs: build
+    # Fork PRs don't receive repository secrets (SONAR_TOKEN), so the scan can't run there;
+    # contributions are analyzed on the push to master after merge instead.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     uses: ./.github/workflows/analyze.yml
     secrets: inherit
   interop:
