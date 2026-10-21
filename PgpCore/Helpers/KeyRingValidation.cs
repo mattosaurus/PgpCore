@@ -135,11 +135,16 @@ namespace PgpCore.Helpers
             // BouncyCastle's string overload re-encodes the user ID, which does not round-trip
             // non-ASCII identities. Hash the stored octets exactly as they appear in the packet.
             if (!UpdateWithKey(signature, key)) return false;
-            signature.Update((byte)0xB4);
-            signature.Update((byte)(userId.Length >> 24));
-            signature.Update((byte)(userId.Length >> 16));
-            signature.Update((byte)(userId.Length >> 8));
-            signature.Update((byte)userId.Length);
+            if (signature.Version >= 4)
+            {
+                // RFC 4880 §5.2.4 frames the identity for version 4 and later signatures only;
+                // §5.2.2 version 3 certifications hash the packet contents bare.
+                signature.Update((byte)0xB4);
+                signature.Update((byte)(userId.Length >> 24));
+                signature.Update((byte)(userId.Length >> 16));
+                signature.Update((byte)(userId.Length >> 8));
+                signature.Update((byte)userId.Length);
+            }
             signature.Update(userId);
             return signature.Verify();
         }

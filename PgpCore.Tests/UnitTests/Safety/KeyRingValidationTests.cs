@@ -382,6 +382,32 @@ namespace PgpCore.Tests.UnitTests.Safety
         }
 
         [Theory]
+        [InlineData("legacy-v3@example.test")]
+        [InlineData("Legacy Wirsén <legacy-v3@example.test>")]
+        public void LegacyV3SelfCertification_HashesTheBareUserId(string userId)
+        {
+            // RFC 4880 §5.2.2: a version 3 certification hashes the user ID packet contents without
+            // the 0xB4 header and length that version 4 adds. BouncyCastle has no v3 certification
+            // generator, so frame the key by hand and feed the identity bare.
+            var primary = Pair();
+            var generator = new PgpV3SignatureGenerator(primary.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            generator.InitSign(PgpSignature.PositiveCertification, primary.PrivateKey);
+            byte[] contents = primary.PublicKey.PublicKeyPacket.GetEncodedContents();
+            generator.Update((byte)0x99, (byte)(contents.Length >> 8), (byte)contents.Length);
+            generator.Update(contents);
+            generator.Update(Encoding.UTF8.GetBytes(userId));
+            PgpSignature certification = generator.Generate();
+            Assert.Equal(3, certification.Version);
+            var key = PgpPublicKey.AddCertification(primary.PublicKey, userId, certification);
+            using var encoded = new MemoryStream();
+            new PgpPublicKeyRing(key.GetEncoded()).Encode(encoded);
+            encoded.Position = 0;
+            var info = Assert.Single(PGP.InspectKeys(encoded));
+            Assert.Equal(new[] { userId }, info.UserIds);
+            Assert.True(info.IsUsableForSigning);
+        }
+
+        [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public void NonAsciiUserId_CertificationRevocationIsAuthenticatedOverStoredOctets(bool authentic)
