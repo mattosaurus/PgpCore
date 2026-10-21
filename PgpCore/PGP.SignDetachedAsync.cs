@@ -129,14 +129,7 @@ namespace PgpCore
             PublicKeyAlgorithmTag tag = EncryptionKeys.SigningSecretKey.PublicKey.Algorithm;
             PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
             pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, EncryptionKeys.SigningPrivateKey);
-            foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
-            {
-                PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-                subPacketGenerator.AddSignerUserId(false, userId);
-                pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-                // Just the first one!
-                break;
-            }
+            SetSignerUserId(pgpSignatureGenerator);
 
             return pgpSignatureGenerator;
         }
