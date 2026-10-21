@@ -334,17 +334,24 @@ namespace PgpCore
 			PublicKeyAlgorithmTag tag = EncryptionKeys.SigningSecretKey.PublicKey.Algorithm;
 			PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
 			pgpSignatureGenerator.InitSign(PgpSignature.BinaryDocument, EncryptionKeys.SigningPrivateKey);
-			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
-			{
-				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.AddSignerUserId(false, userId);
-				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-				// Just the first one!
-				break;
-			}
+			SetSignerUserId(pgpSignatureGenerator);
 
 			pgpSignatureGenerator.GenerateOnePassVersion(false).Encode(compressedOut);
 			return pgpSignatureGenerator;
+		}
+
+		/// <summary>
+		/// Records the signing key's first user ID in the hashed subpackets. The stored octets are used
+		/// as-is so that non-ASCII identities are not re-encoded (BouncyCastle's string form does not round-trip).
+		/// </summary>
+		private void SetSignerUserId(PgpSignatureGenerator pgpSignatureGenerator)
+		{
+			byte[] userId = EncryptionKeys.SigningSecretKey.PublicKey.GetRawUserIds().FirstOrDefault();
+			if (userId == null)
+				return;
+			PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
+			subPacketGenerator.SetSignerUserId(false, userId);
+			pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
 		}
 
 		#endregion InitSignatureGenerator
@@ -357,14 +364,7 @@ namespace PgpCore
 			PgpSignatureGenerator pgpSignatureGenerator = new PgpSignatureGenerator(tag, HashAlgorithmTag);
 			pgpSignatureGenerator.InitSign(PgpSignature.CanonicalTextDocument, EncryptionKeys.SigningPrivateKey);
 			armoredOutputStream.BeginClearText(HashAlgorithmTag);
-			foreach (string userId in EncryptionKeys.SigningSecretKey.PublicKey.GetUserIds())
-			{
-				PgpSignatureSubpacketGenerator subPacketGenerator = new PgpSignatureSubpacketGenerator();
-				subPacketGenerator.AddSignerUserId(false, userId);
-				pgpSignatureGenerator.SetHashedSubpackets(subPacketGenerator.Generate());
-				// Just the first one!
-				break;
-			}
+			SetSignerUserId(pgpSignatureGenerator);
 
 			return pgpSignatureGenerator;
 		}

@@ -325,5 +325,86 @@ namespace PgpCore.Tests.UnitTests.Safety
             Assert.Single(keys.VerificationKeys);
             Assert.Throws<NoSigningKeyException>(() => keys.SigningSecretKey);
         }
+
+        [Theory]
+        [InlineData("Test Wirsén <test@example.com>")]
+        [InlineData("Zoë Müller-Ångström <zoë@example.com>")]
+        [InlineData("日本語 <nihongo@example.com>")]
+        public async Task NonAsciiUserId_IsAuthenticatedAndUsableForEveryOperation(string userId)
+        {
+            // Regression for #345: BouncyCastle exposes stored user IDs with one char per byte, so
+            // looking certifications up by that string found nothing and the whole ring was rejected.
+            using var publicKey = new MemoryStream();
+            using var privateKey = new MemoryStream();
+            new PGP().GenerateKey(publicKey, privateKey, userId, "password", 1024);
+            publicKey.Position = 0;
+            var inspected = PGP.InspectKeys(publicKey);
+            Assert.Equal(2, inspected.Count);
+            Assert.All(inspected, info => Assert.Equal(new[] { userId }, info.UserIds));
+            Assert.True(inspected[0].IsUsableForSigning);
+            Assert.True(inspected[1].IsUsableForEncryption);
+
+            var pgp = new PGP(new EncryptionKeys(Encoding.UTF8.GetString(publicKey.ToArray()),
+                Encoding.UTF8.GetString(privateKey.ToArray()), "password"));
+            byte[] payload = Encoding.UTF8.GetBytes("non-ascii identity");
+
+            using (var input = new MemoryStream(payload))
+            using (var signed = new MemoryStream())
+            {
+                await pgp.SignStreamAsync(input, signed);
+                signed.Position = 0;
+                Assert.True(await pgp.VerifyStreamAsync(signed));
+            }
+
+            using (var input = new MemoryStream(payload))
+            using (var encrypted = new MemoryStream())
+            using (var decrypted = new MemoryStream())
+            {
+                await pgp.EncryptAndSignAsync(input, encrypted);
+                encrypted.Position = 0;
+                await pgp.DecryptStreamAndVerifyAsync(encrypted, decrypted);
+                Assert.Equal(payload, decrypted.ToArray());
+            }
+
+            using (var input = new MemoryStream(payload))
+            using (var signature = new MemoryStream())
+            {
+                await pgp.SignDetachedAsync(input, signature, armor: false);
+                signature.Position = 0;
+                // The signer user ID subpacket must carry the stored octets, not a re-encoded string.
+                var list = (PgpSignatureList)new PgpObjectFactory(signature).NextPgpObject();
+                var signer = (SignerUserId)list[0].GetHashedSubPackets().GetSubpacket(SignatureSubpacketTag.SignerUserId);
+                Assert.Equal(Encoding.UTF8.GetBytes(userId), signer.GetRawId());
+                signature.Position = 0;
+                using var verified = new MemoryStream(payload);
+                Assert.True(await pgp.VerifyDetachedAsync(verified, signature));
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void NonAsciiUserId_CertificationRevocationIsAuthenticatedOverStoredOctets(bool authentic)
+        {
+            const string userId = "Revoked Wirsén <revoked@example.test>";
+            var primary = Pair();
+            var generator = new PgpKeyRingGenerator(PgpSignature.PositiveCertification, primary, userId,
+                SymmetricKeyAlgorithmTag.Null, HashAlgorithmTag.Sha256, Array.Empty<char>(), false, null, null, new SecureRandom());
+            var ring = generator.GeneratePublicKeyRing();
+            var revoker = authentic ? primary : Pair();
+            var revocation = new PgpSignatureGenerator(revoker.PublicKey.Algorithm, HashAlgorithmTag.Sha256);
+            revocation.InitSign(PgpSignature.CertificationRevocation, revoker.PrivateKey);
+            var revoked = PgpPublicKey.AddCertification(ring.GetPublicKey(), userId,
+                revocation.GenerateCertification(userId, ring.GetPublicKey()));
+            ring = PgpPublicKeyRing.InsertPublicKey(ring, revoked);
+            using var encoded = new MemoryStream();
+            ring.Encode(encoded);
+            encoded.Position = 0;
+            if (authentic)
+                // The revocation does not pre-date the certification and is bound to the same raw identity.
+                Assert.Throws<InvalidKeyMaterialException>(() => PGP.InspectKeys(encoded));
+            else
+                Assert.Equal(new[] { userId }, Assert.Single(PGP.InspectKeys(encoded)).UserIds);
+        }
     }
 }

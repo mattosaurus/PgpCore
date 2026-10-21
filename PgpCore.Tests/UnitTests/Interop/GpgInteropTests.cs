@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -349,6 +350,74 @@ namespace PgpCore.Tests.UnitTests.Interop
             finally
             {
                 GpgRunner.DeleteHomeDir(homeDir);
+            }
+        }
+
+        /// <summary>
+        /// Regression for #345: a user ID outside ASCII must not make the key ring unusable, and the
+        /// signer user ID PgpCore records must be the identity gpg stored rather than a re-encoding of it.
+        /// </summary>
+        [GpgFact("2.1")]
+        [Trait("Category", "Interop")]
+        public void GpgGeneratedKeyWithNonAsciiUserId_PgpCoreRoundTrip_ShouldSignVerifyAndInspect()
+        {
+            // Arrange
+            TestFactory testFactory = new TestFactory();
+            string homeDir = GpgRunner.CreateHomeDir();
+
+            try
+            {
+                testFactory.Arrange(KeyType.Known, FileType.Known);
+                const string name = "PgpCore Wirsén";
+                const string email = "pgpcore-wirsen@example.com";
+                const string passphrase = "interop-passphrase";
+                const string content = "The quick brown fox jumps over the lazy dog";
+
+                string batchScriptPath = Path.Combine(homeDir, "genkey.batch");
+                File.WriteAllText(batchScriptPath, string.Join("\n",
+                    "Key-Type: RSA",
+                    "Key-Length: 2048",
+                    "Subkey-Type: RSA",
+                    "Subkey-Length: 2048",
+                    $"Name-Real: {name}",
+                    $"Name-Email: {email}",
+                    "Expire-Date: 0",
+                    $"Passphrase: {passphrase}",
+                    "%commit",
+                    ""), new UTF8Encoding(false));
+
+                GpgResult generateKey = GpgRunner.Run(homeDir, passphrase, "--gen-key", batchScriptPath);
+                generateKey.ExitCode.Should().Be(0, "gpg should generate a key pair in batch mode: {0}", generateKey.Details);
+
+                GpgResult exportPublic = GpgRunner.Run(homeDir, null, "--armor", "--export", email);
+                GpgResult exportSecret = GpgRunner.Run(homeDir, passphrase, "--armor", "--export-secret-keys", email);
+                exportPublic.ExitCode.Should().Be(0, "gpg should export the armored public key: {0}", exportPublic.Details);
+                exportSecret.ExitCode.Should().Be(0, "gpg should export the armored private key: {0}", exportSecret.Details);
+
+                // Act
+                using (Stream publicKeyStream = new MemoryStream(Encoding.UTF8.GetBytes(exportPublic.StdOut)))
+                {
+                    PGP.InspectKeys(publicKeyStream).Should().OnlyContain(key => key.UserIds.Single() == $"{name} <{email}>",
+                        "the stored UTF-8 identity should be decoded as text");
+                }
+
+                EncryptionKeys encryptionKeys = new EncryptionKeys(exportPublic.StdOut, exportSecret.StdOut, passphrase);
+                PGP pgp = new PGP(encryptionKeys);
+
+                string encrypted = pgp.EncryptAndSign(content);
+                string decrypted = pgp.DecryptAndVerify(encrypted);
+
+                pgp.Sign(testFactory.ContentFileInfo, testFactory.SignedContentFileInfo);
+                GpgResult verify = GpgRunner.Run(homeDir, null, "--verify", testFactory.SignedContentFileInfo.FullName);
+
+                // Assert
+                decrypted.Should().Be(content);
+                verify.ExitCode.Should().Be(0, "gpg should verify a signature carrying the stored signer identity: {0}", verify.Details);
+            }
+            finally
+            {
+                GpgRunner.DeleteHomeDir(homeDir);
+                testFactory.Teardown();
             }
         }
 

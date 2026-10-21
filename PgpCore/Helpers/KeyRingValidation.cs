@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace PgpCore.Helpers
 {
@@ -112,7 +113,7 @@ namespace PgpCore.Helpers
             foreach (PgpSignature signature in primary.GetSignaturesOfType(PgpSignature.DirectKey))
                 if (Verify(signature, primary, copy => VerifyDirectKey(copy, primary)))
                     yield return signature;
-            foreach (string userId in primary.GetUserIds())
+            foreach (byte[] userId in primary.GetRawUserIds())
                 foreach (PgpSignature signature in SelfCertifications(primary, userId))
                     yield return signature;
             foreach (PgpUserAttributeSubpacketVector attribute in primary.GetUserAttributes())
@@ -126,6 +127,25 @@ namespace PgpCore.Helpers
         private static bool VerifyDirectKey(PgpSignature signature, PgpPublicKey key)
         {
             // BouncyCastle's single-key VerifyCertification accepts revocations only.
+            return UpdateWithKey(signature, key) && signature.Verify();
+        }
+
+        private static bool VerifyCertification(PgpSignature signature, byte[] userId, PgpPublicKey key)
+        {
+            // BouncyCastle's string overload re-encodes the user ID, which does not round-trip
+            // non-ASCII identities. Hash the stored octets exactly as they appear in the packet.
+            if (!UpdateWithKey(signature, key)) return false;
+            signature.Update((byte)0xB4);
+            signature.Update((byte)(userId.Length >> 24));
+            signature.Update((byte)(userId.Length >> 16));
+            signature.Update((byte)(userId.Length >> 8));
+            signature.Update((byte)userId.Length);
+            signature.Update(userId);
+            return signature.Verify();
+        }
+
+        private static bool UpdateWithKey(PgpSignature signature, PgpPublicKey key)
+        {
             // Use the framing belonging to the key version. Modern key packets have
             // a four-octet length even though the current signature reader is still limited.
             byte[] contents = key.PublicKeyPacket.GetEncodedContents();
@@ -139,21 +159,25 @@ namespace PgpCore.Helpers
             signature.Update((byte)(contents.Length >> 8));
             signature.Update((byte)contents.Length);
             signature.Update(contents);
-            return signature.Verify();
+            return true;
         }
 
-        internal static string[] UserIds(PgpPublicKey primary) => primary.GetUserIds()
-            .Where(id => SelfCertifications(primary, id).Any()).ToArray();
+        /// <summary>Decodes a stored user ID. RFC 4880 §5.11 defines the packet as UTF-8 text.</summary>
+        internal static string DecodeUserId(byte[] userId) => Encoding.UTF8.GetString(userId);
 
-        private static IEnumerable<PgpSignature> SelfCertifications(PgpPublicKey primary, string userId)
+        internal static string[] UserIds(PgpPublicKey primary) => primary.GetRawUserIds()
+            .Where(id => SelfCertifications(primary, id).Any()).Select(DecodeUserId).ToArray();
+
+        private static IEnumerable<PgpSignature> SelfCertifications(PgpPublicKey primary, byte[] userId)
         {
-            PgpSignature[] signatures = primary.GetSignaturesForId(userId).ToArray();
+            // BouncyCastle returns null rather than an empty sequence for an unknown user ID.
+            PgpSignature[] signatures = (primary.GetSignaturesForId(userId) ?? Enumerable.Empty<PgpSignature>()).ToArray();
             DateTime revokedAt = signatures.Where(s => s.SignatureType == PgpSignature.CertificationRevocation &&
-                Verify(s, primary, copy => copy.VerifyCertification(userId, primary)))
+                Verify(s, primary, copy => VerifyCertification(copy, userId, primary)))
                 .Select(s => s.CreationTime).DefaultIfEmpty(DateTime.MinValue).Max();
             return signatures.Where(s => s.SignatureType >= PgpSignature.DefaultCertification &&
                 s.SignatureType <= PgpSignature.PositiveCertification && s.CreationTime > revokedAt &&
-                Verify(s, primary, copy => copy.VerifyCertification(userId, primary)));
+                Verify(s, primary, copy => VerifyCertification(copy, userId, primary)));
         }
 
         private static bool HasRevocation(PgpPublicKey primary, PgpPublicKey key, int type)
